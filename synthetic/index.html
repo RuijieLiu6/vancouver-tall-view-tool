@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vancouver View-Protection Lab</title>
+<link rel="stylesheet" href="style.css">
+<script src="../runtime-config.js"></script>
+</head>
+<body>
+<header class="app-header">
+  <div class="title-block">
+    <h1>Vancouver View-Protection Lab</h1>
+    <p class="subtitle">Synthetic geometry demo &mdash; not a Vancouver assessment.</p>
+  </div>
+  <div class="header-status">
+    <span id="fixture-label" class="fixture-label">Fixture: F1</span>
+    <span id="pending-badge" class="pending-badge hidden">Updating&hellip;</span>
+  </div>
+</header>
+<div id="error-strip" class="error-strip hidden" role="alert"></div>
+
+<main class="app-grid">
+  <section class="panel controls-panel" aria-label="Controls">
+    <h2>Controls</h2>
+
+    <div class="control-group">
+      <label for="height-range">Tower height above base (m)</label>
+      <div class="control-row">
+        <input type="range" id="height-range" min="1" max="150" step="0.5" value="85">
+        <input type="number" id="height-number" min="1" max="150" step="0.5" value="85">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label for="xc-range">Tower X centre (m)</label>
+      <div class="control-row">
+        <input type="range" id="xc-range" min="-40" max="140" step="0.5" value="35">
+        <input type="number" id="xc-number" min="-40" max="140" step="0.5" value="35">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label for="yc-range">Tower Y centre (m)</label>
+      <div class="control-row">
+        <input type="range" id="yc-range" min="-30" max="90" step="0.5" value="25">
+        <input type="number" id="yc-number" min="-30" max="90" step="0.5" value="25">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label for="width-range">Footprint width, x (m)</label>
+      <div class="control-row">
+        <input type="range" id="width-range" min="1" max="80" step="0.5" value="30">
+        <input type="number" id="width-number" min="1" max="80" step="0.5" value="30">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label for="depth-range">Footprint depth, y (m)</label>
+      <div class="control-row">
+        <input type="range" id="depth-range" min="1" max="60" step="0.5" value="30">
+        <input type="number" id="depth-number" min="1" max="60" step="0.5" value="30">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label for="base-number">Base elevation (m)</label>
+      <input type="number" id="base-number" min="0" max="50" step="0.5" value="10">
+    </div>
+
+    <div class="control-group readonly-group">
+      <label>Top elevation (m, derived)</label>
+      <output id="top-elevation" class="mono">95.000</output>
+    </div>
+
+    <div class="control-group">
+      <label for="boundary-range">Hypothetical boundary elevation (m)</label>
+      <div class="control-row">
+        <input type="range" id="boundary-range" min="0" max="150" step="0.5" value="80">
+        <input type="number" id="boundary-number" min="0" max="150" step="0.5" value="80">
+      </div>
+      <label class="checkbox-label">
+        <input type="checkbox" id="missing-toggle">
+        Boundary data missing
+      </label>
+    </div>
+
+    <div class="control-group button-group">
+      <button type="button" id="btn-f1" class="fixture-btn">F1: Intersection</button>
+      <button type="button" id="btn-f2" class="fixture-btn">F2: Boundary contact</button>
+      <button type="button" id="btn-f3" class="fixture-btn">F3: Missing data</button>
+      <button type="button" id="btn-reset" class="reset-btn">Reset</button>
+    </div>
+
+    <div class="control-group view-buttons">
+      <span class="group-caption">View</span>
+      <button type="button" id="btn-view-plan">Plan</button>
+      <button type="button" id="btn-view-3d">3D</button>
+      <button type="button" id="btn-reset-view">Reset View</button>
+    </div>
+  </section>
+
+  <section class="panel viewport-panel" aria-label="3D viewport">
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="scene-canvas"></canvas>
+      <div class="legend" id="legend">
+        <div class="legend-title">Legend</div>
+        <div class="legend-row"><span class="swatch swatch-grid"></span>Ground grid (10 m)</div>
+        <div class="legend-row"><span class="swatch swatch-area"></span>Test area</div>
+        <div class="legend-row"><span class="swatch swatch-tower"></span>Tower volume</div>
+        <div class="legend-row"><span class="swatch swatch-boundary"></span>Boundary plane <span id="legend-boundary-z" class="mono">(z = 80.000 m)</span></div>
+        <div class="legend-row"><span class="swatch swatch-overlap"></span>Overlap (evaluated)</div>
+        <div class="legend-row"><span class="swatch swatch-uneval"></span>Unevaluated footprint</div>
+      </div>
+      <div class="readout" id="readout">
+        <div>Boundary z: <span class="mono" id="readout-boundary-z">80.000</span> m</div>
+        <div>Tower top z: <span class="mono" id="readout-top-z">95.000</span> m</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel results-panel" aria-label="Results">
+    <h2>Results</h2>
+    <div id="result-badge" class="result-badge">&mdash;</div>
+    <div class="applicability-banner">Regulatory applicability: <strong id="applicability-value">NOT ASSESSED</strong></div>
+
+    <div class="result-row">
+      <span class="row-label">Signed margin (m)</span>
+      <span class="row-value mono" id="val-margin">&mdash;</span>
+      <span class="row-note" id="note-margin">&mdash;</span>
+    </div>
+    <div class="result-row">
+      <span class="row-label">Vertical overlap thickness (m)</span>
+      <span class="row-value mono" id="val-penetration">&mdash;</span>
+      <span class="row-note" id="note-penetration">&mdash;</span>
+    </div>
+    <div class="result-row">
+      <span class="row-label">Evaluated footprint area (m&sup2;)</span>
+      <span class="row-value mono" id="val-eval-area">&mdash;</span>
+    </div>
+    <div class="result-row">
+      <span class="row-label">Unevaluated footprint area (m&sup2;)</span>
+      <span class="row-value mono" id="val-uneval-area">&mdash;</span>
+    </div>
+    <div class="result-row">
+      <span class="row-label">Prototype tolerance (m)</span>
+      <span class="row-value mono" id="val-tolerance">&mdash;</span>
+      <span class="row-note" id="note-tolerance">&mdash;</span>
+    </div>
+
+    <div class="explanation" id="explanation-text"></div>
+
+    <h3>Why</h3>
+    <ul id="reasons-list" class="reasons-list"></ul>
+
+    <h3>Result for input snapshot</h3>
+    <div class="snapshot-row"><span>Tower top elevation (top_z)</span><span class="mono" id="snap-top-z">&mdash;</span></div>
+    <div class="snapshot-row"><span>Boundary elevation (boundary_z)</span><span class="mono" id="snap-boundary-z">&mdash;</span></div>
+
+    <details id="technical-details">
+      <summary>Technical</summary>
+      <h4>Request input</h4>
+      <pre id="tech-input"></pre>
+      <h4>Result</h4>
+      <pre id="tech-result"></pre>
+      <button type="button" id="btn-download">Download Result JSON</button>
+    </details>
+
+    <div class="result-footer" id="result-footer">Result &mdash; for the inputs shown</div>
+  </section>
+</main>
+
+<script src="../explorer/browser-api.js"></script>
+<script src="../explorer/browser-check.js"></script>
+<script src="app.js"></script>
+<script>
+  if (location.search.indexOf('selftest=1') !== -1) {
+    var s = document.createElement('script');
+    s.src = 'selftest.js';
+    document.body.appendChild(s);
+  }
+</script>
+</body>
+</html>
