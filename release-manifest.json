@@ -1,0 +1,207 @@
+{
+  "format": "vancouver-static-pages/1",
+  "file_count": 50,
+  "total_bytes": 41905738,
+  "files": {
+    ".github/workflows/pages.yml": {
+      "bytes": 591,
+      "sha256": "8548c3879cb4969a9fb6f2f13ce3c780b2cc5158b483a1ce22fbd6f556c0aa84"
+    },
+    ".nojekyll": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "README.md": {
+      "bytes": 2583,
+      "sha256": "a30ee3555844deee10ba247acffc9df3e72b6d59fee8844847f134ca6257b39c"
+    },
+    "data/context.json": {
+      "bytes": 7679,
+      "sha256": "add435147d6f3b81730253aef49da9ac88068a0755cf7330b1bcb88411d3b497"
+    },
+    "data/fixtures.json": {
+      "bytes": 1696,
+      "sha256": "2f8cee00b2634e95276958f4dc4a8694e6105f91fdbcda74a177da2f0347fe43"
+    },
+    "data/geo.json": {
+      "bytes": 2477,
+      "sha256": "7b0e8bfb7b2a9ecb997d8a0b6b036d0942f98d0bf39c4a1a602db50f80612b3f"
+    },
+    "data/guideline.json": {
+      "bytes": 12062,
+      "sha256": "51ba7ee75633522fb719e616d37e7c3d912332c1017e92cd313d9fd1b7cb5518"
+    },
+    "data/health.json": {
+      "bytes": 116,
+      "sha256": "cf1a6f108f6d18306d22f2d8e0a3ec98f3844332b9fe36eaff755dcbdfededf5"
+    },
+    "data/viewcones.json": {
+      "bytes": 36357,
+      "sha256": "935953f809619aed16321659323fb92619ceca36503d9c0419881eefe9d13cd0"
+    },
+    "explorer/browser-api.js": {
+      "bytes": 3108,
+      "sha256": "0652d3691055b243dac358a15aff3ed8d62c4b0b56b4654225bf2c910a368add"
+    },
+    "explorer/browser-check.js": {
+      "bytes": 18022,
+      "sha256": "19b1a524fb7a76df700d4c1f74dc7a4691778254b4af760e5ceb22fc82e91681"
+    },
+    "explorer/browser-rhino.js": {
+      "bytes": 8609,
+      "sha256": "423bb75586bbf848d7480671ea06b4218998a2ab9b2d8224b91c9c5940759730"
+    },
+    "explorer/entry.js": {
+      "bytes": 3270,
+      "sha256": "349131b6923060d84bdc19ae50c1fbb54b89469eb4d8075c9c55e5d937aa9f6e"
+    },
+    "explorer/explorer.css": {
+      "bytes": 36870,
+      "sha256": "3a754694e3b4730f6286eac0a7066ebcab02b9e522012effc43ba2e8692c6c1c"
+    },
+    "explorer/explorer.js": {
+      "bytes": 141610,
+      "sha256": "10baa1b3a68c38cc11a4a23fd94ad4503f3050086f9be28d027c4919bb10e6ab"
+    },
+    "explorer/index.html": {
+      "bytes": 21376,
+      "sha256": "2a8484dacda599bf674679858fd00b3bef251dc64411e33a121ac52649300692"
+    },
+    "explorer/pdf.js": {
+      "bytes": 6692,
+      "sha256": "a2b9afbcb5a2a5ebeb18f3c8737999f2fcd267aaa3e5990823e2eb8e5dcd543c"
+    },
+    "explorer/proposal-geometry.js": {
+      "bytes": 4662,
+      "sha256": "54b67c465a03a5d5ec8458e8a073d0fa086e33364e0adb9d3c072c3d2829a8e2"
+    },
+    "explorer/selftest.js": {
+      "bytes": 16718,
+      "sha256": "e05934f51e61feab281ea5ec6b30156c22d0dd744736386823f6c9abaab5055e"
+    },
+    "explorer/server-ready.js": {
+      "bytes": 151,
+      "sha256": "d8fbdb4fc3d2804530a1144c080728e1d5ec8f806fa54ba2c713c12a9eb882ff"
+    },
+    "explorer/site-geometry.js": {
+      "bytes": 6185,
+      "sha256": "36d2627acf7e0e5ae7b4288e8d25a97196da2da471d52471a05501733922ee2d"
+    },
+    "explorer/study-selftest.js": {
+      "bytes": 14408,
+      "sha256": "0e13cccd0f581e009234e0f4b9997a894316405312aeef5060a90805f789368a"
+    },
+    "explorer/surface-selftest.js": {
+      "bytes": 3225,
+      "sha256": "39293665c664623c8cccf054f90bb51acbc26c92c05f2d06e729d238c2eb8f0d"
+    },
+    "explorer/vendor/rhino3dm/LICENSE": {
+      "bytes": 1083,
+      "sha256": "f57a154acc534312b7e7b2bff29748bcef5e1202713b891759a027f7c015f0bd"
+    },
+    "explorer/vendor/rhino3dm/PROVENANCE.md": {
+      "bytes": 881,
+      "sha256": "baaaa64c4a60a554c8ee2a664c67b6c2309f666b05bbf87fa7db470cbfcbdd29"
+    },
+    "explorer/vendor/rhino3dm/rhino3dm.js": {
+      "bytes": 126991,
+      "sha256": "7f3b804afda0cafbf456d5729f2980a6011cf90e882b8156c674e78696e2005a"
+    },
+    "explorer/vendor/rhino3dm/rhino3dm.wasm": {
+      "bytes": 2670316,
+      "sha256": "18cb4b663cda1167d510e49c7780808a14f8ea3b609bcf751f5b6062e7692df2"
+    },
+    "explorer/workflow-selftest.js": {
+      "bytes": 16484,
+      "sha256": "cacf881459724ee11ce869cdd98cfe6ba4601658ffcb9cd494025593c9d13d24"
+    },
+    "generated/backdrop_manifest.json": {
+      "bytes": 1774,
+      "sha256": "26f56dc46062c56323fa8522d4ac4886d69dc27860f76a7be59f1711f0e3c465"
+    },
+    "generated/extension_labels.json": {
+      "bytes": 1274,
+      "sha256": "9d1cc6027df37d718769c24c1eba1319e892a48ddbd8ca433165e29449378805"
+    },
+    "generated/extension_manifest.json": {
+      "bytes": 7533,
+      "sha256": "a0cc10dd856c5bdb3b1e8ed2eb876037f6be42d29d6ef39700a9fd099c3fe1b3"
+    },
+    "generated/labels.json": {
+      "bytes": 1428,
+      "sha256": "53b4b2319a8631fcd6bf3c7e90759922104e38c40dfeeb28d600a8bed0a5c020"
+    },
+    "generated/manifest.json": {
+      "bytes": 6007,
+      "sha256": "fda95b42523259a361e6d1e248169a79d1e0f4aa93b463b3fa1fea25c11a0420"
+    },
+    "generated/unified_backdrop.bin": {
+      "bytes": 435492,
+      "sha256": "e80117eb6b7d560fa783b5055221a55d4b3985e98e58aa4f728c667ab629d2cf"
+    },
+    "generated/unified_buildings.bin": {
+      "bytes": 9722568,
+      "sha256": "67318a6196abb1daded227ba584154210b69118ab068b01aec72d9bc8b96b2be"
+    },
+    "generated/unified_buildings_index.json": {
+      "bytes": 891705,
+      "sha256": "4b9c8468a886e5fd98b5060f88454f3aa9d2792579d84cc46a0d47882cd6ed25"
+    },
+    "generated/unified_ext_buildings.bin": {
+      "bytes": 16473300,
+      "sha256": "695eed8e32374924854382d919d70c7e43a7dd225abefcc76550b34e91b74ddd"
+    },
+    "generated/unified_ext_buildings_index.json": {
+      "bytes": 4534560,
+      "sha256": "897c99a1b4a2db1da869836aa699de8cd531aa38fc4377aff8d5b388011797e0"
+    },
+    "generated/unified_manifest.json": {
+      "bytes": 8597,
+      "sha256": "73edf36dc0de8808474fec7faad2d23115b7cfa3aafde8d89852e045c6fcb70b"
+    },
+    "generated/unified_parks.bin": {
+      "bytes": 4666848,
+      "sha256": "539b24c882f89b957731df6d4046ee99d07d5bddb46497d919e49c8b1696458a"
+    },
+    "generated/unified_roads.bin": {
+      "bytes": 482304,
+      "sha256": "05b7268d1c5666eb826cab7e765208af5cd8fec5b1fadef609ec41c317dd939f"
+    },
+    "generated/unified_shoreline.bin": {
+      "bytes": 70200,
+      "sha256": "ac58d857e4fe4e5107d6160381240155781893f428dcfa61e32fadb4d55a734b"
+    },
+    "generated/unified_terrain.bin": {
+      "bytes": 1104396,
+      "sha256": "e20da5c0c8ca2f3afa9323ca70c47d71ae979c36bd2fd19ba5819101de38545e"
+    },
+    "generated/unified_water.bin": {
+      "bytes": 275088,
+      "sha256": "a7395ea08048891de69ae2e75529772ec6dabf29372e0a538cdeca03cf775255"
+    },
+    "index.html": {
+      "bytes": 356,
+      "sha256": "59dd86f3385ebbe62853b1cc0edd9049ca334b86a2ae9faa1da8d6e25508c76e"
+    },
+    "runtime-config.js": {
+      "bytes": 111,
+      "sha256": "c6ca15bc31e666dc647acb570a4bff5f02911fbb02168c403ca28acc1cd6ac7c"
+    },
+    "synthetic/app.js": {
+      "bytes": 33879,
+      "sha256": "d76fbdfa54ede11c74a8e576e2973d7be229410649a7fea1a032935c5033897c"
+    },
+    "synthetic/index.html": {
+      "bytes": 7649,
+      "sha256": "97c0632d34c01b542b8e9dd16b807fd2b782f641e222355601c8a68b4c9c23f1"
+    },
+    "synthetic/selftest.js": {
+      "bytes": 8000,
+      "sha256": "e51ead3777d92ee5d74cee3207a34c45b9cd7142121a5db692cda0ad35320d0f"
+    },
+    "synthetic/style.css": {
+      "bytes": 8447,
+      "sha256": "fc52ace7b0978c2aaecc8cf9840fd703e1feeddb0a3ef7e3674d45e8f362aa24"
+    }
+  }
+}
