@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vancouver View-Protection Lab — Site Explorer</title>
+<script>if (location.protocol === 'file:') document.documentElement.classList.add('local-entry');</script>
+<style>
+  #local-entry { display: none; }
+  html.local-entry body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #edf2ef; color: #223b32; font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  html.local-entry body > :not(#local-entry) { display: none !important; }
+  html.local-entry #local-entry { display: block; box-sizing: border-box; width: min(540px, calc(100% - 40px)); margin: 30px auto; padding: 30px; background: white; border: 1px solid #d6e0da; border-radius: 14px; }
+  #local-entry h1 { font-size: 23px; margin-top: 0; }
+  #local-entry p { margin: 12px 0; }
+  #local-entry a { color: #24665e; }
+  #local-entry button { background: #24665e; color: white; border: 0; border-radius: 7px; font: inherit; padding: 9px 15px; cursor: pointer; }
+  #local-entry code { font-size: 13px; overflow-wrap: anywhere; }
+</style>
+<script src="../runtime-config.js"></script>
+</head>
+<body>
+<section id="local-entry" aria-labelledby="local-entry-title">
+  <h1 id="local-entry-title">Open Vancouver Site Explorer</h1>
+  <p id="local-entry-status" role="status">Connecting to your local project…</p>
+  <p>This tool loads its model and calculations through a local server.</p>
+  <ol><li>In Finder, open your <b>vancouver-tall-view-tool</b> project folder.</li><li>Double-click <b>Open Work in Progress.command</b> and keep its Terminal window open.</li><li>Return here and choose <b>Retry connection</b>.</li></ol>
+  <button id="retry-local-entry" type="button">Retry connection</button>
+  <p><a id="local-app-link" href="http://127.0.0.1:8765/">Open the running app</a><br><code>http://127.0.0.1:8765/</code></p>
+</section>
+<header class="app-header">
+  <div class="title-block">
+    <h1>Vancouver View-Protection Lab <span class="thin">Site Explorer</span></h1>
+    <p class="subtitle">City context · your proposal · mapped view corridors · live massing studies. Teaching tool, not a protected-view assessment.</p>
+  </div>
+  <label class="style-picker">Palette<select id="scene-style" aria-label="View palette"><option value="classic">Studio</option><option value="illustrated">Illustrated garden</option><option value="collage">Landscape collage</option></select></label>
+  <div class="status-chips" id="status-chips">
+    <span class="chip" title="Building heights come from OpenStreetMap tags, floor counts or type estimates; the 2022 extraction date is user-reported.">Heights: OSM, unverified</span>
+    <span class="chip" id="chip-terrain" title="Terrain source, resolution and vertical datum are not recorded. Elevations are model-relative.">Terrain z: model-relative</span>
+    <span class="chip" id="chip-cones" title="City open-data 'view-cones' polygons mapped with a transformation checked against 8 OSM footprints (max 0.1 m). By-laws are authoritative; cone heights are not in the data.">View cones: plan only, heights unknown</span>
+    <span class="chip hidden" id="chip-extension" title="Context generated outside the supplied model from current OpenStreetMap footprints (© OpenStreetMap contributors, ODbL; heights by the supplied model's rules) on SRTM terrain, so that all 24 view origins have ground. Distinct tint; lower provenance.">Extension: OSM + SRTM, all origins covered</span>
+    <span class="chip hidden" id="chip-backdrop" title="Distant mountains from NASA SRTM via Open Topo Data, drawn only in the observer view; approximate, never checked against.">Mountains: SRTM backdrop, approximate</span>
+    <a class="chip chip-link" href="/synthetic/" title="The tested synthetic box-vs-boundary checker">Synthetic checker ↗</a>
+  </div>
+</header>
+
+<div id="error-strip" class="error-strip hidden" role="alert"></div>
+
+<main class="layout">
+  <button id="btn-panel-toggle" class="panel-toggle" type="button" aria-expanded="true">Controls</button>
+  <aside id="panel" class="panel">
+    <div class="study-save"><label>Study name<input id="study-name" type="text" value="Untitled study" maxlength="80"></label><div class="row"><button id="btn-save-study" class="btn" type="button">Save study</button><button id="btn-open-study" class="btn" type="button">Open study</button></div><input id="file-study" class="hidden" type="file" accept=".json"><p class="small muted">Save a JSON beside your iteration notes. Imported geometry must be reopened separately.</p></div>
+    <nav class="steps" id="steps">
+      <button class="step-tab active" data-step="1" type="button"><b>1</b> Explore</button>
+      <button class="step-tab" data-step="2" type="button"><b>2</b> View study</button>
+      <button class="step-tab" data-step="3" type="button"><b>3</b> Report</button>
+    </nav>
+    <p id="hint" class="hint">Loading the context model…</p>
+
+    <!-- STAGE 1: EXPLORE (site, proposal and viewpoint together) -->
+    <section class="step-body" data-step="1">
+      <details class="sec" id="sec-site" open>
+        <summary>Site <span class="pill" id="pill-site">not set</span></summary>
+        <p class="small muted">Choose a starting point, or draw a study boundary in plan. Open ground in this model does not establish vacancy or ownership.</p>
+        <label class="field">Go to a place<select id="place-select"><option value="">Choose a neighbourhood…</option></select></label>
+        <div class="site-actions">
+          <button id="btn-open-ground" class="btn primary" type="button">Choose open ground</button>
+          <button id="btn-draw-site" class="btn" type="button">Draw boundary</button>
+          <button id="btn-find-building" class="btn" type="button">Select a building</button>
+        </div>
+        <div id="draw-actions" class="row wrap hidden"><button id="btn-finish-boundary" class="btn primary" type="button">Finish boundary</button><button id="btn-undo-vertex" class="btn" type="button">Undo vertex</button><button id="btn-cancel-boundary" class="btn" type="button">Cancel</button></div>
+        <div id="site-metrics" class="site-metrics" aria-live="polite"><b>Start with a place</b><span>Plan view makes boundaries and distances easier to read.</span></div>
+        <p id="site-info" class="data muted">No site yet.</p>
+        <details class="why"><summary>Size a rectangular study area</summary><div class="grid2"><label>East–west (m)<input id="site-width" type="number" min="2" max="2000" value="60"></label><label>North–south (m)<input id="site-depth" type="number" min="2" max="2000" value="80"></label></div><button id="btn-rectangle" class="btn" type="button">Apply around site point</button></details>
+        <p id="building-info" class="data muted small hidden"></p>
+        <button id="btn-replace-building" class="btn hidden" type="button">Use building area as study site</button>
+        <div id="replacement-controls" class="hidden"><p id="replacement-info" class="small"></p><label class="checks"><span><input id="chk-existing" type="checkbox"> Compare existing (hide proposal)</span></label><button id="btn-restore-buildings" class="btn" type="button">Restore all buildings</button></div>
+        <div class="row wrap"><button id="btn-fit-site" class="btn" type="button" disabled>Focus site</button><button id="btn-clear-site" class="btn" type="button">Clear site</button><button id="btn-reset-context" class="btn" type="button">Fit whole city</button></div>
+      </details>
+
+      <details class="sec" id="sec-proposal" open>
+        <summary>Proposal <span class="pill" id="pill-proposal">none</span></summary>
+        <div class="seg small">
+          <button id="pmode-boxes" class="seg-btn active" type="button">Stacked blocks</button>
+          <button id="pmode-import" class="seg-btn" type="button">My model (.3dm / .obj)</button>
+        </div>
+        <div id="boxes-ui">
+          <div id="parts-list"></div>
+          <div class="row wrap"><button id="btn-add-part" class="btn" type="button">+ Block</button><span class="small muted">Blocks stack; the lowest sits on the terrain at the site. Offsets are from the site point. Positive rotation turns clockwise in plan, around each block’s centre.</span></div>
+        </div>
+        <div id="import-ui" class="hidden">
+          <input id="file-import" type="file" accept=".3dm,.obj">
+          <div class="grid2">
+            <label>.obj units<select id="obj-units"><option value="1">metres</option><option value="0.001">millimetres</option><option value="0.01">centimetres</option><option value="0.3048">feet</option><option value="0.0254">inches</option></select></label>
+            <label>Placement<select id="import-placement"><option value="site">Centre on site, base on terrain</option><option value="file">File coordinates = model coordinates</option></select></label>
+          </div>
+          <p id="import-info" class="data muted small">No model loaded. .3dm is read on the local server (rhino3dm, read-only); .obj in this browser.</p>
+        </div>
+        <p id="proposal-info" class="data muted small"></p>
+      </details>
+
+      <details class="sec" id="sec-view">
+        <summary>Viewpoint <span class="pill" id="pill-view">none</span></summary>
+        <label class="field">Protected public view (Table 1)<select id="view-select"><option value="">— none —</option></select></label>
+        <p id="view-info" class="data muted small">Choose a public place to see its corridor and look toward your proposal.</p>
+        <div class="row wrap">
+          <button id="btn-observer-at-origin" class="btn primary" type="button" disabled>View from here</button>
+          <button id="btn-look" class="btn" type="button">Look toward proposal</button>
+          <button id="btn-clear-observer" class="btn" type="button">Clear observer</button>
+        </div>
+        <p id="obs-info" class="data muted small">No observer. Use the <b>Observer</b> tool to stand anywhere on the terrain.</p>
+        <div class="grid3">
+          <label>Eye height (m)<input id="eye-h" type="number" min="0.5" max="100" step="0.1" value="1.6"></label>
+          <label>Field of view (°)<input id="fov" type="number" min="20" max="110" step="1" value="60"></label>
+          <label class="checks"><span><input id="chk-wedge" type="checkbox" checked> Camera wedge</span><span><input id="chk-cones" type="checkbox"> All cone outlines</span><span><input id="chk-backdrop" type="checkbox" checked> Mountains</span></label>
+        </div>
+        <details class="why"><summary>Where this comes from</summary><p class="small muted">Table 1 of the <i>Public Views Guidelines</i> (pp.4–6) lists 24 views. Plan cones: City open-data <code>view-cones</code> polygons, mapped with a transformation checked against 8 OpenStreetMap footprints (max 0.1 m). Origins are the polygon apexes; the by-laws are authoritative. Cone heights are not published in the dataset and are never invented. The wedge is exploratory camera geometry, not the City cone. Mountains: NASA SRTM via Open Topo Data, approximate, observer view only.</p></details>
+      </details>
+    </section>
+
+    <!-- STAGE 2: LIVE VIEW STUDY -->
+    <section class="step-body hidden" data-step="2">
+      <div class="study-intro"><h2>Views at your proposal</h2><span class="live-indicator">Updates as you edit</span></div>
+      <p id="view-study-summary" class="data">Place a proposal to find overlapping mapped view corridors.</p>
+      <button id="btn-study-site" class="btn primary" type="button">Choose a site</button>
+      <div id="view-matches" class="view-matches"></div>
+      <p class="small muted">Corridor overlap is measured in plan. City height limits are unavailable here, so this does not establish a policy conflict.</p>
+      <details class="height-study" open>
+        <summary>Height experiment <span class="small muted">optional</span></summary>
+        <label class="checks"><span><input id="enable-height-study" type="checkbox"> Compare with a study ceiling</span></label>
+        <p class="small muted">Set your own design assumption, then adjust the proposal to explore clearance. This ceiling is not a City height limit.</p>
+        <input id="chk-bz-unknown" type="checkbox" checked hidden aria-hidden="true" tabindex="-1">
+        <div id="height-controls" class="hidden">
+          <label class="field">Study ceiling above proposal base (m)<input id="ceiling-height" type="number" min="0" max="500" step="0.5" value="120"></label>
+          <input id="ceiling-slider" type="range" min="0" max="500" step="0.5" value="120" aria-label="Study ceiling height slider">
+          <p id="ceiling-reference" class="small muted"></p>
+          <div id="height-meter" class="height-meter" aria-hidden="true"><i id="height-meter-fill"></i><span id="height-meter-line"></span></div>
+          <details class="why"><summary>Elevation and test area</summary>
+            <label class="field">Ceiling elevation (model z, m)<input id="check-bz" type="number" step="0.5" value="120"></label>
+            <p class="small muted">Editing this elevation fixes the ceiling to the model datum. Editing the height above base makes it follow the proposal base.</p>
+            <label class="field">Evaluation area<select id="check-area"><option value="footprint">Whole proposal</option><option value="custom">Custom rectangle</option></select></label>
+            <div id="custom-area" class="grid2 hidden">
+              <label>x min<input id="ca-xmin" type="number" step="1"></label><label>x max<input id="ca-xmax" type="number" step="1"></label>
+              <label>y min<input id="ca-ymin" type="number" step="1"></label><label>y max<input id="ca-ymax" type="number" step="1"></label>
+            </div>
+          </details>
+        </div>
+      </details>
+      <p id="check-live-status" class="small" role="status">No study ceiling set.</p>
+      <div id="check-error" class="hidden" role="alert"><p id="check-error-text"></p><button id="btn-run-check" class="btn" type="button">Retry calculation</button></div>
+      <div id="check-result" class="check-result hidden">
+        <div class="badge-row"><span id="check-badge" class="badge">—</span><span class="small muted">your assumption · not a policy verdict</span></div>
+        <p id="check-numbers" class="data small"></p>
+        <p id="check-explain" class="small"></p>
+        <details class="why"><summary>Part-by-part measurements</summary><div id="check-parts" class="small"></div></details>
+      </div>
+      <div id="study-proposal-slot"></div>
+      <details class="why" id="clauses-details"><summary>Guideline text and interpretation</summary><div id="clause-cards" class="cards"></div></details>
+    </section>
+
+    <!-- STAGE 3: REPORT -->
+    <section class="step-body hidden" data-step="3">
+      <div class="row wrap">
+        <button id="btn-download-pdf" class="btn primary" type="button">Download PDF report</button>
+        <button id="btn-download-state" class="btn" type="button">JSON</button>
+        <button id="btn-download-image" class="btn" type="button">Current view PNG</button>
+      </div>
+      <p id="pdf-status" class="small muted">The PDF follows a fixed template: summary, city overview and plan, observer view, two inspection views, the live view study and assumptions, and the unverified items.</p>
+      <div id="report" class="report small"></div>
+    </section>
+
+    <div class="row nav-row">
+      <button id="btn-back" class="btn" type="button">‹ Back</button>
+      <span id="step-status" class="small muted"></span>
+      <button id="btn-next" class="btn primary" type="button">Next ›</button>
+    </div>
+
+    <details id="technical" class="details">
+      <summary>Technical details</summary>
+      <ul class="small caveats">
+        <li>Context: source Rhino geometry is preserved. When rebuilt context is available, ground and water are replaced and building bases are aligned to it; XY footprints and building heights are retained.</li>
+        <li>View cones and origins: City open-data polygons converted with an equirectangular mapping about the earth anchor, identified from and checked against 8 OpenStreetMap footprints (max residual 0.1 m). Absolute accuracy inherits OpenStreetMap's.</li>
+        <li>Heights: the model's z datum is unknown; cone heights are not in the open data; the mountain backdrop is SRTM-derived and approximate. Every check is a declared hypothesis.</li>
+        <li>Clauses 3.1.2–3.1.5 describe exceptions that people decide; the tool reports numbers and flags them.</li>
+      </ul>
+      <pre id="tech-json" class="tech-json">{}</pre>
+    </details>
+  </aside>
+
+  <section id="viewport" class="viewport">
+    <canvas id="gl" tabindex="0" aria-label="3D view of the Vancouver study model"></canvas>
+    <div id="labels" class="labels" aria-hidden="true"></div>
+    <div class="vp-toolbar">
+      <div class="seg tiny" id="modes">
+        <button id="mode-overview" class="seg-btn active" type="button" title="Orbit the city">City</button>
+        <button id="mode-observer" class="seg-btn" type="button" title="Look from the observer">Observer</button>
+        <button id="mode-inspect" class="seg-btn" type="button" title="Orbit the proposal">Inspect</button>
+        <button id="btn-plan" class="seg-btn" type="button" title="North-up orthographic plan · drag to pan">Plan</button>
+      </div>
+      <div class="seg tiny" id="tools">
+        <button id="tool-site" class="seg-btn active" type="button" title="Click terrain to set the site">Site point</button>
+        <button id="tool-boundary" class="seg-btn" type="button" title="Draw a measured study boundary in plan">Boundary</button>
+        <button id="tool-observer" class="seg-btn" type="button" title="Click terrain to place the observer">Observer</button>
+        <button id="tool-identify" class="seg-btn" type="button" title="Click a building to identify it">Identify</button>
+      </div>
+      <div class="seg tiny hidden" id="inspect-shortcuts">
+        <button id="cam-n" class="seg-btn" type="button" title="From north">N</button><button id="cam-e" class="seg-btn" type="button" title="From east">E</button>
+        <button id="cam-s" class="seg-btn" type="button" title="From south">S</button><button id="cam-w" class="seg-btn" type="button" title="From west">W</button>
+        <button id="cam-opposite" class="seg-btn" type="button" title="Opposite side">Opp.</button><button id="cam-top" class="seg-btn" type="button" title="From above">Top</button>
+      </div>
+    </div>
+    <div class="view-utilities">
+      <button id="btn-focus" class="btn" type="button" title="Fit the current study site">Focus site</button>
+      <button id="btn-zoom-in" class="btn" type="button" aria-label="Zoom in">+</button><button id="btn-zoom-out" class="btn" type="button" aria-label="Zoom out">−</button>
+      <details class="layer-menu"><summary>Layers</summary><label><input id="layer-labels" type="checkbox" checked> Place labels</label><label><input id="layer-roads" type="checkbox" checked> Roads</label><label><input id="layer-sources" type="checkbox"> Distinguish data sources</label><label><input id="layer-extent" type="checkbox"> Coverage outlines</label><p>Context heights remain approximate. Source tint is a display aid.</p></details>
+    </div>
+    <div id="live-feedback" class="live-feedback hidden" role="status"></div>
+    <div id="scene-status" class="scene-status">Study scene</div>
+    <div id="view-caption" class="view-caption"></div>
+    <div id="map-scale" class="map-scale hidden"><span id="scale-label"></span><i id="scale-line"></i><small>plan distance</small></div>
+    <div id="north-cue" class="north-cue" aria-label="North">N <span>↑</span></div>
+    <div id="draw-floating-actions" class="draw-floating-actions hidden"><button id="btn-finish-map" class="btn primary" type="button">Finish boundary</button><button id="btn-cancel-map" class="btn" type="button">Cancel</button></div>
+    <div id="draw-prompt" class="draw-prompt hidden" role="status">Click corners · Enter to finish · Esc to cancel</div>
+    <div id="legend" class="legend">
+      <span><i class="sw sw-city"></i>Existing</span><span><i class="sw sw-terrain"></i>Terrain</span><span><i class="sw sw-water"></i>Water</span>
+      <span><i class="sw sw-proposal"></i>Proposal</span><span><i class="sw sw-observer"></i>Observer · ray</span><span><i class="sw sw-wedge"></i>Camera wedge</span>
+      <span><i class="sw sw-cone"></i>View cone</span><span><i class="sw sw-plane"></i>Study ceiling</span><span><i class="sw sw-site"></i>Study boundary</span>
+    </div>
+    <div id="inset-frame" class="inset-frame hidden"><span>observer ▶ proposal</span></div>
+    <div id="loading" class="loading"><div class="bar"><div id="progress" class="fill"></div></div><div id="loading-text">Loading…</div></div>
+  </section>
+</main>
+
+<footer class="statusbar"><span id="status-coverage">Coverage: —</span></footer>
+
+<script>
+  var entry = document.createElement('script');
+  entry.src = location.protocol === 'file:' ? './entry.js' : (window.VANCOUVER_STATIC ? new URL('explorer/entry.js', window.VANCOUVER_STATIC_BASE).href : '/explorer/entry.js');
+  document.body.appendChild(entry);
+</script>
+</body>
+</html>
