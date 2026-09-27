@@ -1,0 +1,310 @@
+{
+ "generated_at": "2026-09-24T15:17:32-07:00",
+ "generator": "tools/build_unified_context.py",
+ "target_extent_model_m": [
+  -3238.63,
+  -5083.1,
+  5674.22,
+  3939.94
+ ],
+ "purpose": "coherent full-extent context for visual exploration; original Rhino and prior generated assets remain untouched",
+ "sources": {
+  "supplied_context": {
+   "file": "sources/Vancouver DT context.3dm",
+   "sha256": "c1614721fd113a448ecbf4f390e6374d5d879fff46229ee711efc69c3ab432ca"
+  },
+  "extension_context": {
+   "manifest": "generated_assets/context/extension_manifest.json",
+   "source": "current OpenStreetMap via Overpass"
+  },
+  "elevation": {
+   "file": "external_data/extension_terrain/srtm_grid.json",
+   "sha256": "3f05632a0bae62c470108ef38f351cce8fcf1f5b3c0caf5d2049456d14f44c6f",
+   "source": "NASA SRTM 1 arc-second via Open Topo Data, sampled about 60 m; EGM96 heights"
+  },
+  "coastline": {
+   "ways": 143,
+   "vertices": 6372,
+   "polygonized_faces": 6,
+   "sea_faces": 1,
+   "sea_area_m2": 20948468.04,
+   "source_file": "external_data/shoreline/coastline_overpass.json",
+   "sha256": "c4c35067dabbe9d9928e371d7d4ec2934634f0483639120e2c6168c503ec365e",
+   "source": "OpenStreetMap natural=coastline via Overpass; (c) OpenStreetMap contributors, ODbL",
+   "classification": "OSM directed coastline: land on left, sea on right"
+  },
+  "inland_water": {
+   "closed_water_ways": 92,
+   "water_way_file": "external_data/shoreline/inland_water_ways.json",
+   "water_way_sha256": "a55e8af2094e22af5468d40a5a7c7f91229c289702962cdba4a85a9657518887",
+   "source_water_meshes": [
+    "water.bin",
+    "extension_water.bin"
+   ],
+   "legacy_marine_components_discarded": 1,
+   "inland_parts": 84,
+   "inland_area_m2": 288936.15,
+   "note": "Closed OSM water ways plus supplied/extension OSM-derived water faces; full multipolygon relation metadata unavailable from bounded Overpass response"
+  }
+ },
+ "methods": {
+  "terrain": {
+   "grid_vertices": 22800,
+   "grid_cells": 22499,
+   "input_triangles": 44998,
+   "fully_under_water": 10860,
+   "partially_clipped": 2101,
+   "replacement_triangles": 9299,
+   "method": "SRTM grid, each cell divided southwest-to-northeast; exact XY subtraction of mapped water; clipped vertices sampled on the same triangular planes"
+  },
+  "water": {
+   "ocean_triangles": 2932,
+   "inland_triangles": 2799,
+   "ocean_level_m": 0.0,
+   "inland_level_method": "flat per polygon at the minimum nearby SRTM shoreline sample, approximate EGM96 height",
+   "inland_level_range_m": [
+    0.0,
+    125.69
+   ]
+  },
+  "parks": {
+   "input_triangles": 19134,
+   "output_triangles": 97226,
+   "method": "clip existing park mesh triangles to unified land triangles; drape vertices 0.15 m above matching terrain"
+  },
+  "roads": {
+   "land_segments": 20091,
+   "source_water_crossing_segments_retained_at_source_z": 5,
+   "method": "split roads at terrain triangles and drape 0.5 m above land; preserve supplied-source Z for water crossings as bridge/deck context"
+  },
+  "buildings": {
+   "count": 9897,
+   "on_land": 9837,
+   "on_ocean": 57,
+   "on_inland_water": 3,
+   "median_z_shift_m": 0.48,
+   "min_z_shift_m": -12.24,
+   "max_z_shift_m": 21.61,
+   "old_ground_sources": {
+    "terrain": 9836,
+    "water": 57,
+    "height_tag": 4,
+    "mesh_minimum": 0
+   },
+   "elevated_parts_preserved": 568,
+   "method": "uniform per-object Z translation by new triangulated surface minus old triangulated surface at footprint-bbox centre; original clearance, XY/index topology and height span retained"
+  },
+  "ext_buildings": {
+   "count": 51510,
+   "on_land": 51508,
+   "on_ocean": 2,
+   "on_inland_water": 0,
+   "median_z_shift_m": 0.0,
+   "min_z_shift_m": -0.98,
+   "max_z_shift_m": 2.21,
+   "old_ground_sources": {
+    "terrain": 51282,
+    "water": 0,
+    "height_tag": 228,
+    "mesh_minimum": 0
+   },
+   "elevated_parts_preserved": 54,
+   "method": "uniform per-object Z translation by new triangulated surface minus old triangulated surface at footprint-bbox centre; original clearance, XY/index topology and height span retained"
+  },
+  "backdrop": {
+   "kept_source_triangles": 23772,
+   "fully_removed_inside_target": 108,
+   "clipped_at_target": 32,
+   "result_triangles": 23822,
+   "method": "source SRTM mountain backdrop clipped to outside the full unified target rectangle"
+  }
+ },
+ "files": {
+  "terrain": {
+   "file": "unified_terrain.bin",
+   "byte_length": 1104396,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 50697
+   },
+   "indices": {
+    "dtype": "uint32",
+    "byte_offset": 608364,
+    "count": 124008,
+    "triangles": 41336
+   },
+   "bbox": [
+    -3238.6298828125,
+    -5083.10009765625,
+    0.0,
+    5674.22021484375,
+    3939.93994140625,
+    129.0
+   ]
+  },
+  "water": {
+   "file": "unified_water.bin",
+   "byte_length": 275088,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 17193
+   },
+   "indices": {
+    "dtype": "uint32",
+    "byte_offset": 206316,
+    "count": 17193,
+    "triangles": 5731
+   },
+   "bbox": [
+    -3238.6298828125,
+    -4993.03515625,
+    0.0,
+    5674.22021484375,
+    3939.93994140625,
+    125.6921615600586
+   ]
+  },
+  "parks": {
+   "file": "unified_parks.bin",
+   "byte_length": 4666848,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 291678
+   },
+   "indices": {
+    "dtype": "uint32",
+    "byte_offset": 3500136,
+    "count": 291678,
+    "triangles": 97226
+   },
+   "bbox": [
+    -3238.6298828125,
+    -5083.10009765625,
+    0.15000000596046448,
+    5674.22021484375,
+    3939.93994140625,
+    129.14999389648438
+   ]
+  },
+  "roads": {
+   "file": "unified_roads.bin",
+   "byte_length": 482304,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 40192
+   },
+   "segments": 20096
+  },
+  "shoreline": {
+   "file": "unified_shoreline.bin",
+   "byte_length": 70200,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 5850
+   },
+   "segments": 2925
+  },
+  "buildings": {
+   "file": "unified_buildings.bin",
+   "byte_length": 9722568,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 505090
+   },
+   "indices": {
+    "dtype": "uint32",
+    "byte_offset": 6061080,
+    "count": 915372,
+    "triangles": 305124
+   },
+   "bbox": [
+    -3238.340087890625,
+    -2350.3701171875,
+    -1.4997308254241943,
+    2623.830078125,
+    3939.909912109375,
+    241.53436279296875
+   ]
+  },
+  "ext_buildings": {
+   "file": "unified_ext_buildings.bin",
+   "byte_length": 16473300,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 590318
+   },
+   "indices": {
+    "dtype": "uint32",
+    "byte_offset": 7083816,
+    "count": 2347371,
+    "triangles": 782457
+   },
+   "bbox": [
+    -3255.902587890625,
+    -5135.4990234375,
+    0.0,
+    5778.7578125,
+    3962.806396484375,
+    152.6031951904297
+   ]
+  },
+  "backdrop": {
+   "file": "unified_backdrop.bin",
+   "byte_length": 435492,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 12469
+   },
+   "indices": {
+    "dtype": "uint32",
+    "byte_offset": 149628,
+    "count": 71466,
+    "triangles": 23822
+   },
+   "bbox": [
+    -17377.265625,
+    1912.93017578125,
+    0.0,
+    20422.734375,
+    30712.9296875,
+    1728.0
+   ]
+  }
+ },
+ "buildings_index": "unified_buildings_index.json",
+ "ext_buildings_index": "unified_ext_buildings_index.json",
+ "counts": {
+  "terrain_triangles": 41336,
+  "water_triangles": 5731,
+  "park_triangles": 97226,
+  "road_segments": 20096,
+  "shoreline_segments": 2925,
+  "buildings": 9897,
+  "ext_buildings": 51510
+ },
+ "caveats": [
+  "Visual context only; not a survey, parcel map, building entitlement or protected-view ruling.",
+  "SRTM uses EGM96 heights; the supplied Rhino terrain vertical datum is unknown and remains available unchanged for comparison.",
+  "The final 23 m at the north target edge repeats the cached SRTM edge elevations; east edge is interpolated within cached samples.",
+  "Ocean geometry follows current directed OSM coastline; inland water includes current closed OSM ways and previously exported OSM-derived water faces. Multipolygon relation metadata was unavailable from the bounded query.",
+  "Buildings retain supplied OSM footprint meshes and estimated/measured heights; only whole-object Z placement changes.",
+  "Roads over water retain supplied source Z as approximate bridge/deck hints; bridge geometry is not verified."
+ ],
+ "elapsed_s": 13.8
+}
