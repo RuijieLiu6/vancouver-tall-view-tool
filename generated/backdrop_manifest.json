@@ -1,0 +1,57 @@
+{
+ "generated_at": "2026-09-23T22:13:57-07:00",
+ "generator": "tools/fetch_backdrop_dem.py",
+ "source": {
+  "source": "NASA SRTM 1 arc-second (SRTMGL1), public domain, served by Open Topo Data (https://www.opentopodata.org), dataset 'srtm30m', bilinear interpolation",
+  "api": "https://api.opentopodata.org/v1/srtm30m",
+  "accessed": "2026-09-23T22:13:57-07:00",
+  "bounds_lonlat": [
+   -123.36,
+   49.3,
+   -122.84,
+   49.56
+  ],
+  "spacing_m": 300.0,
+  "points": 12319,
+  "vertical_reference": "SRTM heights are metres above the EGM96 geoid; the supplied model's vertical datum is unknown, so the backdrop is approximate",
+  "use_in_tool": "distant mountain backdrop drawn only in the observer view; never used in any check; cells inside the supplied model's extent are dropped"
+ },
+ "transformation": "equirectangular about the earth anchor: x = (lon - -123.1207) * 111320.0 * cos(49.2827 deg), y = (lat - 49.2827) * 110574.0; checked against 8 OpenStreetMap footprints, max residual 0.1 m; absolute accuracy inherits OpenStreetMap",
+ "grid": {
+  "lat0": 49.3,
+  "lon0": -123.36,
+  "dlat": 0.002713115198871344,
+  "dlon": 0.004131259844630107,
+  "nx": 127,
+  "ny": 97,
+  "spacing_m": 300.0
+ },
+ "files": {
+  "backdrop": {
+   "file": "backdrop.bin",
+   "byte_length": 434772,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 12319
+   },
+   "indices": {
+    "dtype": "uint32",
+    "byte_offset": 147828,
+    "count": 71736,
+    "triangles": 23912
+   },
+   "bbox": [
+    -17377.3,
+    1912.9,
+    0.0,
+    20422.7,
+    30712.9,
+    1728.0
+   ],
+   "max_elevation_m": 1728.0
+  }
+ },
+ "note": "APPROXIMATE distant backdrop (SRTM via Open Topo Data), observer view only, not part of the supplied model, never checked against"
+}

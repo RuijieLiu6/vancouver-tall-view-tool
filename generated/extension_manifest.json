@@ -1,0 +1,296 @@
+{
+ "generated_at": "2026-09-24T14:42:08-07:00",
+ "generator": "tools/build_extension_context.py",
+ "purpose": "context EXTENSION outside the supplied model so that all 24 Table 1 view origins lie on a placement surface; distinct provenance from the supplied model",
+ "target_extent_model_m": [
+  -3238.63,
+  -5083.1,
+  5674.22,
+  3939.94
+ ],
+ "supplied_extent_model_m": [
+  -3238.63,
+  -2351.63,
+  2632.6,
+  3939.94
+ ],
+ "sources": {
+  "buildings_water_parks_roads_labels": {
+   "source": "OpenStreetMap via Overpass API (https://overpass-api.de/api/interpreter), current data at access time; (c) OpenStreetMap contributors, Open Database License (ODbL)",
+   "accessed": "2026-09-24T00:05:03-07:00",
+   "tiles_model_xy": [
+    [
+     -3238.63,
+     -5083.1,
+     -267.67999999999984,
+     -2351.63
+    ],
+    [
+     -267.67999999999984,
+     -5083.1,
+     2703.2700000000004,
+     -2351.63
+    ],
+    [
+     2703.2700000000004,
+     -5083.1,
+     5674.22,
+     -2351.63
+    ],
+    [
+     2632.6,
+     -2351.63,
+     5674.22,
+     794.1549999999997
+    ],
+    [
+     2632.6,
+     794.1549999999997,
+     5674.22,
+     3939.9399999999996
+    ]
+   ],
+   "tiles_latlon": [
+    "49.236730,-123.165299,49.261433,-123.124386",
+    "49.236730,-123.124386,49.261433,-123.083474",
+    "49.236730,-123.083474,49.261433,-123.042561",
+    "49.261433,-123.084447,49.289882,-123.042561",
+    "49.289882,-123.084447,49.318332,-123.042561"
+   ],
+   "queries": {
+    "buildings": "way[building] out geom",
+    "extras": "way natural=water | landuse=reservoir | leisure=park | highway motorway..tertiary; node place neighbourhood/suburb/quarter"
+   },
+   "note": "the supplied model was built from 2022 OSM data; this extension uses current OSM, so newer or removed buildings differ"
+  },
+  "terrain": {
+   "source": "NASA SRTM 1 arc-second (SRTMGL1), public domain, served by Open Topo Data (https://www.opentopodata.org), dataset 'srtm30m', bilinear interpolation",
+   "api": "https://api.opentopodata.org/v1/srtm30m",
+   "accessed": "2026-09-24T00:02:24-07:00",
+   "spacing_m": 60.0,
+   "points": 22650,
+   "target_model_extent": [
+    -3238.63,
+    -5083.1,
+    5674.22,
+    3939.94
+   ],
+   "vertical_reference": "metres above the EGM96 geoid; the supplied model's vertical datum is unknown, so the extension terrain is approximate",
+   "use_in_tool": "terrain of the context EXTENSION outside the supplied model's extent (placement surface there); never used in any check"
+  }
+ },
+ "terrain_seam": {
+  "edge": "straight south edge of the supplied land terrain",
+  "method": "triangulated ribbon between unchanged SRTM grid row and exact exported Rhino terrain edge heights; visualization and exploratory placement only",
+  "source_edge_y_m": -2288.88,
+  "srtm_row_y_m": -2323.0999999999585,
+  "width_m": 34.21999999995842,
+  "source_edge_vertices": 16,
+  "matched_edge_vertices": 113,
+  "srtm_edge_vertices": 113,
+  "triangles": 224,
+  "srtm_minus_source_at_edge_m": {
+   "min": -1.63,
+   "median": 0.62,
+   "max": 7.01
+  }
+ },
+ "terrain_water_mask": {
+  "method": "subtract union of rendered OSM water triangles from generated SRTM/seam terrain in XY; interpolate elevations on clipped triangle planes",
+  "engine": "Shapely 2.1.2 / GEOS 3.13.1",
+  "area_m2": 54016.33,
+  "rendered_water_triangles": 516,
+  "fully_removed_triangles": 7,
+  "partially_clipped_triangles": 90,
+  "generated_triangles": 771
+ },
+ "height_rules": {
+  "measured": "OSM height tag (metres)",
+  "levels": "3.2 m x building:levels + 1.0 m when levels >= 2, else 3.2 m x levels (matched 60 of 61 sampled supplied-model buildings)",
+  "estimated": "per building type from the supplied model",
+  "type_table": {
+   "yes": 9.0,
+   "sports_centre": 9.0,
+   "civic": 9.0,
+   "industrial": 8.0,
+   "apartments": 12.0,
+   "commercial": 10.0,
+   "retail": 6.0,
+   "residential": 10.0,
+   "terrace": 9.0,
+   "detached": 8.0,
+   "house": 8.0,
+   "roof": 5.0,
+   "office": 15.0,
+   "barracks": 9.0,
+   "school": 9.0,
+   "parking": 10.0,
+   "church": 12.0,
+   "theatre": 9.0,
+   "hospital": 9.0,
+   "garage": 3.0,
+   "hotel": 20.0,
+   "shed": 3.0,
+   "garages": 3.0,
+   "university": 9.0,
+   "semidetached_house": 8.0,
+   "service": 9.0,
+   "government": 9.0,
+   "allotment_house": 9.0,
+   "tower": 9.0,
+   "military": 9.0,
+   "kiosk": 3.0,
+   "carport": 3.0,
+   "bell_tower": 9.0,
+   "construction": 9.0,
+   "fire_station": 9.0,
+   "warehouse": 8.0,
+   "convent": 9.0,
+   "temple": 9.0,
+   "mosque": 9.0,
+   "greenhouse": 9.0,
+   "outbuilding": 9.0,
+   "stable": 9.0,
+   "college": 9.0
+  },
+  "default_type_height_m": 9.0
+ },
+ "counts": {
+  "buildings": 51510,
+  "building_triangles": 782457,
+  "by_height_source": {
+   "measured": 3940,
+   "levels": 2955,
+   "estimated": 44615
+  },
+  "skipped": {
+   "inside_supplied": 62,
+   "open_or_tiny": 0,
+   "degenerate": 0,
+   "relation_or_node": 0
+  },
+  "terrain_triangles": 25630,
+  "water_polygons": 19,
+  "park_polygons": 97,
+  "road_segments": 5669,
+  "labels": 16
+ },
+ "caveats": [
+  "current OSM vs the supplied model's 2022 extraction",
+  "SRTM ~60 m terrain (EGM96) vs the supplied terrain of unknown source and datum; a south-edge display ribbon interpolates the gap, while the irregular east/coastal edge remains unstitched",
+  "bases are draped at the footprint centroid; multipolygon relations are skipped",
+  "extension buildings are context only; never a site by themselves"
+ ],
+ "files": {
+  "buildings": {
+   "file": "extension_buildings.bin",
+   "byte_length": 16473300,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 590318
+   },
+   "indices": {
+    "dtype": "uint32",
+    "byte_offset": 7083816,
+    "count": 2347371,
+    "triangles": 782457
+   },
+   "bbox": [
+    -3255.902680022121,
+    -5135.498856000115,
+    0.0,
+    5778.757787658966,
+    3962.8062990004537,
+    152.6031885771102
+   ]
+  },
+  "terrain": {
+   "file": "extension_terrain.bin",
+   "byte_length": 609828,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 25189
+   },
+   "indices": {
+    "dtype": "uint32",
+    "byte_offset": 302268,
+    "count": 76890,
+    "triangles": 25630
+   },
+   "bbox": [
+    -3238.630000000371,
+    -5083.0999999999585,
+    0.0,
+    5701.369999999308,
+    3916.9000000003743,
+    129.0
+   ]
+  },
+  "water": {
+   "file": "extension_water.bin",
+   "byte_length": 12840,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 554
+   },
+   "indices": {
+    "dtype": "uint32",
+    "byte_offset": 6648,
+    "count": 1548,
+    "triangles": 516
+   },
+   "bbox": [
+    -1193.4616038274992,
+    -4993.035314400118,
+    22.9310767959164,
+    5089.926751359741,
+    3340.1862197998103,
+    126.0489504019779
+   ]
+  },
+  "parks": {
+   "file": "extension_parks.bin",
+   "byte_length": 37704,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 1668
+   },
+   "indices": {
+    "dtype": "uint32",
+    "byte_offset": 20016,
+    "count": 4422,
+    "triangles": 1474
+   },
+   "bbox": [
+    -3253.0851375683987,
+    -5176.4775803997345,
+    7.5164185302182975,
+    6455.570698285748,
+    4039.8542622004597,
+    115.0338231863299
+   ]
+  },
+  "roads": {
+   "file": "extension_roads.bin",
+   "byte_length": 136056,
+   "positions": {
+    "dtype": "float32",
+    "components": 3,
+    "byte_offset": 0,
+    "count": 11338
+   },
+   "segments": 5669
+  }
+ },
+ "buildings_index": "extension_buildings_index.json",
+ "labels": "extension_labels.json",
+ "elapsed_s": 2.2
+}
