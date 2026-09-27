@@ -1,0 +1,1350 @@
+{
+  "available": true,
+  "cones": [
+    {
+      "view_number": "10",
+      "name": "Granville Island",
+      "description": "View of Hollyburn Mountain and Mount Strachan from Granville Island",
+      "url": "https://vancouver.ca/home-property-development/granville-island-public-view.aspx",
+      "object_id": 3,
+      "polygon_model_xy": [
+        [
+          -976.91,
+          -1134.69
+        ],
+        [
+          -1850.13,
+          1081.46
+        ],
+        [
+          -1532.16,
+          1180.92
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.1341528438892,
+          49.27243820488794
+        ],
+        [
+          -123.1461779243708,
+          49.29248038850457
+        ],
+        [
+          -123.14179921663418,
+          49.293379880811656
+        ]
+      ],
+      "origin_model_xy": [
+        -976.91,
+        -1134.69
+      ],
+      "origin_latlon": [
+        49.2724382,
+        -123.1341528
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 8.0 deg, far edge 2382 m); the by-law origin point is authoritative",
+      "spread_deg": 8.02,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "20",
+      "name": "Granville Street",
+      "description": "View of Wizard Peak to Capilano Mountain from Granville St and West Broadway",
+      "url": "https://vancouver.ca/home-property-development/granville-street-public-view.aspx",
+      "object_id": 7,
+      "polygon_model_xy": [
+        [
+          -1297.02,
+          -2127.9
+        ],
+        [
+          -1543.05,
+          1373.55
+        ],
+        [
+          -910.44,
+          1361.85
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.1385610253247,
+          49.263455874222295
+        ],
+        [
+          -123.14194914170342,
+          49.29512201782899
+        ],
+        [
+          -123.13323755866425,
+          49.295016167557655
+        ]
+      ],
+      "origin_model_xy": [
+        -1297.02,
+        -2127.9
+      ],
+      "origin_latlon": [
+        49.2634559,
+        -123.138561
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 10.3 deg, far edge 3511 m); the by-law origin point is authoritative",
+      "spread_deg": 10.34,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "21",
+      "name": "Commercial Drive",
+      "description": "View of Crown and Grouse Mountain from Commercial Drive and West Broadway",
+      "url": "https://vancouver.ca/home-property-development/commercial-drive-public-view.aspx",
+      "object_id": 18,
+      "polygon_model_xy": [
+        [
+          3708.92,
+          -2265.74
+        ],
+        [
+          3149.48,
+          966.74
+        ],
+        [
+          3836.63,
+          1011.64
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.06962490922585,
+          49.26220926320878
+        ],
+        [
+          -123.07732887834986,
+          49.291442953000676
+        ],
+        [
+          -123.06786624893613,
+          49.29184894853095
+        ]
+      ],
+      "origin_model_xy": [
+        3708.92,
+        -2265.74
+      ],
+      "origin_latlon": [
+        49.2622093,
+        -123.0696249
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 12.1 deg, far edge 3281 m); the by-law origin point is authoritative",
+      "spread_deg": 12.05,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "22",
+      "name": "Main Street",
+      "description": "View of Dam Mountain to Mount Fromme from Main St and Kingsway",
+      "url": "https://vancouver.ca/home-property-development/main-street-public-view.aspx",
+      "object_id": 8,
+      "polygon_model_xy": [
+        [
+          1434.52,
+          -2038.07
+        ],
+        [
+          1374.73,
+          1161.58
+        ],
+        [
+          2027.46,
+          1107.14
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.10094536333015,
+          49.26426829698579
+        ],
+        [
+          -123.10176877341598,
+          49.293204961313826
+        ],
+        [
+          -123.09278010298003,
+          49.29271266941086
+        ]
+      ],
+      "origin_model_xy": [
+        1434.52,
+        -2038.07
+      ],
+      "origin_latlon": [
+        49.2642683,
+        -123.1009454
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 11.7 deg, far edge 3201 m); the by-law origin point is authoritative",
+      "spread_deg": 11.75,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "27.1",
+      "name": "Trout Lake",
+      "description": "View of the Lions from Trout Lake",
+      "url": "https://vancouver.ca/home-property-development/trout-lake-public-view.aspx",
+      "object_id": 2,
+      "polygon_model_xy": [
+        [
+          4273.57,
+          -3139.61
+        ],
+        [
+          2422.8,
+          933.65
+        ],
+        [
+          3120.21,
+          1181.43
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.0618492660659,
+          49.25430627624202
+        ],
+        [
+          -123.08733595135025,
+          49.29114370081236
+        ],
+        [
+          -123.07773206555679,
+          49.29338449733466
+        ]
+      ],
+      "origin_model_xy": [
+        4273.57,
+        -3139.61
+      ],
+      "origin_latlon": [
+        49.2543063,
+        -123.0618493
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 9.5 deg, far edge 4474 m); the by-law origin point is authoritative",
+      "spread_deg": 9.49,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "27.2",
+      "name": "Trout Lake",
+      "description": "View of Crown Mountain to Mount Seymour from Trout Lake",
+      "url": "https://vancouver.ca/home-property-development/trout-lake-public-view.aspx",
+      "object_id": 5,
+      "polygon_model_xy": [
+        [
+          4273.57,
+          -3139.61
+        ],
+        [
+          3119.8,
+          1182.93
+        ],
+        [
+          7034.31,
+          387.37
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.0618492660659,
+          49.25430627624202
+        ],
+        [
+          -123.07773760463192,
+          49.293398114077334
+        ],
+        [
+          -123.02383145076276,
+          49.28620326866524
+        ]
+      ],
+      "origin_model_xy": [
+        4273.57,
+        -3139.61
+      ],
+      "origin_latlon": [
+        49.2543063,
+        -123.0618493
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 53.0 deg, far edge 4479 m); the by-law origin point is authoritative",
+      "spread_deg": 53.0,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "28",
+      "name": "Clinton Park",
+      "description": "View of the North Shore mountains from midpoint of the south berm overlooking the park",
+      "url": "https://vancouver.ca/home-property-development/clinton-park-public-view.aspx",
+      "object_id": 10,
+      "polygon_model_xy": [
+        [
+          5074.22,
+          -1443.93
+        ],
+        [
+          3908.9,
+          822.68
+        ],
+        [
+          3834.88,
+          966.6
+        ],
+        [
+          3819.13,
+          997.22
+        ],
+        [
+          5169.76,
+          1298.36
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.05082361262755,
+          49.26964152856014
+        ],
+        [
+          -123.0668710147081,
+          49.290140108885716
+        ],
+        [
+          -123.06789043028526,
+          49.291441634347095
+        ],
+        [
+          -123.06810733300084,
+          49.291718551371275
+        ],
+        [
+          -123.0495079580285,
+          49.29444199971474
+        ]
+      ],
+      "origin_model_xy": [
+        5074.22,
+        -1443.93
+      ],
+      "origin_latlon": [
+        49.2696415,
+        -123.0508236
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 29.2 deg, far edge 2744 m); the by-law origin point is authoritative",
+      "spread_deg": 29.2,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "3.2.1",
+      "name": "Queen Elizabeth Park",
+      "description": "View of Mount Strachanm, Hollyburn Mountain and the Lions from QE Park",
+      "url": "https://vancouver.ca/home-property-development/queen-elizabeth-park-public-view.aspx",
+      "object_id": 4,
+      "polygon_model_xy": [
+        [
+          600.09,
+          -4483.1
+        ],
+        [
+          -1374.91,
+          1361.14
+        ],
+        [
+          -285.28,
+          1620.16
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.11243625254127,
+          49.242156152884434
+        ],
+        [
+          -123.13963374341328,
+          49.29500976370673
+        ],
+        [
+          -123.12462851899599,
+          49.29735223859254
+        ]
+      ],
+      "origin_model_xy": [
+        600.09,
+        -4483.1
+      ],
+      "origin_latlon": [
+        49.2421562,
+        -123.1124363
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 10.4 deg, far edge 6169 m); the by-law origin point is authoritative",
+      "spread_deg": 10.42,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "3.2.2",
+      "name": "Queen Elizabeth Park",
+      "description": "View of Magic and Wizard Peak from QE Park",
+      "url": "https://vancouver.ca/home-property-development/queen-elizabeth-park-public-view.aspx",
+      "object_id": 16,
+      "polygon_model_xy": [
+        [
+          600.05,
+          -4482.76
+        ],
+        [
+          -185.26,
+          930.84
+        ],
+        [
+          141.85,
+          968.01
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.11243676765505,
+          49.242159140601764
+        ],
+        [
+          -123.12325125554477,
+          49.29111822211504
+        ],
+        [
+          -123.11874662427614,
+          49.29145444749888
+        ]
+      ],
+      "origin_model_xy": [
+        600.05,
+        -4482.76
+      ],
+      "origin_latlon": [
+        49.2421591,
+        -123.1124368
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 3.4 deg, far edge 5470 m); the by-law origin point is authoritative",
+      "spread_deg": 3.45,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "3.2.3",
+      "name": "Queen Elizabeth Park",
+      "description": "View of Capilano and Crown Mountains from QE Park",
+      "url": "https://vancouver.ca/home-property-development/queen-elizabeth-park-public-view.aspx",
+      "object_id": 23,
+      "polygon_model_xy": [
+        [
+          600.09,
+          -4483.1
+        ],
+        [
+          141.73,
+          968.29
+        ],
+        [
+          1267.04,
+          946.98
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.11243625254127,
+          49.242156152884434
+        ],
+        [
+          -123.1187482860911,
+          49.29145695814021
+        ],
+        [
+          -123.1032517246872,
+          49.291264175750555
+        ]
+      ],
+      "origin_model_xy": [
+        600.09,
+        -4483.1
+      ],
+      "origin_latlon": [
+        49.2421562,
+        -123.1124363
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 11.8 deg, far edge 5471 m); the by-law origin point is authoritative",
+      "spread_deg": 11.81,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "3.2.4",
+      "name": "Queen Elizabeth Park",
+      "description": "View of Grouse and Fromme Mountains from QE Park",
+      "url": "https://vancouver.ca/home-property-development/queen-elizabeth-park-public-view.aspx",
+      "object_id": 13,
+      "polygon_model_xy": [
+        [
+          600.09,
+          -4483.1
+        ],
+        [
+          1266.02,
+          946.79
+        ],
+        [
+          2434.96,
+          671.56
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.11243625254127,
+          49.242156152884434
+        ],
+        [
+          -123.10326586400696,
+          49.29126247382458
+        ],
+        [
+          -123.08716852304654,
+          49.28877337933276
+        ]
+      ],
+      "origin_model_xy": [
+        600.09,
+        -4483.1
+      ],
+      "origin_latlon": [
+        49.2421562,
+        -123.1124363
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 12.6 deg, far edge 5471 m); the by-law origin point is authoritative",
+      "spread_deg": 12.6,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "9.1",
+      "name": "Cambie Street",
+      "description": "View of Lions from the Walking Figures plaza behind Broadway-City Hall Station",
+      "url": "https://vancouver.ca/home-property-development/cambie-street-public-view.aspx",
+      "object_id": 20,
+      "polygon_model_xy": [
+        [
+          441.02,
+          -2272.04
+        ],
+        [
+          -323.83,
+          865.71
+        ],
+        [
+          -236.23,
+          889.0
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.11462675883394,
+          49.26215234834192
+        ],
+        [
+          -123.12515935380434,
+          49.290529237656834
+        ],
+        [
+          -123.12395307678865,
+          49.29073985894735
+        ]
+      ],
+      "origin_model_xy": [
+        441.02,
+        -2272.04
+      ],
+      "origin_latlon": [
+        49.2621523,
+        -123.1146268
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 1.6 deg, far edge 3233 m); the by-law origin point is authoritative",
+      "spread_deg": 1.61,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "9.2",
+      "name": "Cambie Street",
+      "description": "View of Beauty Peak to Grouse Mountain from the Walking Figures plaza behind Broadway-City Hall Station",
+      "url": "https://vancouver.ca/home-property-development/cambie-street-public-view.aspx",
+      "object_id": 14,
+      "polygon_model_xy": [
+        [
+          441.02,
+          -2272.04
+        ],
+        [
+          475.64,
+          1068.26
+        ],
+        [
+          1206.27,
+          980.11
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.11462675883394,
+          49.26215234834192
+        ],
+        [
+          -123.1141499989656,
+          49.29236106491776
+        ],
+        [
+          -123.10408865561196,
+          49.29156388043109
+        ]
+      ],
+      "origin_model_xy": [
+        441.02,
+        -2272.04
+      ],
+      "origin_latlon": [
+        49.2621523,
+        -123.1146268
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 12.6 deg, far edge 3341 m); the by-law origin point is authoritative",
+      "spread_deg": 12.65,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "A",
+      "name": "Alder Terrace",
+      "description": "View of Mount Seymour from Alder Terrace viewing platform",
+      "url": "https://vancouver.ca/home-property-development/alder-terrace-public-view.aspx",
+      "object_id": 12,
+      "polygon_model_xy": [
+        [
+          -815.03,
+          -1709.15
+        ],
+        [
+          1235.32,
+          458.88
+        ],
+        [
+          1372.9,
+          320.99
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.1319236956185,
+          49.26724291103936
+        ],
+        [
+          -123.10368862347345,
+          49.28684994202205
+        ],
+        [
+          -123.101794024412,
+          49.28560293586471
+        ]
+      ],
+      "origin_model_xy": [
+        -815.03,
+        -1709.15
+      ],
+      "origin_latlon": [
+        49.2672429,
+        -123.1319237
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 3.7 deg, far edge 2985 m); the by-law origin point is authoritative",
+      "spread_deg": 3.74,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "B1",
+      "name": "Charleson Seawall",
+      "description": "View of the Lions from the Seawall at Charlson Park",
+      "url": "https://vancouver.ca/home-property-development/charleson-seawall-public-view.aspx",
+      "object_id": 21,
+      "polygon_model_xy": [
+        [
+          -278.37,
+          -1672.4
+        ],
+        [
+          -1008.38,
+          1317.68
+        ],
+        [
+          -767.97,
+          1365.94
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.12453335941721,
+          49.26757529801141
+        ],
+        [
+          -123.1345863174266,
+          49.29461668127991
+        ],
+        [
+          -123.1312756143935,
+          49.29505320264231
+        ]
+      ],
+      "origin_model_xy": [
+        -278.37,
+        -1672.4
+      ],
+      "origin_latlon": [
+        49.2675753,
+        -123.1245334
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 4.6 deg, far edge 3078 m); the by-law origin point is authoritative",
+      "spread_deg": 4.57,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "B2",
+      "name": "Charleson Seawall",
+      "description": "View of the Crown Mountain from the Seawall at Charlson Park",
+      "url": "https://vancouver.ca/home-property-development/charleson-seawall-public-view.aspx",
+      "object_id": 15,
+      "polygon_model_xy": [
+        [
+          -278.37,
+          -1672.4
+        ],
+        [
+          102.77,
+          1381.19
+        ],
+        [
+          207.74,
+          1366.83
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.12453335941721,
+          49.26757529801141
+        ],
+        [
+          -123.11928483269531,
+          49.29519111954504
+        ],
+        [
+          -123.11783930590076,
+          49.295061239144
+        ]
+      ],
+      "origin_model_xy": [
+        -278.37,
+        -1672.4
+      ],
+      "origin_latlon": [
+        49.2675753,
+        -123.1245334
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 2.0 deg, far edge 3078 m); the by-law origin point is authoritative",
+      "spread_deg": 1.97,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "D",
+      "name": "Heather Bay",
+      "description": "View of the Lions from the Seawall at the Heather Civic Marina",
+      "url": "https://vancouver.ca/home-property-development/heather-bay-public-view.aspx",
+      "object_id": 22,
+      "polygon_model_xy": [
+        [
+          100.63,
+          -1661.88
+        ],
+        [
+          -684.17,
+          1417.4
+        ],
+        [
+          -437.23,
+          1469.59
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.1193142778024,
+          49.26767041099611
+        ],
+        [
+          -123.13012157881553,
+          49.29551860221755
+        ],
+        [
+          -123.12672104478426,
+          49.29599056111433
+        ]
+      ],
+      "origin_model_xy": [
+        100.63,
+        -1661.88
+      ],
+      "origin_latlon": [
+        49.2676704,
+        -123.1193143
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 4.6 deg, far edge 3178 m); the by-law origin point is authoritative",
+      "spread_deg": 4.55,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "E",
+      "name": "Cambie Bridge",
+      "description": "View of Mount Seymour from Cambie Bridge",
+      "url": "https://vancouver.ca/home-property-development/cambie-bridge-public-view.aspx",
+      "object_id": 9,
+      "polygon_model_xy": [
+        [
+          430.22,
+          -1440.84
+        ],
+        [
+          2317.57,
+          869.91
+        ],
+        [
+          2833.3,
+          333.3
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.11477553322416,
+          49.269669491591586
+        ],
+        [
+          -123.08878502878417,
+          49.29056720657535
+        ],
+        [
+          -123.0816830435616,
+          49.28571423637108
+        ]
+      ],
+      "origin_model_xy": [
+        430.22,
+        -1440.84
+      ],
+      "origin_latlon": [
+        49.2696695,
+        -123.1147755
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 14.3 deg, far edge 2987 m); the by-law origin point is authoritative",
+      "spread_deg": 14.32,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "G1",
+      "name": "Olympic Shipyard Pier",
+      "description": "View of Coliseum Mountain and Lynn Peaks from Olympic Village Shipyard Pier",
+      "url": "https://vancouver.ca/home-property-development/olympic-village-shipyard-pier-public-view.aspx",
+      "object_id": 19,
+      "polygon_model_xy": [
+        [
+          940.21,
+          -1143.04
+        ],
+        [
+          1803.29,
+          1080.39
+        ],
+        [
+          2123.86,
+          928.85
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.10775244081057,
+          49.27236267022767
+        ],
+        [
+          -123.0958670886902,
+          49.29247074620232
+        ],
+        [
+          -123.09145257048814,
+          49.29110028897587
+        ]
+      ],
+      "origin_model_xy": [
+        940.21,
+        -1143.04
+      ],
+      "origin_latlon": [
+        49.2723627,
+        -123.1077524
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 8.5 deg, far edge 2386 m); the by-law origin point is authoritative",
+      "spread_deg": 8.52,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "G2",
+      "name": "Olympic Shipyard Pier",
+      "description": "View of Curate Peak to Mount Seymour from Olympic Village Shipyard Pier",
+      "url": "https://vancouver.ca/home-property-development/olympic-village-shipyard-pier-public-view.aspx",
+      "object_id": 1,
+      "polygon_model_xy": [
+        [
+          940.21,
+          -1143.04
+        ],
+        [
+          2284.29,
+          829.29
+        ],
+        [
+          2560.77,
+          610.97
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.10775244081057,
+          49.27236267022767
+        ],
+        [
+          -123.08924329432266,
+          49.290199829316634
+        ],
+        [
+          -123.08543592199017,
+          49.28822546264175
+        ]
+      ],
+      "origin_model_xy": [
+        940.21,
+        -1143.04
+      ],
+      "origin_latlon": [
+        49.2723627,
+        -123.1077524
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 8.5 deg, far edge 2388 m); the by-law origin point is authoritative",
+      "spread_deg": 8.46,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "H",
+      "name": "Olympic Plaza Stage",
+      "description": "View of Grouse Mountain, Mount Fromm and Mount Burwell from the Olympic Plaza stage",
+      "url": "https://vancouver.ca/home-property-development/olympic-plaza-public-view.aspx",
+      "object_id": 6,
+      "polygon_model_xy": [
+        [
+          1034.82,
+          -1260.69
+        ],
+        [
+          1352.88,
+          903.02
+        ],
+        [
+          1938.24,
+          732.36
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.1064496662284,
+          49.27129863283315
+        ],
+        [
+          -123.10206972358291,
+          49.29086662048132
+        ],
+        [
+          -123.09400877497637,
+          49.28932323103015
+        ]
+      ],
+      "origin_model_xy": [
+        1034.82,
+        -1260.69
+      ],
+      "origin_latlon": [
+        49.2712986,
+        -123.1064497
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 16.0 deg, far edge 2188 m); the by-law origin point is authoritative",
+      "spread_deg": 16.02,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "J1",
+      "name": "Creekside Park",
+      "description": "View of Lions from Creekside Park",
+      "url": "https://vancouver.ca/home-property-development/creekside-park-public-view.aspx",
+      "object_id": 11,
+      "polygon_model_xy": [
+        [
+          1287.23,
+          -833.16
+        ],
+        [
+          648.17,
+          1102.84
+        ],
+        [
+          783.25,
+          1142.01
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.10297367663784,
+          49.27516516517493
+        ],
+        [
+          -123.11177412350047,
+          49.29267377983227
+        ],
+        [
+          -123.10991400143487,
+          49.293028034925634
+        ]
+      ],
+      "origin_model_xy": [
+        1287.23,
+        -833.16
+      ],
+      "origin_latlon": [
+        49.2751652,
+        -123.1029737
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 4.0 deg, far edge 2039 m); the by-law origin point is authoritative",
+      "spread_deg": 3.95,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "J2",
+      "name": "Creekside Park",
+      "description": "View of Beauty Peak to the west side of Mount Fromme from Creekside Park",
+      "url": "https://vancouver.ca/home-property-development/creekside-park-public-view.aspx",
+      "object_id": 24,
+      "polygon_model_xy": [
+        [
+          1287.23,
+          -833.16
+        ],
+        [
+          1185.24,
+          1193.41
+        ],
+        [
+          1780.25,
+          1144.76
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.10297367663784,
+          49.27516516517493
+        ],
+        [
+          -123.10437817024287,
+          49.29349287256195
+        ],
+        [
+          -123.09618436291586,
+          49.29305285529873
+        ]
+      ],
+      "origin_model_xy": [
+        1287.23,
+        -833.16
+      ],
+      "origin_latlon": [
+        49.2751652,
+        -123.1029737
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 16.9 deg, far edge 2038 m); the by-law origin point is authoritative",
+      "spread_deg": 16.88,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    },
+    {
+      "view_number": "K",
+      "name": "Drake Street",
+      "description": "View of City Hall from seawall at end of Drake Street",
+      "url": "https://vancouver.ca/home-property-development/drake-street-public-view.aspx",
+      "object_id": 17,
+      "polygon_model_xy": [
+        [
+          19.05,
+          -1255.14
+        ],
+        [
+          521.22,
+          -2406.77
+        ],
+        [
+          460.33,
+          -2405.28
+        ]
+      ],
+      "polygon_lonlat": [
+        [
+          -123.12043762439285,
+          49.271348828168435
+        ],
+        [
+          -123.11352233454441,
+          49.26093388894076
+        ],
+        [
+          -123.11436092095295,
+          49.260947331050936
+        ]
+      ],
+      "origin_model_xy": [
+        19.05,
+        -1255.14
+      ],
+      "origin_latlon": [
+        49.2713488,
+        -123.1204376
+      ],
+      "origin_derivation": "apex vertex of the open-data cone polygon (interior angle 2.6 deg, far edge 1256 m); the by-law origin point is authoritative",
+      "spread_deg": 2.57,
+      "origin_inside_model_extent": true,
+      "height_boundary": null,
+      "height_boundary_status": "UNKNOWN: not in the open-data polygons; not fabricated"
+    }
+  ],
+  "provenance": {
+    "dataset": "view-cones",
+    "portal": "City of Vancouver Open Data Portal",
+    "dataset_page": "https://opendata.vancouver.ca/explore/dataset/view-cones/",
+    "metadata_api": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/view-cones",
+    "export_api": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/view-cones/exports/geojson",
+    "accessed": "2026-09-23T21:27:17-07:00",
+    "license": "Open Government Licence - Vancouver",
+    "license_url": "https://opendata.vancouver.ca/pages/licence/",
+    "portal_modified": "2026-09-21T13:35:44+00:00",
+    "portal_data_processed": "2026-09-21T13:35:44+00:00",
+    "records": 24,
+    "title": "View cones",
+    "description": "<div><p>This dataset contains the boundaries of the City's protected views.  Development within the polygons is limited in height to maintain these public views. </p><p>\n<strong>Note:</strong> To understand view cone implications on individual sites, please email <a href=\"mailto:views@vancouver.caviews@vancouver.ca\">views@vancouver.ca</a></p></div> <h3>Data currency</h3><div><p>The extract for this dataset is updated as needed. There may be no change in data content from one week to the next because there is no change in source data. Priorities and resources will also determine how fast a change in reality is reflected in the database.  </p></div> <h3>Data accuracy</h3><div><p>These view corridors have been entered accurately, but the authoritative source for these is the City's bylaws.</p></div> <h3>Websites for further information</h3><div><ul><li>\n<a href=\"https://vancouver.ca/your-government/vanmap.aspx\">VanMap - View Cones </a></li><li>\n<a href=\"http://vancouver.ca/home-property-development/protecting-vancouvers-views.aspx\">Protecting Vancouver's views</a></li></ul></div>",
+    "sha256_geojson": "843383585c4a732ed18f9624628651b7aaa478cb195cfc1e8a3ef2aefd215980",
+    "crs": "GeoJSON export, WGS84 longitude/latitude (EPSG:4326) as served by the portal",
+    "portal_caveat_verbatim": "The extract for this dataset is updated as needed. There may be no change in data content from one week to the next because there is no change in source data. (portal description)",
+    "use_in_tool": "plan outlines of the view cones and candidate origin positions, mapped into model coordinates with the checked earth-anchor transformation; the heights of the horizontal lower boundaries are NOT in this dataset unless a field says so",
+    "city_view_pages": {
+      "status": "listed in the dataset's url field; automated access returned HTTP 403 (Cloudflare) on 2026-09-23, so they were NOT read",
+      "verification_needed": "Origin elevations and cone height data have not been verified against the per-view pages; no height data from those pages is used here."
+    },
+    "heights": "The dataset holds plan polygons only. No maximum geodetic heights, no origin elevations, no datum statement. The tool therefore never uses a City height; the guideline check runs on a user-declared hypothetical boundary."
+  },
+  "transformation": {
+    "anchor": {
+      "latitude": 49.2827,
+      "longitude": -123.1207,
+      "model_xy": [
+        0.0,
+        0.0
+      ],
+      "north": "+Y"
+    },
+    "method": "equirectangular about the earth anchor: x = (lon - -123.1207) * 111320.0 * cos(49.2827 deg), y = (lat - 49.2827) * 110574.0; checked against 8 OpenStreetMap footprints, max residual 0.1 m; absolute accuracy inherits OpenStreetMap",
+    "check_points": [
+      {
+        "osm_id": "w184923406",
+        "model": [
+          -516.5,
+          -148.4
+        ],
+        "projected": [
+          -516.48,
+          -148.37
+        ],
+        "residual_m": [
+          0.02,
+          0.03
+        ],
+        "distance_m": 0.04
+      },
+      {
+        "osm_id": "w311569755",
+        "model": [
+          -587.8,
+          606.9
+        ],
+        "projected": [
+          -587.86,
+          606.9
+        ],
+        "residual_m": [
+          -0.06,
+          -0.0
+        ],
+        "distance_m": 0.06
+      },
+      {
+        "osm_id": "w49288682",
+        "model": [
+          -526.6,
+          -781.6
+        ],
+        "projected": [
+          -526.59,
+          -781.61
+        ],
+        "residual_m": [
+          0.01,
+          -0.01
+        ],
+        "distance_m": 0.02
+      },
+      {
+        "osm_id": "w136258928",
+        "model": [
+          1027.6,
+          165.4
+        ],
+        "projected": [
+          1027.55,
+          165.37
+        ],
+        "residual_m": [
+          -0.05,
+          -0.03
+        ],
+        "distance_m": 0.05
+      },
+      {
+        "osm_id": "w143524452",
+        "model": [
+          855.7,
+          -885.4
+        ],
+        "projected": [
+          855.66,
+          -885.42
+        ],
+        "residual_m": [
+          -0.04,
+          -0.02
+        ],
+        "distance_m": 0.04
+      },
+      {
+        "osm_id": "w223173357",
+        "model": [
+          -959.4,
+          -20.2
+        ],
+        "projected": [
+          -959.47,
+          -20.19
+        ],
+        "residual_m": [
+          -0.07,
+          0.01
+        ],
+        "distance_m": 0.08
+      },
+      {
+        "osm_id": "w311594529",
+        "model": [
+          -869.8,
+          816.7
+        ],
+        "projected": [
+          -869.87,
+          816.71
+        ],
+        "residual_m": [
+          -0.07,
+          0.01
+        ],
+        "distance_m": 0.07
+      },
+      {
+        "osm_id": "w160286918",
+        "model": [
+          -1333.0,
+          -2174.2
+        ],
+        "projected": [
+          -1333.0,
+          -2174.18
+        ],
+        "residual_m": [
+          0.0,
+          0.02
+        ],
+        "distance_m": 0.02
+      }
+    ],
+    "max_residual_m": 0.08,
+    "vertical": "not transformed: model z datum unknown (ASSET_INVENTORY U2)"
+  },
+  "extent_used": [
+    -3238.63,
+    -5083.1,
+    0.0,
+    5674.22,
+    3939.94,
+    246.61
+  ],
+  "extension_present": true
+}

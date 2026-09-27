@@ -1,0 +1,144 @@
+{
+  "anchor": {
+    "latitude": 49.2827,
+    "longitude": -123.1207,
+    "model_xy": [
+      0.0,
+      0.0
+    ],
+    "north": "+Y"
+  },
+  "method": "equirectangular about the earth anchor: x = (lon - -123.1207) * 111320.0 * cos(49.2827 deg), y = (lat - 49.2827) * 110574.0; checked against 8 OpenStreetMap footprints, max residual 0.1 m; absolute accuracy inherits OpenStreetMap",
+  "check_points": [
+    {
+      "osm_id": "w184923406",
+      "model": [
+        -516.5,
+        -148.4
+      ],
+      "projected": [
+        -516.48,
+        -148.37
+      ],
+      "residual_m": [
+        0.02,
+        0.03
+      ],
+      "distance_m": 0.04
+    },
+    {
+      "osm_id": "w311569755",
+      "model": [
+        -587.8,
+        606.9
+      ],
+      "projected": [
+        -587.86,
+        606.9
+      ],
+      "residual_m": [
+        -0.06,
+        -0.0
+      ],
+      "distance_m": 0.06
+    },
+    {
+      "osm_id": "w49288682",
+      "model": [
+        -526.6,
+        -781.6
+      ],
+      "projected": [
+        -526.59,
+        -781.61
+      ],
+      "residual_m": [
+        0.01,
+        -0.01
+      ],
+      "distance_m": 0.02
+    },
+    {
+      "osm_id": "w136258928",
+      "model": [
+        1027.6,
+        165.4
+      ],
+      "projected": [
+        1027.55,
+        165.37
+      ],
+      "residual_m": [
+        -0.05,
+        -0.03
+      ],
+      "distance_m": 0.05
+    },
+    {
+      "osm_id": "w143524452",
+      "model": [
+        855.7,
+        -885.4
+      ],
+      "projected": [
+        855.66,
+        -885.42
+      ],
+      "residual_m": [
+        -0.04,
+        -0.02
+      ],
+      "distance_m": 0.04
+    },
+    {
+      "osm_id": "w223173357",
+      "model": [
+        -959.4,
+        -20.2
+      ],
+      "projected": [
+        -959.47,
+        -20.19
+      ],
+      "residual_m": [
+        -0.07,
+        0.01
+      ],
+      "distance_m": 0.08
+    },
+    {
+      "osm_id": "w311594529",
+      "model": [
+        -869.8,
+        816.7
+      ],
+      "projected": [
+        -869.87,
+        816.71
+      ],
+      "residual_m": [
+        -0.07,
+        0.01
+      ],
+      "distance_m": 0.07
+    },
+    {
+      "osm_id": "w160286918",
+      "model": [
+        -1333.0,
+        -2174.2
+      ],
+      "projected": [
+        -1333.0,
+        -2174.18
+      ],
+      "residual_m": [
+        0.0,
+        0.02
+      ],
+      "distance_m": 0.02
+    }
+  ],
+  "max_residual_m": 0.08,
+  "vertical": "not transformed: model z datum unknown (ASSET_INVENTORY U2)"
+}

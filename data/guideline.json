@@ -1,0 +1,275 @@
+{
+  "source": {
+    "title": "Public Views Guidelines",
+    "publisher": "City of Vancouver",
+    "approved": "2024-07-10 (Council)",
+    "amended": "2026-02-04",
+    "pages": 8,
+    "local_copy": "sources/guidelines-public-views.pdf",
+    "accessed": "2026-09-22",
+    "text_extract": "research/source_extracts/guidelines-public-views.txt",
+    "status": "Council-approved design guideline, not a by-law; wording is 'should' and 'may be considered' (s.2, p.3)"
+  },
+  "definition": {
+    "ref": "s.2 Application and Intent",
+    "page": 3,
+    "quote": "Protected public views are comprised of three parts: an origin point, view cone(s), and view subject(s). A view origin point is a specific location within an accessible, public place from which an obstructed view to the view subject(s) is secured. A view cone is the technical tool used to locate where and how development should be shaped to ensure that the view remains sufficiently protected. View cones are made up of two vertical boundaries that define the spread of the view cone and a horizontal lower boundary that establishes the maximum geodetic height permitted. When a development proposal intersects with a view cone, all parts of the building are expected to be located outside of the view cone boundaries to mitigate the risk that the protected views are sequentially compromised.",
+    "teaching_note": "The tool's hypothetical check compares a proposal with ONE declared horizontal lower boundary height. The two vertical boundaries and the real geodetic height of any cone are not evaluated."
+  },
+  "clauses": [
+    {
+      "ref": "3.1.1",
+      "page": 6,
+      "heading": "3.2 Building Height and Massing",
+      "quote": "Development sites located within protected public views should be designed so that no part of the building, including appurtenances, encroach into the boundaries of the relevant view cone(s).",
+      "what_the_tool_computes": "Whether the declared box(es) rise above the declared hypothetical boundary height over the evaluated plan area, and by how much (INTERSECTS / BOUNDARY_CONTACT / BELOW_BOUNDARY with a signed margin).",
+      "human_or_city_interpretation": "Whether the declared boundary corresponds to a real cone at this site, and whether appurtenances not modelled here exist."
+    },
+    {
+      "ref": "3.1.2",
+      "page": 6,
+      "heading": "3.2 Building Height and Massing",
+      "quote": "Minor encroachments into a view cone boundary may be considered for building elements that contribute to the safety and usability of common rooftop outdoor amenity areas (e.g., glass guardrails, small open pergolas and play structures), rooftop vegetation and climate adaptation technologies (e.g., solar panels, photovoltaic panels).",
+      "what_the_tool_computes": "Nothing. The tool flags that an encroachment exists; it does not classify elements as minor.",
+      "human_or_city_interpretation": "Whether an encroaching element qualifies as one of these building elements."
+    },
+    {
+      "ref": "3.1.3",
+      "page": 6,
+      "heading": "3.2 Building Height and Massing",
+      "quote": "Encroachments should not compromise the legibility of the primary focal point of the public view (e.g., the peak and/or immediate profile line of the subject mountain, the neon clock of Vancouver City Hall, etc.).",
+      "quote_continued": "Encroachments, except for rooftop vegetation, should be comprised of low-profile or translucent materials to mitigate their visibility from the public view origin point (e.g., glass guardrails, matte anodized aluminum posts, perforated sun shades/louvers, etc.).",
+      "what_the_tool_computes": "Nothing regulatory. The observer view shows what a camera at the exploratory or mapped origin sees; visibility is not an assessment.",
+      "human_or_city_interpretation": "Legibility of the focal point and suitability of materials."
+    },
+    {
+      "ref": "3.1.4",
+      "page": 7,
+      "heading": "3.2 Building Height and Massing",
+      "quote": "Common rooftop amenity elements, such as tensile shade structures and pergolas, should be fully open at the sides for any part that encroaches into a public view cone boundary.",
+      "what_the_tool_computes": "Nothing.",
+      "human_or_city_interpretation": "Whether an element is such an amenity element and whether it is fully open."
+    },
+    {
+      "ref": "3.1.5",
+      "page": 7,
+      "heading": "3.2 Building Height and Massing",
+      "quote": "Building elements encroaching into a public view cone boundary, except for rooftop vegetation, should be absolutely minimized except where a more stringent requirement or hardship can be demonstrated. In this instance, the encroachment should be limited no greater than 2 m (6.5 ft.).",
+      "what_the_tool_computes": "The measured penetration is reported as a number. The tool NEVER uses 2 m as a tolerance or decides that the provision applies (PROJECT_SCOPE §6).",
+      "human_or_city_interpretation": "Whether hardship or a more stringent requirement is demonstrated and whether the provision applies."
+    }
+  ],
+  "out_of_scope": [
+    {
+      "ref": "3.3 View Shadows",
+      "page": 7,
+      "note": "not evaluated"
+    },
+    {
+      "ref": "3.4 Exceptional Downtown Sites",
+      "page": 7,
+      "note": "not evaluated; refers to the Higher Buildings Policy"
+    }
+  ],
+  "table_1": [
+    {
+      "reference": "A",
+      "name": "Alder Terrace",
+      "origin_point": "Seawall below Alder Terrace",
+      "subject": "Mount Seymour",
+      "date_approved": "1989 (Amended 2024)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "B1",
+      "name": "Charleson Seawall",
+      "origin_point": "Charleson Seawall below Charleson Park",
+      "subject": "Ch'ích'iyúy Elxwíkn (the 'Two Sisters' or the 'Lions')",
+      "date_approved": "1989",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "B2",
+      "name": "Charleson Seawall",
+      "origin_point": "Charleson Seawall below Charleson Park",
+      "subject": "Crown/Grouse and Hotel Vancouver roof",
+      "date_approved": "1989 (Amended 1990)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "D",
+      "name": "Heather Bay",
+      "origin_point": "Water's Edge at Leg-in-Boot Square",
+      "subject": "Ch'ích'iyúy Elxwíkn (the 'Two Sisters' or the 'Lions')",
+      "date_approved": "1989",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "E",
+      "name": "Cambie Bridge",
+      "origin_point": "Cambie Bridge at the False Creek Seawall pedestrian stair",
+      "subject": "Mount Seymour",
+      "date_approved": "1989 (Amended 2024)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "G1",
+      "name": "Olympic Shipyard Pier",
+      "origin_point": "North End of Pier to the west of the Canoe Bridge",
+      "subject": "North Shore Mountains",
+      "date_approved": "2011 (Amended 2024)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "G2",
+      "name": "Olympic Shipyard Pier",
+      "origin_point": "North End of Pier to the west of the Canoe Bridge",
+      "subject": "North Shore Mountains",
+      "date_approved": "2011 (Amended 2024)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "H",
+      "name": "Olympic Village Plaza",
+      "origin_point": "Centre of the stage in Olympic Village Plaza",
+      "subject": "North Shore Mountains",
+      "date_approved": "2011",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "J1",
+      "name": "Creekside Park",
+      "origin_point": "On the pedestrian path at the north end of the Creekside Park lawn at the north pillar",
+      "subject": "Ch'ích'iyúy Elxwíkn (the 'Two Sisters' or the 'Lions')",
+      "date_approved": "2011 (Amended 2024)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "J2",
+      "name": "Creekside Park",
+      "origin_point": "On the pedestrian path at the north end of the Creekside Park lawn at the north pillar",
+      "subject": "North Shore Mountains",
+      "date_approved": "2011 (Amended 2024, 2025)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "K",
+      "name": "Drake Street",
+      "origin_point": "Seawall near Drake Street the Canoe Bridge",
+      "subject": "City Hall",
+      "date_approved": "2023",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "3.2.1",
+      "name": "Queen Elizabeth Park",
+      "origin_point": "Viewing Platform",
+      "subject": "North Shore Mountains",
+      "date_approved": "1989",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "3.2.2",
+      "name": "Queen Elizabeth Park",
+      "origin_point": "Viewing Platform",
+      "subject": "North Shore Mountains",
+      "date_approved": "1989",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "3.2.3",
+      "name": "Queen Elizabeth Park",
+      "origin_point": "Viewing Platform",
+      "subject": "North Shore Mountains",
+      "date_approved": "1989",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "3.2.4",
+      "name": "Queen Elizabeth Park",
+      "origin_point": "Viewing Platform",
+      "subject": "North Shore Mountains",
+      "date_approved": "1989 (Amended 2025)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "9.1",
+      "name": "Cambie Street",
+      "origin_point": "Cambie Street at the base of the stairs at the northwest corner of City Hall campus.",
+      "subject": "Ch'ích'iyúy Elxwíkn (the 'Two Sisters' or the 'Lions')",
+      "date_approved": "1989 (Amended 1990, 2024, 2026)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "9.2",
+      "name": "Cambie Street",
+      "origin_point": "Cambie Street at the base of the stairs at the northwest corner of City Hall campus.",
+      "subject": "North Shore Mountains",
+      "date_approved": "1989 (Amended 1990, 2024, 2026)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "10",
+      "name": "Granville Island",
+      "origin_point": "At the west side of the Granville Island Seawall north of the False Creek Ferries dock",
+      "subject": "Hollyburn Mountain",
+      "date_approved": "1989",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "20",
+      "name": "Granville Street",
+      "origin_point": "Granville Street at W Broadway",
+      "subject": "North Shore Mountains",
+      "date_approved": "1989 (Amended 2024)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "21",
+      "name": "Commercial Drive",
+      "origin_point": "Commercial Drive at E Broadway",
+      "subject": "North Shore Mountains",
+      "date_approved": "1989 (Amended 2024)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "22",
+      "name": "Main Street",
+      "origin_point": "At the Mt. Pleasant Clock at Main Street and Kingsway",
+      "subject": "North Shore Mountains",
+      "date_approved": "1989 (Amended 2024)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "27.1",
+      "name": "Trout Lake",
+      "origin_point": "South Shore of Trout Lake",
+      "subject": "Ch'ích'iyúy Elxwíkn (the 'Two Sisters' or the 'Lions')",
+      "date_approved": "2016 (Amended 2026)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "27.2",
+      "name": "Trout Lake",
+      "origin_point": "South Shore of Trout Lake",
+      "subject": "North Shore Mountains",
+      "date_approved": "1989 (Amended 2026)",
+      "source_pages": "pp.4–6"
+    },
+    {
+      "reference": "28",
+      "name": "Clinton Park",
+      "origin_point": "At the midpoint of the south berm overlooking the park",
+      "subject": "North Shore Mountains",
+      "date_approved": "2026",
+      "source_pages": "pp.4–6"
+    }
+  ],
+  "pilot_view": "3.2.3",
+  "statement_kinds": [
+    "source statement (quoted, with page)",
+    "deterministic computation (numbers from the tested function)",
+    "AI explanation (plain language pointing back to the clause)",
+    "human or City interpretation (flagged, never computed)"
+  ]
+}

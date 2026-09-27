@@ -1,0 +1,303 @@
+{
+  "available": true,
+  "manifest": {
+    "generated_at": "2026-09-23T19:20:00-07:00",
+    "generator": "tools/export_context_assets.py (rhino3dm 8.35.0, read-only File3dm.Read)",
+    "source": {
+      "filename": "Vancouver DT context.3dm",
+      "relative_path": "sources/Vancouver DT context.3dm",
+      "sha256": "c1614721fd113a448ecbf4f390e6374d5d879fff46229ee711efc69c3ab432ca",
+      "size_bytes": 53437495,
+      "modified": "2026-09-22T20:27:34-07:00",
+      "model_units": "Meters",
+      "object_count": 11316,
+      "layer_count": 33
+    },
+    "display_transform": {
+      "translation_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_deg": 0.0,
+      "scale": 1.0,
+      "axis_convention": "model X/Y/Z as stored, Z up",
+      "note": "No transformation applied: browser coordinates equal model coordinates in metres. Stored as float32."
+    },
+    "observed_metadata_unverified": {
+      "earth_anchor": {
+        "latitude": 49.2827,
+        "longitude": -123.1207,
+        "elevation": 0.0,
+        "model_north": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "model_base_point": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "building_heights": "OSM-derived; height_source counts: {\"measured\": 1441, \"levels\": 3656, \"estimated\": 4800}; 2022 extraction is user-reported",
+      "terrain": "source, resolution and vertical datum not recorded; z values are model-relative, not verified geodetic elevations",
+      "caveat": "Nothing here verifies the model's projection, placement, scale or vertical datum."
+    },
+    "extent_m": {
+      "scene_bbox": [
+        -3238.63,
+        -2351.63,
+        0.0,
+        2632.6,
+        3939.94,
+        246.61
+      ],
+      "terrain_bbox": [
+        -3216.94,
+        -2288.88,
+        0.0,
+        2592.43,
+        3903.26,
+        82.703
+      ],
+      "buildings_bbox": [
+        -3238.34,
+        -2350.37,
+        0.0,
+        2623.83,
+        3939.91,
+        246.611
+      ]
+    },
+    "coverage": "full supplied model: every object in the exported categories is included; nothing subset or simplified",
+    "counts": {
+      "buildings": 9897,
+      "building_triangles": 305124,
+      "terrain_meshes": 5,
+      "terrain_triangles": 19298,
+      "park_triangles": 17660,
+      "water_triangles": 3659,
+      "road_segments": 5505,
+      "shoreline_segments": 2489,
+      "labels": 18,
+      "skipped_objects": 0
+    },
+    "objects_by_type_and_layer": {
+      "Brep | Vancouver DT::Lakes": 70,
+      "Brep | Vancouver DT::Water": 1,
+      "Extrusion | Vancouver DT::Buildings::Height estimated by type": 4800,
+      "Extrusion | Vancouver DT::Buildings::Height from OSM tag": 1441,
+      "Extrusion | Vancouver DT::Buildings::Height from floor count": 3656,
+      "Mesh | Vancouver DT::Land": 5,
+      "Mesh | Vancouver DT::Parks": 99,
+      "PolylineCurve | Vancouver DT::Roads::Arterial": 217,
+      "PolylineCurve | Vancouver DT::Roads::Collector": 1004,
+      "PolylineCurve | Vancouver DT::Shoreline": 5,
+      "TextDot | Vancouver DT::Labels": 18
+    },
+    "skipped": [],
+    "files": {
+      "buildings": {
+        "file": "buildings.bin",
+        "byte_length": 9722568,
+        "positions": {
+          "dtype": "float32",
+          "components": 3,
+          "byte_offset": 0,
+          "count": 505090
+        },
+        "indices": {
+          "dtype": "uint32",
+          "byte_offset": 6061080,
+          "count": 915372,
+          "triangles": 305124
+        },
+        "bbox": [
+          -3238.34,
+          -2350.37,
+          0.0,
+          2623.83,
+          3939.91,
+          246.611
+        ]
+      },
+      "terrain": {
+        "file": "terrain.bin",
+        "byte_length": 363024,
+        "positions": {
+          "dtype": "float32",
+          "components": 3,
+          "byte_offset": 0,
+          "count": 10954
+        },
+        "indices": {
+          "dtype": "uint32",
+          "byte_offset": 131448,
+          "count": 57894,
+          "triangles": 19298
+        },
+        "bbox": [
+          -3216.94,
+          -2288.88,
+          0.0,
+          2592.43,
+          3903.26,
+          82.703
+        ],
+        "pieces": [
+          {
+            "name": "Land terrain",
+            "vertices": 1394,
+            "faces": 2039,
+            "index_offset": 0,
+            "index_count": 7212,
+            "bbox": [
+              -1224.0,
+              2855.56,
+              0.0,
+              2592.43,
+              3903.26,
+              27.0
+            ]
+          },
+          {
+            "name": "Land terrain",
+            "vertices": 99,
+            "faces": 131,
+            "index_offset": 7212,
+            "index_count": 444,
+            "bbox": [
+              677.82,
+              -1181.53,
+              1.098,
+              770.41,
+              -1133.98,
+              1.518
+            ]
+          },
+          {
+            "name": "Land terrain",
+            "vertices": 67,
+            "faces": 77,
+            "index_offset": 7656,
+            "index_count": 306,
+            "bbox": [
+              -2571.17,
+              2874.88,
+              13.673,
+              -2557.6,
+              2885.38,
+              15.927
+            ]
+          },
+          {
+            "name": "Land terrain",
+            "vertices": 25,
+            "faces": 30,
+            "index_offset": 7962,
+            "index_count": 96,
+            "bbox": [
+              -2559.44,
+              2876.58,
+              15.864,
+              -2553.13,
+              2882.68,
+              16.914
+            ]
+          },
+          {
+            "name": "Land terrain",
+            "vertices": 9369,
+            "faces": 13991,
+            "index_offset": 8058,
+            "index_count": 49836,
+            "bbox": [
+              -3216.94,
+              -2288.88,
+              0.0,
+              2592.43,
+              3469.45,
+              82.703
+            ]
+          }
+        ]
+      },
+      "parks": {
+        "file": "parks.bin",
+        "byte_length": 345216,
+        "positions": {
+          "dtype": "float32",
+          "components": 3,
+          "byte_offset": 0,
+          "count": 11108
+        },
+        "indices": {
+          "dtype": "uint32",
+          "byte_offset": 133296,
+          "count": 52980,
+          "triangles": 17660
+        },
+        "bbox": [
+          -3215.94,
+          -2241.84,
+          0.5,
+          2428.69,
+          3891.82,
+          82.061
+        ]
+      },
+      "water": {
+        "file": "water.bin",
+        "byte_length": 89448,
+        "positions": {
+          "dtype": "float32",
+          "components": 3,
+          "byte_offset": 0,
+          "count": 3795
+        },
+        "indices": {
+          "dtype": "uint32",
+          "byte_offset": 45540,
+          "count": 10977,
+          "triangles": 3659
+        },
+        "bbox": [
+          -3216.94,
+          -2132.51,
+          0.0,
+          2592.43,
+          3903.26,
+          46.757
+        ]
+      },
+      "roads": {
+        "file": "roads.bin",
+        "byte_length": 132120,
+        "positions": {
+          "dtype": "float32",
+          "components": 3,
+          "byte_offset": 0,
+          "count": 11010
+        },
+        "segments": 5505,
+        "polylines": 1221
+      },
+      "shoreline": {
+        "file": "shoreline.bin",
+        "byte_length": 59736,
+        "positions": {
+          "dtype": "float32",
+          "components": 3,
+          "byte_offset": 0,
+          "count": 4978
+        },
+        "segments": 2489,
+        "polylines": 5
+      }
+    },
+    "buildings_index": "buildings_index.json",
+    "labels": "labels.json",
+    "elapsed_s": 1.2
+  }
+}
