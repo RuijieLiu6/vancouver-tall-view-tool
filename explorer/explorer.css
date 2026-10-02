@@ -1019,3 +1019,5 @@ body[data-scene-style="night"] .metrics-help { background: #111; border-color: #
 body[data-scene-style="night"] .metrics .m-help .btn.link { color: #eee; border-color: #444; }
 .site-step-opt { font-weight: 400; color: var(--muted); }
 .site-step.collapsed .site-step-opt { display: none; }
+.metrics .m-help, .metrics .m-help .btn { pointer-events: auto; } /* the strip ignores the pointer; its "?" must not */
+@media (max-width: 1400px) { .draw-prompt { top: 124px; z-index: 5; } }

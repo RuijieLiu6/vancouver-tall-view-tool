@@ -386,11 +386,14 @@ function rayFromClient(cx, cy, cam) { const r = canvas.getBoundingClientRect(); 
 // ------------------------------------------------------------------ proposal geometry (boxes or import)
 function importOffset() { const im = state.imported; if (!im) return null; if (im.placement === 'file' || !state.site) return im.placement === 'file' ? [0, 0, 0] : null;
   const b = im.bbox; const cx = (b[0] + b[3]) / 2, cy = (b[1] + b[4]) / 2; const gz = terrainZAt(state.site.x, state.site.y); if (gz === null) return null; return [state.site.x - cx, state.site.y - cy, gz - b[2]]; }
+// the terrain is static, so the ground height under the first block is looked up once per position (a ray cast, called many times per refresh)
+const baseMemo = { x: NaN, y: NaN, z: null };
+function baseZAt(x, y) { if (x !== baseMemo.x || y !== baseMemo.y) { baseMemo.x = x; baseMemo.y = y; baseMemo.z = terrainZAt(x, y); } return baseMemo.z; }
 function proposalParts() { // [{name, box:[xmin,ymin,zmin,xmax,ymax,zmax]}] in model coordinates, or []
   if (state.pmode === 'import') { const im = state.imported; const off = importOffset(); if (!im || !off) return [];
     return im.parts.map((p) => ({ name: p.name, box: [p.bbox[0] + off[0], p.bbox[1] + off[1], p.bbox[2] + off[2], p.bbox[3] + off[0], p.bbox[4] + off[1], p.bbox[5] + off[2]] })); }
   if (!state.site || !state.parts.length) return []; const out = []; let base = null;
-  for (const p of state.parts) { const cx = state.site.x + p.dx, cy = state.site.y + p.dy; if (base === null) { base = terrainZAt(cx, cy); if (base === null) return []; }
+  for (const p of state.parts) { const cx = state.site.x + p.dx, cy = state.site.y + p.dy; if (base === null) { base = baseZAt(cx, cy); if (base === null) return []; }
     out.push(ProposalGeometry.makePart({ name: p.name, cx, cy, zMin: base, zMax: base+p.h, w: p.w, d: p.d, rotation: p.rotation || 0 })); base += p.h; }
   return out;
 }
@@ -887,22 +890,24 @@ function checkBody() { const parts=proposalParts(); return {parts:parts.map(p=>(
   boundary_z:state.check.unknown?null:state.check.bz, hypothesis:{boundary_z_model_m:state.check.unknown?null:state.check.bz,declared_by:'user',reference:state.check.reference,height_above_proposal_base_m:proposalBox()?state.check.bz-proposalBox().base:null,note:'User study ceiling; not a City view height. Model vertical datum unverified.',evaluation_area:state.check.area,viewpoint_context:state.viewpoint}}; }
 // the whole study in one plain sentence at the top of Output (a Spotless-style narrative of the scenario)
 function studySentence(P, matches) { if (!P || !state.site) return '';
-  const n = P.parts.length, site = state.boundary.length >= 3 ? `on a ${formatArea(SiteGeometry.metrics(state.boundary).area)} study boundary` : state.removed.length ? `replacing ${state.removed.length} existing building${state.removed.length === 1 ? '' : 's'}` : 'on a point site';
+  const n = P.parts.length, site = state.boundary.length >= 3 ? `on a study boundary of ${formatArea(SiteGeometry.metrics(state.boundary).area)}` : state.removed.length ? `replacing ${state.removed.length} existing building${state.removed.length === 1 ? '' : 's'}` : 'on a point site';
   const eye = observerEye(), d = eye ? Math.hypot(P.cx - eye[0], P.cy - eye[1]) : null;
   const from = !state.observer ? 'with no viewpoint chosen yet' : state.observerSource === 'origin' ? `seen from the origin of protected view ${state.viewpoint}` : `seen from ${state.observerSource === 'rooftop' ? 'a rooftop' : 'the ground'} about ${fmt(d, 0)} m away`;
   const o = matches.filter((m) => m.relation === 'overlap').length, t = matches.length - o;
   const views = !assets.cones?.available ? 'View corridor data is unavailable.' : `${o || 'No'} mapped view corridor${o === 1 ? '' : 's'} overlap${o === 1 ? 's' : ''} it in plan${t ? ` and ${t} touch${t === 1 ? 'es' : ''} its edge` : ''}.`;
   const r = state.check.result, ceil = state.check.unknown || !r ? '' : r.overall_result === 'INTERSECTS' ? ` Its top is ${fmt(r.max_penetration_m, 0)} m above the ${fmt(state.check.bz - P.base, 0)} m study ceiling set in Your height experiment.` : r.overall_result === 'BELOW_BOUNDARY' ? ` Its top is ${fmt(r.min_signed_margin_m, 0)} m below the ${fmt(state.check.bz - P.base, 0)} m study ceiling set in Your height experiment.` : '';
-  return `A ${fmt(P.top - P.base, 0)} m ${n === 1 ? 'building' : n + '-block building'} ${site}, ${from}. ${views}${ceil}`; }
+  // 'an 80 m', 'an 18 m', 'a 120 m'
+  const hs = String(Math.round(P.top - P.base)), an = hs[0] === '8' || (hs.length % 3 === 2 && /^1[18]/.test(hs));
+  return `${an ? 'An' : 'A'} ${fmt(P.top - P.base, 0)} m ${n === 1 ? 'building' : 'building of ' + n + ' blocks'} ${site}, ${from}. ${views}${ceil}`; }
 function refreshLiveStudy() { const P=syncCeiling(), matches=planAnalysis(); if ($('study-sentence')) $('study-sentence').textContent = studySentence(P, matches);
   $('btn-study-site').classList.toggle('hidden',!!P);
   $('view-study-summary').classList.toggle('hidden', !!P && !!assets.cones?.available);
   $('view-study-summary').textContent = !P ? 'Build your proposal to find the mapped view corridors it overlaps in plan.' : !assets.cones?.available ? 'View corridor data unavailable.' : matches.length ? (()=>{ const t=matches.filter(m=>m.relation==='touch').length, o=matches.length-t; return o&&t ? `${o} mapped view corridor${o===1?' overlaps':'s overlap'} your building in plan, and ${t} touch${t===1?'es':''} its edge.` : o ? `${o} mapped view corridor${o===1?' overlaps':'s overlap'} your building in plan.` : `${t} mapped view corridor${t===1?' touches':'s touch'} the edge of your building in plan.`; })() : 'No mapped view corridor overlaps your building in plan.';
   const html=matches.map(m=>`<article class="view-match"><div><b>${esc(m.cone.view_number)} — ${esc(m.cone.name)}</b><span>${m.relation==='touch'?'Touches your footprint edge in plan':'Overlaps your footprint in plan'}${state.pmode==='import'?' · bounding-box estimate':''}</span></div><button class="btn" data-view="${esc(m.cone.view_number)}">View from here</button></article>`).join('');
   // corridors that pass close by without overlapping, so a site next to a famous view is not mistaken for "unaffected"
-  const nearEl=$('view-near'); if(nearEl) { const hit=new Set(matches.map(m=>String(m.cone.view_number))), pts=P?proposalParts().flatMap(q=>partFootprint(q)):[];
+  const nearEl=$('view-near'); if(nearEl) { const hit=new Set(matches.map(m=>String(m.cone.view_number))), parts=P?proposalParts():[], feet=parts.map(q=>partFootprint(q)), pts=feet.flat();
     const segD=(p,a,b)=>{ const vx=b[0]-a[0], vy=b[1]-a[1], L=vx*vx+vy*vy, t=L?clamp(((p[0]-a[0])*vx+(p[1]-a[1])*vy)/L,0,1):0; return Math.hypot(a[0]+t*vx-p[0], a[1]+t*vy-p[1]); };
-    const near=!P||!assets.cones?.available?[]:assets.cones.cones.filter(c=>!hit.has(String(c.view_number))).map(c=>{ const poly=c.polygon_model_xy; let d=Infinity; for(const p of pts) for(let i=0;i<poly.length;i++) d=Math.min(d,segD(p,poly[i],poly[(i+1)%poly.length])); for(const p of poly) for(const part of proposalParts()) { const f=partFootprint(part); for(let i=0;i<f.length;i++) d=Math.min(d,segD(p,f[i],f[(i+1)%f.length])); } return {c,d}; }).filter(q=>q.d<400).sort((a,b)=>a.d-b.d).slice(0,3);
+    const near=!P||!assets.cones?.available?[]:assets.cones.cones.filter(c=>!hit.has(String(c.view_number))).map(c=>{ const poly=c.polygon_model_xy; let d=Infinity; for(const p of pts) for(let i=0;i<poly.length;i++) d=Math.min(d,segD(p,poly[i],poly[(i+1)%poly.length])); for(const p of poly) for(const f of feet) { for(let i=0;i<f.length;i++) d=Math.min(d,segD(p,f[i],f[(i+1)%f.length])); } return {c,d}; }).filter(q=>q.d<400).sort((a,b)=>a.d-b.d).slice(0,3);
     nearEl.classList.toggle('hidden',!near.length); nearEl.textContent=near.length?`Close by but not overlapping in plan: ${near.map(q=>`${q.c.view_number} ${q.c.name} (${fmt(q.d,0)} m away)`).join(' · ')}.`:''; }
   if(html!==matchMarkup) { $('view-matches').innerHTML=html; matchMarkup=html; $('view-matches').querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>viewFromHere(b.dataset.view))); }
   $('enable-height-study').checked=!state.check.unknown; $('chk-bz-unknown').checked=state.check.unknown; $('height-controls').classList.toggle('hidden',state.check.unknown);
@@ -945,7 +950,7 @@ function renderCheck() { const r=state.check.result, P=proposalBox(); $('check-r
 function updateMetrics() {
   const el = $('metrics'); if (!el) return; const P = proposalShown() ? proposalBox() : null, show = !!state.site && state.flow.guided;
   if (!show) $('metrics-help')?.classList.add('hidden');
-  el.classList.toggle('hidden', !show); $('live-feedback').classList.toggle('hidden', show || !P); $('scene-status').classList.toggle('hidden', show); if (!show) return; // the strip replaces the small scene badge
+  el.classList.toggle('hidden', !show); const wide = matchMedia('(min-width: 861px)').matches; $('live-feedback').classList.toggle('hidden', (show && wide) || !P); $('scene-status').classList.toggle('hidden', show && wide); if (!show) return; // the strip replaces the small scene badge
   const r = state.check.result, an = P && assets.cones?.available ? planAnalysis() : null, met = an ? an.length : null, touch = an ? an.filter((m) => m.relation === 'touch').length : 0;
   $('m-height').textContent = P ? `${fmt(P.top - P.base, 0)} m` : '–';
   $('m-site').textContent = state.boundary.length >= 3 ? formatArea(SiteGeometry.metrics(state.boundary).area) : 'Point';
@@ -1318,12 +1323,13 @@ document.querySelectorAll('[data-open-example]').forEach((b) => b.addEventListen
 if (new URLSearchParams(location.search).get('example') === '1') $('example-banner')?.classList.remove('hidden');
 $('btn-example-close')?.addEventListener('click', () => $('example-banner').classList.add('hidden'));
 // keyboard route for the map: arrows look, orbit or pan; +/- zoom; Enter acts at the centre of the view (place a site, add a corner, pick a roof, stand here)
-canvas.addEventListener('keydown', (e) => { if (!assets.ready) return; const k = e.key, f = e.shiftKey ? 4 : 1, r = canvas.getBoundingClientRect(); let used = true;
+canvas.addEventListener('keydown', (e) => { if (!assets.ready || e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key, f = e.shiftKey ? 4 : 1, r = canvas.getBoundingClientRect(); let used = true;
   if (k.startsWith('Arrow')) { const dx = k === 'ArrowLeft' ? -1 : k === 'ArrowRight' ? 1 : 0, dy = k === 'ArrowUp' ? -1 : k === 'ArrowDown' ? 1 : 0;
     if (state.mode === 'observer' && state.observer) { const o = state.cams.observer; o.yaw -= dx * 0.05 * f; o.pitch = clamp(o.pitch - dy * 0.035 * f, -1.48, 1.48); }
     else if (state.mode === 'plan') { const o = state.cams.overview, d = o.dist * 0.04 * f; o.target[0] += dx * d; o.target[1] -= dy * d; }
     else { const o = state.mode === 'inspect' ? state.cams.inspect : state.cams.overview; o.az -= dx * 0.07 * f; o.el = clamp(o.el - dy * 0.04 * f, 0.03, 1.55); } }
   else if (k === '+' || k === '=') zoomBy(-0.15); else if (k === '-' || k === '_') zoomBy(0.15);
+  else if (k === 'Enter' && state.drawing) finishBoundary();
   else if (k === 'Enter' || k === ' ') { const cx = r.left + r.width / 2, cy = r.top + r.height / 2; if (state.tool === 'aim' && state.mode !== 'observer') { if (beginAim(cx, cy)) endAim(false); } else handleClick(cx, cy, 0); }
   else used = false;
   if (used) { e.preventDefault(); e.stopPropagation(); requestRender(); } });
@@ -1331,7 +1337,7 @@ canvas.addEventListener('keydown', (e) => { if (!assets.ready) return; const k =
 document.querySelectorAll('.vp-toolbar .seg-btn, [id^="pmode-"]').forEach((b) => { const sync = () => b.setAttribute('aria-pressed', String(b.classList.contains('active'))); sync(); new MutationObserver(sync).observe(b, { attributes: true, attributeFilter: ['class'] }); });
 // the "?" at the end of the strip opens plain definitions of each number
 $('btn-metrics-help')?.addEventListener('click', (e) => { const box = $('metrics-help'), open = box.classList.toggle('hidden') === false; e.currentTarget.setAttribute('aria-expanded', String(open)); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('metrics-help')?.classList.contains('hidden')) { $('metrics-help').classList.add('hidden'); $('btn-metrics-help').setAttribute('aria-expanded', 'false'); $('btn-metrics-help').focus(); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('metrics-help')?.classList.contains('hidden')) { $('metrics-help').classList.add('hidden'); $('btn-metrics-help').setAttribute('aria-expanded', 'false'); if (!/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) $('btn-metrics-help').focus(); } });
 $('btn-face')?.addEventListener('click', () => { if (lookTowardProposal()) setHint('Now facing your building. Your viewpoint has not moved.'); });
 $('btn-flow-back').addEventListener('click', flowBack); $('btn-flow-next').addEventListener('click', flowNext); $('btn-nav-pdf')?.addEventListener('click', async (e) => { const b = e.currentTarget; b.textContent = 'Exporting…'; await window.__report?.exportPdf(); b.textContent = 'Export PDF'; $('flow-need').textContent = $('pdf-status').textContent; });
 document.querySelectorAll('[data-proceed]').forEach(b => b.addEventListener('click', flowNext));
