@@ -79,7 +79,7 @@
     // 16 PDF report: valid header, six pages, at least five embedded views
     await X.runCheck(); const blob = await X.buildPdfReport(); const bytes = new Uint8Array(await blob.arrayBuffer()); const head = String.fromCharCode(...bytes.slice(0, 8)); const txt = new TextDecoder('latin1').decode(bytes);
     const nImg = (txt.match(/\/Subtype \/Image/g) || []).length; const nPages = (txt.match(/\/Type \/Page\b/g) || []).length;
-    record(16, head.startsWith('%PDF-1.4') && nPages === 6 && nImg >= 5 && bytes.length > 20000 && /%%EOF/.test(txt.slice(-40)), { bytes: bytes.length, pages: nPages, images: nImg });
+    const expectedPages = window.__report.pagePlan(window.__report.defaults()).length; record(16, head.startsWith('%PDF-1.4') && nPages === expectedPages && nPages >= 6 && nImg >= 5 && bytes.length > 20000 && /%%EOF/.test(txt.slice(-40)), { bytes: bytes.length, pages: nPages, images: nImg });
     if (new URLSearchParams(location.search).get('pdfdump') === '1') { const pre = document.createElement('pre'); pre.id = 'pdf-b64'; pre.style.display = 'none'; let b64 = ''; for (let i = 0; i < bytes.length; i += 0x8000) b64 += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); pre.textContent = btoa(b64); document.body.appendChild(pre); }
     // 17 mountain backdrop: present when the server has it; drawn only in the observer view
     const bmResp = await window.ProjectAPI.fetch('/generated/backdrop_manifest.json'); const hasBd = bmResp.ok; const bd = X.assets.backdrop;
