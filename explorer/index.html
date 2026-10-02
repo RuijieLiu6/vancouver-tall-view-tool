@@ -271,7 +271,8 @@
       <p id="view-study-summary" class="data">Place a proposal to find overlapping mapped view corridors.</p>
       <button id="btn-study-site" class="btn primary" type="button">Choose a site</button>
       <div id="view-matches" class="view-matches"></div>
-      <p class="caveat small">Plan overlap only. City view-cone height limits are unavailable, so this cannot decide whether a building meets the policy.</p>
+      <p id="view-near" class="view-near small hidden"></p>
+      <p class="caveat small">Plan overlap only: changing the height does not change this list. City view-cone height limits are unavailable, so this cannot decide whether a building meets the policy.</p>
       <details class="height-study">
         <summary>Your height experiment <span class="small muted">optional</span></summary>
         <label class="checks"><span><input id="enable-height-study" type="checkbox"> Compare with a study ceiling</span></label>
@@ -296,7 +297,7 @@
       <p id="check-live-status" class="small" role="status">No study ceiling set.</p>
       <div id="check-error" class="hidden" role="alert"><p id="check-error-text"></p><button id="btn-run-check" class="btn" type="button">Retry calculation</button></div>
       <div id="check-result" class="check-result hidden">
-        <div class="badge-row"><span id="check-badge" class="badge">—</span><span class="small muted">your assumption · not a policy verdict</span></div>
+        <div class="badge-row"><span id="check-badge" class="badge">—</span><span class="badge-note">Your own assumption, not a City height limit</span></div>
         <p id="check-numbers" class="data small"></p>
         <p id="check-explain" class="small"></p>
         <details class="why"><summary>Part-by-part measurements</summary><div id="check-parts" class="small"></div></details>
@@ -315,7 +316,7 @@
       </section>
 
       <div class="output-export">
-        <button id="btn-download-pdf" class="btn primary" type="button">Export to PDF</button>
+        <button id="btn-download-pdf" class="btn primary" type="button">Export PDF</button>
         <p id="pdf-summary" class="small"></p>
         <p id="pdf-status" class="small muted" role="status" aria-live="polite">Rendered on your device; nothing is uploaded.</p>
         <div class="row wrap"><button id="btn-download-state" class="btn" type="button">Study data (JSON)</button><button id="btn-download-image" class="btn" type="button">Current view (PNG)</button></div>
@@ -371,9 +372,11 @@
     <div id="plan-markers" class="plan-markers" aria-hidden="true">
       <svg id="pm-link" class="pm-link"><line id="pm-link-line"/></svg>
       <div id="pm-proposal" class="pm-proposal nm nm-prop hidden"><i class="ring"></i><i class="ring r2"></i><span class="nm-dot big"><svg class="ico"><use href="#i-blocks"/></svg></span><span class="pm-label">Proposal</span></div>
+      <div id="pm-address" class="pm-address hidden"><span class="pm-addr-dot"></span><span class="pm-label" id="pm-address-label">Address</span></div>
       <div id="pm-site" class="pm-proposal pm-site nm nm-prop hidden"><i class="ring"></i><i class="ring r2"></i><span class="nm-dot big"><svg class="ico"><use href="#i-pin"/></svg></span><span class="pm-label">Your site</span></div>
       <div id="pm-observer" class="pm-observer hidden"><svg class="pm-fan" viewBox="-70 -70 140 140"><path id="pm-fan-path"/></svg><i class="ring nm-eye-ring"></i><i class="ring r2 nm-eye-ring"></i><span class="pm-eye"><svg class="ico"><use href="#i-eye"/></svg></span><span class="pm-label" id="pm-observer-label">You</span></div>
     </div>
+    <button id="btn-face" class="btn face-btn hidden" type="button" title="Turn to face your building again">Face my building</button>
     <div class="vp-toolbar">
       <div class="seg tiny" id="modes">
         <button id="mode-overview" class="seg-btn active" type="button" title="Orbit the city">City</button>
@@ -406,7 +409,7 @@
       <div><dt>Plan overlaps</dt><dd id="m-views">–</dd></div>
       <div><dt>Demolished</dt><dd id="m-demolished">–</dd></div>
       <div><dt>Viewpoint</dt><dd id="m-view">–</dd></div>
-      <div><dt>Height test</dt><dd id="m-ceiling">–</dd></div>
+      <div><dt>Your ceiling</dt><dd id="m-ceiling">–</dd></div>
     </dl>
     <div id="scene-status" class="scene-status">Study scene</div>
     <p id="aerial-note" class="aerial-note hidden" role="status"></p>

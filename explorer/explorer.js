@@ -504,6 +504,8 @@ function updatePlanMarkers(cam) {
     if (c && (size < 36 || so)) sp = c; }
   propEl.classList.toggle('hidden', !sp); if (sp) { b = place(propEl, sp); propEl.querySelector('.pm-label').textContent = `Proposal · ${fmt(P.top - P.base, 0)} m`; }
   // before the building exists (Site, or Build before a method), a pin shows where it will stand; the proposal marker takes over once it is drawn
+  // a searched address stays marked until a site is placed, so "centred in plan" has something to look at
+  const adEl = $('pm-address'); if (adEl) { const ad = show && state.addressPin && !state.site ? toScreen([state.addressPin.x, state.addressPin.y, terrainZAt(state.addressPin.x, state.addressPin.y) ?? 0]) : null; adEl.classList.toggle('hidden', !ad); if (ad) { place(adEl, ad); $('pm-address-label').textContent = state.addressPin.label; } }
   const siteEl = $('pm-site'); let ss = null;
   if (siteEl) { if (show && state.site && !proposalShown()) { const c = state.boundary.length >= 3 && !state.drawing ? SiteGeometry.metrics(state.boundary).centre : [state.site.x, state.site.y]; ss = toScreen([c[0], c[1], state.site.z]); }
     siteEl.classList.toggle('hidden', !ss); if (ss) b = b || place(siteEl, ss); }
@@ -670,7 +672,7 @@ function setMode(mode) {
   if (mode === 'inspect' && !proposalBox()) { setHint('Build a proposal first (2 · Build).'); return false; }
   state.mode = mode; $('inset-frame').classList.toggle('hidden', mode !== 'observer'); floatBtn.classList.toggle('hidden', mode === 'overview');
   for (const m of ['overview', 'observer', 'inspect']) $('mode-' + m).classList.toggle('active', m === mode); $('btn-plan').classList.toggle('active', mode === 'plan'); $('tools').classList.toggle('hidden', mode === 'observer'); $('inspect-shortcuts').classList.toggle('hidden', mode !== 'inspect');
-  if (mode === 'observer') { setHint(state.observerSource === 'rooftop' ? 'You’re viewing from a roof. Drag to look around, or choose another roof.' : 'Eye-level view: drag to look around; “Look toward proposal” re-aims.'); }
+  if (mode === 'observer') { setHint(state.observerSource === 'rooftop' ? 'You’re viewing from a roof. Drag to look around, or choose another roof.' : 'Eye-level view: drag to look around; “Face my building” turns you back to it.'); }
   else if (mode === 'inspect') setHint('Orbit around the proposal. The camera moves; the building does not.');
   refreshCaption();
   refreshPanels(); requestRender(); writeHash(); return true;
@@ -864,9 +866,9 @@ let planCacheKey='', planCache=[];
 function planAnalysis() { if (!assets.cones?.available) return []; const fps=proposalParts().map(partFootprint), key=JSON.stringify(fps); if(key===planCacheKey) return planCache;
   planCacheKey=key; planCache=assets.cones.cones.map(cone=> { const hits=fps.map(fp=>ProposalGeometry.planOverlap(cone.polygon_model_xy,fp)); return {cone,relation:hits.some(h=>h.relation==='overlap')?'overlap':hits.some(h=>h.relation==='touch')?'touch':'none',area:hits.reduce((n,h)=>n+h.area,0)}; }).filter(m=>m.relation!=='none'); return planCache; }
 function resultLabel(r) { if (!r) return ''; switch(r.overall_result) {
-  case 'INTERSECTS': return `${fmt(r.max_penetration_m)} m above your ceiling`;
-  case 'BELOW_BOUNDARY': return `${fmt(r.min_signed_margin_m)} m clearance`;
-  case 'BOUNDARY_CONTACT': return 'Touches your ceiling';
+  case 'INTERSECTS': return `${fmt(r.max_penetration_m)} m above your study ceiling`;
+  case 'BELOW_BOUNDARY': return `${fmt(r.min_signed_margin_m)} m below your study ceiling`;
+  case 'BOUNDARY_CONTACT': return 'Touches your study ceiling';
   case 'CANNOT_DETERMINE': return 'No ceiling set';
   case 'NO_PLAN_OVERLAP': return 'Outside the test area';
   case 'PLAN_EDGE_CONTACT': return 'Touches the test area edge';
@@ -882,6 +884,11 @@ function refreshLiveStudy() { const P=syncCeiling(), matches=planAnalysis();
   $('btn-study-site').classList.toggle('hidden',!!P);
   $('view-study-summary').textContent = !P ? 'Build your proposal to find the mapped view corridors it overlaps in plan.' : !assets.cones?.available ? 'View corridor data unavailable.' : matches.length ? `${matches.length} mapped view corridor${matches.length===1?'':'s'} ${matches.length===1?'overlaps':'overlap'} your building in plan.` : 'No mapped view corridor overlaps your building in plan.';
   const html=matches.map(m=>`<article class="view-match"><div><b>${esc(m.cone.view_number)} — ${esc(m.cone.name)}</b><span>${m.relation==='touch'?'Touches your footprint edge in plan':'Overlaps your footprint in plan'}${state.pmode==='import'?' · bounding-box estimate':''}</span></div><button class="btn" data-view="${esc(m.cone.view_number)}">View from here</button></article>`).join('');
+  // corridors that pass close by without overlapping, so a site next to a famous view is not mistaken for "unaffected"
+  const nearEl=$('view-near'); if(nearEl) { const hit=new Set(matches.map(m=>String(m.cone.view_number))), pts=P?proposalParts().flatMap(q=>partFootprint(q)):[];
+    const segD=(p,a,b)=>{ const vx=b[0]-a[0], vy=b[1]-a[1], L=vx*vx+vy*vy, t=L?clamp(((p[0]-a[0])*vx+(p[1]-a[1])*vy)/L,0,1):0; return Math.hypot(a[0]+t*vx-p[0], a[1]+t*vy-p[1]); };
+    const near=!P||!assets.cones?.available?[]:assets.cones.cones.filter(c=>!hit.has(String(c.view_number))).map(c=>{ const poly=c.polygon_model_xy; let d=Infinity; for(const p of pts) for(let i=0;i<poly.length;i++) d=Math.min(d,segD(p,poly[i],poly[(i+1)%poly.length])); return {c,d}; }).filter(q=>q.d<400).sort((a,b)=>a.d-b.d).slice(0,3);
+    nearEl.classList.toggle('hidden',!near.length); nearEl.textContent=near.length?`Close by but not overlapping in plan: ${near.map(q=>`${q.c.view_number} ${q.c.name} (${fmt(q.d,0)} m away)`).join(' · ')}.`:''; }
   if(html!==matchMarkup) { $('view-matches').innerHTML=html; matchMarkup=html; $('view-matches').querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>viewFromHere(b.dataset.view))); }
   $('enable-height-study').checked=!state.check.unknown; $('chk-bz-unknown').checked=state.check.unknown; $('height-controls').classList.toggle('hidden',state.check.unknown);
   const h=state.check.reference==='height'?state.check.height:P?state.check.bz-P.base:state.check.height;
@@ -912,7 +919,7 @@ function renderCheck() { const r=state.check.result, P=proposalBox(); $('check-r
   $('check-error').classList.toggle('hidden',!state.check.error); $('check-error-text').textContent=state.check.error || '';
   $('check-live-status').textContent=!P?'Place a proposal to explore a study ceiling.':state.check.error?'Calculation unavailable.':state.check.unknown?'No study ceiling set. Corridor overlap updates automatically.':r?'Updates automatically as you edit.':'Updating height comparison…';
   if(r) { $('check-badge').textContent=resultLabel(r); $('check-badge').className='badge '+r.overall_result; $('check-numbers').textContent=`Ceiling ${fmt(state.check.bz-(P?.base || 0))} m above proposal base · ${r.part_count} part(s)`;
-    $('check-parts').innerHTML='<table class="parts"><tr><th>Part</th><th>Clearance (m)</th><th>Above ceiling (m)</th></tr>'+r.parts.map(p=>`<tr><td>${esc(p.part)}</td><td>${fmt(p.result.signed_margin_m,2)}</td><td>${fmt(p.result.penetration_m,2)}</td></tr>`).join('')+'</table><p class="small muted">Negative clearance means above the ceiling. Contact tolerance: '+r.tolerance_m+' m (calculation setting).</p>';
+    $('check-parts').innerHTML='<table class="parts"><tr><th>Part</th><th>Margin to study ceiling (m)</th><th>Above study ceiling (m)</th></tr>'+r.parts.map(p=>`<tr><td>${esc(p.part)}</td><td>${fmt(p.result.signed_margin_m,2)}</td><td>${fmt(p.result.penetration_m,2)}</td></tr>`).join('')+'</table><p class="small muted">Negative clearance means above the ceiling. Contact tolerance: '+r.tolerance_m+' m (calculation setting).</p>';
     $('check-explain').textContent=explainCheck(r); }
   const live=$('live-feedback'); live.classList.toggle('hidden',!P); const matches=planAnalysis();
   live.textContent=P?`${assets.cones?.available ? matches.length+' mapped view corridor'+(matches.length===1?'':'s') : 'View data unavailable'}${state.check.unknown?' · plan only':r?' · '+resultLabel(r)+' · study assumption':state.check.error?' · height comparison unavailable':' · updating height study…'}${state.showExisting && state.removed.length?' · proposal hidden':''}`:'';
@@ -930,8 +937,8 @@ function updateMetrics() {
   $('m-views').textContent = !P ? '–' : met === null ? 'Unavailable' : `${met} of ${assets.cones.cones.length}`; $('m-views').classList.toggle('alert', !!met);
   $('m-demolished').textContent = String(state.removed.length + state.cleared.length);
   $('m-view').textContent = !state.observer ? '–' : state.observerSource === 'origin' ? `View ${state.viewpoint}` : state.observerSource === 'rooftop' ? 'Rooftop' : 'Ground';
-  $('m-ceiling').textContent = state.check.unknown || !P ? 'off' : r ? (r.overall_result === 'INTERSECTS' ? `${fmt(r.max_penetration_m, 0)} m over` : r.overall_result === 'BELOW_BOUNDARY' ? `${fmt(r.min_signed_margin_m, 0)} m clear` : resultLabel(r)) : '…';
-  $('m-ceiling').classList.toggle('alert', r?.overall_result === 'INTERSECTS');
+  $('m-ceiling').textContent = state.check.unknown || !P ? 'off' : r ? (r.overall_result === 'INTERSECTS' ? `${fmt(r.max_penetration_m, 0)} m above` : r.overall_result === 'BELOW_BOUNDARY' ? `${fmt(r.min_signed_margin_m, 0)} m below` : r.overall_result === 'BOUNDARY_CONTACT' ? 'touching' : resultLabel(r)) : '…';
+  $('m-ceiling').classList.remove('alert');
 }
 
 // ------------------------------------------------------------------ steps / panels
@@ -1100,6 +1107,7 @@ function refreshFlowUI() {
   if (showNext) { next.textContent = `Proceed to ${FLOW_NAMES[FLOW[idx + 1]]} ›`; next.disabled = !stageComplete(stage); }
   $('flow-need').textContent = showNext ? stageNeed(stage) : '';
   panelToggleLabel();
+  $('btn-open-ground')?.classList.toggle('hidden', state.mode === 'plan'); $('btn-face')?.classList.toggle('hidden', !(state.mode === 'observer' && proposalBox() && proposalShown()));
   // drag and view: once you stand somewhere, the how-to turns into what you can do next
   const dh = document.querySelector('.method-body[data-stage="view"][data-method="drag"] .method-howto'); if (dh) { dh.dataset.base ??= dh.innerHTML; const placed = state.observerSource === 'exploratory' && !!state.observer;
     const html = placed ? '<b>You’re standing here.</b> Drag the view to look around, or use <b>Pick a spot on the plan</b> to stand somewhere else.' : dh.dataset.base; if (dh.innerHTML !== html) dh.innerHTML = html; }
@@ -1123,7 +1131,7 @@ function refreshFlowUI() {
   document.querySelectorAll('.inline-proceed').forEach(el => { const k = el.dataset.proceedFor;
     const show = siteDone && !choosing && (k === 'spot' ? method === 'point' && alt.place === 'spot' : k === 'boundary' ? method === 'point' && alt.place === 'boundary' && !state.drawing && !!area : k === method);
     el.classList.toggle('hidden', !show); if (!show) return;
-    el.querySelector('.ip-text').textContent = k === 'spot' ? 'Site placed on open ground' : k === 'boundary' ? `Boundary measured · ${formatArea(area)}` : k === 'replace' ? 'Building replaced' : `Site set from ${state.removed.length} building${state.removed.length === 1 ? '' : 's'}${area ? ' · ' + formatArea(area) : ''}`; });
+    el.querySelector('.ip-text').textContent = k === 'spot' ? 'Site point placed' : k === 'boundary' ? `Boundary measured · ${formatArea(area)}` : k === 'replace' ? 'Building replaced' : `Site set from ${state.removed.length} building${state.removed.length === 1 ? '' : 's'}${area ? ' · ' + formatArea(area) : ''}`; });
   document.querySelectorAll('.site-alt[data-alt-step]').forEach(el => { const chosen = alt[el.dataset.altStep];
     el.classList.toggle('alt-active', chosen === el.dataset.alt); el.classList.toggle('alt-dimmed', !!chosen && chosen !== el.dataset.alt); });
   $('tools').classList.add('flow-managed');
@@ -1144,7 +1152,7 @@ function refreshPanels() { updateCleared(); refreshStudyUI(); const P = proposal
   $('proposal-info').textContent = P ? `${P.parts.length} block${P.parts.length === 1 ? '' : 's'} · ${fmt(P.top - P.base, 0)} m tall · about ${fmt(P.box[3] - P.box[0], 0)} × ${fmt(P.box[4] - P.box[1], 0)} m overall` : (state.site ? 'No building yet.' : 'Set the site first; your building stands on it.');
   refreshTechReadout(P, eye);
   const pill = (id, txt, ok) => { const el = $(id); el.textContent = txt; el.classList.toggle('ok', !!ok); };
-  pill('pill-site', state.site ? 'Set' : 'Not set', !!state.site); const built = !!P && (!state.flow.guided || !!state.flow.methods.build); pill('pill-proposal', built ? `${fmt(P.top-P.base, 0)} m` : 'None', built); pill('pill-view', state.observer ? (state.observerSource === 'origin' ? `View ${state.viewpoint}` : state.observerSource === 'rooftop' ? 'Roof' : 'Ground') : 'None', !!state.observer);
+  pill('pill-site', state.site ? 'Set' : 'Not set', !!state.site); const built = !!P && (!state.flow.guided || !!state.flow.methods.build); pill('pill-proposal', built ? `${fmt(P.top-P.base, 0)} m` : 'None', built); pill('pill-view', state.observer ? (state.observerSource === 'origin' ? `${state.viewpoint}` : state.observerSource === 'rooftop' ? 'Roof' : 'Ground') : 'None', !!state.observer);
   if (eye) { let extra = ''; const tgt = proposalCentre(); if (tgt && P) { const dh = Math.hypot(tgt[0] - eye[0], tgt[1] - eye[1]); const ang = Math.atan2(P.top - eye[2], dh) * 180 / Math.PI; extra = ` · ${fmt(dh, 0)} m to your building, its top ${fmt(ang, 0)}° above eye level`; }
     const roof = state.observerSource === 'rooftop' ? state.observer.building : null;
     $('obs-info').textContent = `${state.observerSource === 'origin' ? 'Standing at the origin of protected view ' + state.viewpoint + ' · eye ' + fmt(state.eyeH) + ' m above ground' : roof ? 'Rooftop viewpoint · eye ' + fmt(state.eyeH) + ' m above the roof' + (terrainZAt(state.observer.x, state.observer.y) !== null ? ', roof about ' + fmt(Math.max(0, state.observer.z - terrainZAt(state.observer.x, state.observer.y)), 0) + ' m high' : '') : 'Ground viewpoint · eye ' + fmt(state.eyeH) + ' m above ' + (state.observer.ground === 'water' ? 'the water (no deck modelled)' : 'ground')}${extra}.${roof ? ' Roof height is approximate; access is unknown.' : ''}`; $('obs-info').classList.remove('muted'); }
@@ -1281,13 +1289,15 @@ document.querySelectorAll('.flow-step').forEach((el) => el.addEventListener('cli
 document.querySelectorAll('.method-card').forEach((el) => el.addEventListener('click', () => chooseMethod(el.dataset.stage, el.dataset.method)));
 document.querySelectorAll('.method-keep').forEach((el) => el.addEventListener('click', () => { state.flow.choosing = null; applyFlowTool(); setHint(FLOW_HINTS[flowMethod(el.dataset.keep)]); refreshPanels(); }));
 $('btn-site-find-open')?.addEventListener('click', () => { $('site-find').classList.remove('collapsed'); $('btn-site-find-open').setAttribute('aria-expanded', 'true'); $('place-select').focus(); });
+$('btn-face')?.addEventListener('click', () => { lookTowardProposal(); });
 $('btn-flow-back').addEventListener('click', flowBack); $('btn-flow-next').addEventListener('click', flowNext); $('btn-nav-pdf')?.addEventListener('click', async (e) => { const b = e.currentTarget; b.textContent = 'Exporting…'; await window.__report?.exportPdf(); b.textContent = 'Export PDF'; $('flow-need').textContent = $('pdf-status').textContent; });
 document.querySelectorAll('[data-proceed]').forEach(b => b.addEventListener('click', flowNext));
 $('btn-multi-apply').addEventListener('click', applyMultiSelection); $('btn-multi-clear').addEventListener('click', () => { state.multiSel = []; setHint('Selection cleared. Click buildings to start a new group.'); refreshPanels(); requestRender(); });
 $('btn-drag-again').addEventListener('click', () => { planView(); applyFlowTool(); revealMap(); setHint(FLOW_HINTS.drag); });
 // Start a new study from Output: clears the study and goes straight to the Site chooser (no intro).
 function clearAddressUI() { $('address-query').value = ''; $('address-results').replaceChildren(); $('address-status').textContent = 'Start typing a street number, for example 801 W Georgia.'; }
-function startNewStudy() {
+function setAddressPin(pin) { state.addressPin = pin && Number.isFinite(pin.x) && Number.isFinite(pin.y) ? { x: pin.x, y: pin.y, label: String(pin.label || 'Address') } : null; requestRender(); }
+function startNewStudy() { state.addressPin = null;
   if (hashTimer) { clearTimeout(hashTimer); hashTimer = null; }
   state.imported = null; state.parts = [{ name: 'Tower', h: 120, w: 30, d: 30, dx: 0, dy: 0, rotation: 0 }]; state.check.custom = null; state.check.bz = 120; state.check.height = 120; state.check.reference = 'height';
   applyHash('#style=' + state.sceneStyle); $('file-import').value = ''; $('import-info').textContent = window.ProjectAPI.isStatic ? 'No model loaded. .3dm and .obj files are read in your browser and stay on your device.' : 'No model loaded. .3dm is read on the local server (rhino3dm, read-only); .obj in this browser.';
@@ -1417,7 +1427,7 @@ let lastPdfPages = 0;
 async function buildPdfReport(opts, onProgress) { if (!window.__report) throw new Error('report.js not loaded'); const r = await window.__report.build(opts, onProgress); lastPdfPages = r.pages; return r.blob; }
 
 // ------------------------------------------------------------------ public hook (self-test, debugging)
-window.__explorer = { loadAerial, aerial, updateCleared, isReplaced, startNewStudy, captureScene, proposalShown, partFootprint, highestRoofAtXY, formatArea, planAnalysis, renderClauseCards, SCENE_STYLES, HS, applyFlowTool, flowGo, chooseMethod, changeMethod, flowBack, flowNext, stageComplete, toggleMultiBuilding, applyMultiSelection, replaceSingleBuilding, beginAim, aimDragTo, endAim, setSceneStyle, planAnalysis, refreshLiveStudy, resultLabel, serializeHash, openStudy, landZAt, beginBoundary, addBoundaryPoint, finishBoundary, cancelBoundary, rectangleSite, replaceSelectedBuilding, restoreBuildings, focusSite, focusLocation, planView, applyPick, isRemoved, state, assets, ready: readyPromise, placeSite, placeObserver, placeObserverAtOrigin, lookTowardProposal, setMode, setTool, setStep, aimAtProposal, resetToContext, inspectFrom, selectView, selectedCone, addPart, renderPartsList, setProposalMode, parseObj, installImport, runCheck, evaluationArea,
+window.__explorer = { setAddressPin, loadAerial, aerial, updateCleared, isReplaced, startNewStudy, captureScene, proposalShown, partFootprint, highestRoofAtXY, formatArea, planAnalysis, renderClauseCards, SCENE_STYLES, HS, applyFlowTool, flowGo, chooseMethod, changeMethod, flowBack, flowNext, stageComplete, toggleMultiBuilding, applyMultiSelection, replaceSingleBuilding, beginAim, aimDragTo, endAim, setSceneStyle, planAnalysis, refreshLiveStudy, resultLabel, serializeHash, openStudy, landZAt, beginBoundary, addBoundaryPoint, finishBoundary, cancelBoundary, rectangleSite, replaceSelectedBuilding, restoreBuildings, focusSite, focusLocation, planView, applyPick, isRemoved, state, assets, ready: readyPromise, placeSite, placeObserver, placeObserverAtOrigin, lookTowardProposal, setMode, setTool, setStep, aimAtProposal, resetToContext, inspectFrom, selectView, selectedCone, addPart, renderPartsList, setProposalMode, parseObj, installImport, runCheck, evaluationArea,
   terrainZAt, groundZAt, roofZAt, preferredRoofPoint, placeRoofObserver, placeRooftopAtXY, viewFromSelectedRoof, proposalBox, proposalParts, proposalCentre, observerEye, observerForward, pickRay, rayFromClient, applyHash, refreshPanels, technicalState, explainCheck, buildPdfReport,
   renderOnce: () => { needsRender = false; render(); return lastCam; }, camera: () => lastCam, canvas, gl,
   readPixel: (fx, fy) => { const px = new Uint8Array(4); gl.readPixels(Math.round(fx * (canvas.width - 1)), Math.round(fy * (canvas.height - 1)), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); return Array.from(px); },

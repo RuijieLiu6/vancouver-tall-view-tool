@@ -961,3 +961,25 @@ body[data-scene-style="night"] .panel-toggle { background: #141414; border-color
   .panel-toggle { white-space: nowrap; font-size: 12.5px; padding: 6px 9px; }
   .vp-toolbar { left: 138px; }
 }
+/* The height experiment compares against the user's own assumption: neutral tones, never pass-green or fail-red */
+.badge.INTERSECTS, .badge.BOUNDARY_CONTACT, .badge.BELOW_BOUNDARY,
+body[data-scene-style] .badge.INTERSECTS, body[data-scene-style] .badge.BOUNDARY_CONTACT, body[data-scene-style] .badge.BELOW_BOUNDARY { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); color: var(--ink); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.badge-note { font-size: 13px; color: var(--ink); font-weight: 500; }
+.view-near { margin: 8px 0 0; color: var(--muted); }
+/* Mid-width windows: the strip sits under the camera buttons instead of on top of them */
+@media (max-width: 1240px) {
+  .metrics { left: 10px; top: 54px; transform: none; max-width: calc(100% - 84px); flex-wrap: wrap; row-gap: 6px; }
+  .metrics > div { padding: 0 8px; }
+  .metrics dt { font-size: 10px; letter-spacing: .04em; }
+}
+@media (max-width: 1240px) { .metrics { max-width: calc(100% - 140px); } }
+@media (max-width: 1000px) { .legend { display: none; } .view-caption { bottom: 10px; } }
+.pm-address { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.pm-addr-dot { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; border-radius: 50%; background: var(--ink); border: 2.5px solid #fff; box-shadow: 0 0 0 1px var(--ink), 0 2px 6px rgba(0, 0, 0, .3); }
+.pm-address .pm-label { left: 12px; top: -9px; color: var(--ink); font-weight: 600; }
+body[data-scene-style="night"] .pm-addr-dot { background: #f2efe9; border-color: #111; box-shadow: 0 0 0 1px #f2efe9; }
+body[data-scene-style="night"] .pm-address .pm-label { color: #f2efe9; }
+.vp-toolbar .face-btn { font-size: 12.5px; padding: 5px 10px; background: var(--accent); border-color: var(--accent); color: #fff; }
+#btn-face { position: absolute; right: 10px; top: 52px; z-index: 4; font-size: 12.5px; padding: 6px 11px; background: var(--accent); border-color: var(--accent); color: #fff; }
+#btn-face:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+@media (max-width: 860px) { #btn-face { top: auto; bottom: 150px; } }

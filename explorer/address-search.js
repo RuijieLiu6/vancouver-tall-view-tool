@@ -113,7 +113,8 @@
     }
     X.applyFlowTool?.();
     root.__aerialContext?.setCenterModel(candidate.x, candidate.y);
-    setStatus(`${candidate.label} centred in plan. Now click open ground nearby or draw a boundary, or use “Place site here”. Nothing was moved.`, 'success');
+    X.setAddressPin?.(candidate);
+    setStatus(`${candidate.label} is marked on the plan. Click open ground near it to place your site, or use “Place site here”. ${X.state?.site ? 'Your current site has not moved.' : 'Your site is not placed yet.'}`, 'success');
   }
   function renderResults(items) {
     results.replaceChildren();

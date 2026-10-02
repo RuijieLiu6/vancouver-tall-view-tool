@@ -38,7 +38,7 @@ The tool computes the plan relation between your proposal and each mapped corrid
 
 **Input.** Site at Georgia and Cambie (model x 700, y −300). One block: 120 m tall, 30 × 30 m, rotation 0°. View from the roof of the modelled building `w363410790`, 389 m away, eye 1.6 m above the roof. Study ceiling: 100 m above the proposal base.
 
-**Result.** Three mapped view corridors overlap the proposal in plan: 3.2.3 Queen Elizabeth Park, 9.2 Cambie Street and A Alder Terrace. The height experiment reads **20.0 m above your ceiling**; lowering the tower to 80 m reads **20.0 m clearance**. Open [`media/example-study.json`](media/example-study.json) with **Study file › Open study** to reproduce it.
+**Result.** Three mapped view corridors overlap the proposal in plan: 3.2.3 Queen Elizabeth Park, 9.2 Cambie Street and A Alder Terrace. The height experiment reads **20.0 m above your study ceiling**; lowering the tower to 80 m reads **20.0 m below your study ceiling**. Open [`media/example-study.json`](media/example-study.json) with **Study file › Open study** to reproduce it.
 
 ## 5. Skill and limits
 

@@ -403,7 +403,7 @@ function renderBuilder() {
 async function exportPdf() { if (exporting) return; exporting = true; const btns = [$('btn-download-pdf'), $('btn-nav-pdf')].filter(Boolean), status = $('pdf-status'); for (const b of btns) { b.disabled = true; b.classList.add('busy'); }
   try { const o = current(); const r = await build(o, (m) => { status.textContent = m; }); const a = document.createElement('a'); a.href = URL.createObjectURL(r.blob);
     a.download = (o.title.replace(/[^a-z0-9_-]+/gi, '-').replace(/^-|-$/g, '') || 'site-study') + '-report.pdf'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-    status.textContent = `PDF exported: ${r.pages} pages, ${(r.blob.size / 1048576).toFixed(1)} MB.`; return r; }
+    status.textContent = `PDF exported as ${a.download} (${r.pages} pages, ${(r.blob.size / 1048576).toFixed(1)} MB). Your browser saves it to its download folder, usually Downloads.`; return r; }
   catch (e) { status.textContent = 'Could not export the PDF: ' + (e?.message || e); return null; }
   finally { exporting = false; for (const b of btns) { b.disabled = false; b.classList.remove('busy'); } } }
 if ($('pb-list')) {
