@@ -2,6 +2,10 @@
 
 **[Open the tool in your browser](https://ruijieliu6.github.io/vancouver-tall-view-tool/)** · [Report an issue or a review](https://github.com/RuijieLiu6/vancouver-tall-view-tool/issues/new) · ARCH 540, Assignment 1 · release v09.16 (October 2, 2026)
 
+[Watch the recorded demo (2:04)](https://drive.google.com/file/d/1DWnL5P9Co1HlqFtK4MfyUDTMS3ZeET8c/view) · [Replay the opening animation](https://ruijieliu6.github.io/vancouver-tall-view-tool/?intro=1)
+
+The captioned demo follows address search, site placement, tower height and rotation, rooftop viewing, protected viewpoints, and PDF export. A visible pointer and click highlights make the interactions easier to follow. The recording starts with a skyline view; the separate opening-animation link always replays the introduction, including on a return visit.
+
 ![Demo: site, build, view and output](media/demo.gif)
 
 ## 1. Purpose
