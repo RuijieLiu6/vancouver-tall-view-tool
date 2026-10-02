@@ -1,7 +1,7 @@
 {
   "format": "vancouver-static-pages/1",
   "file_count": 59,
-  "total_bytes": 51875201,
+  "total_bytes": 51978505,
   "files": {
     ".github/workflows/pages.yml": {
       "bytes": 591,
@@ -208,8 +208,8 @@
       "sha256": "59dd86f3385ebbe62853b1cc0edd9049ca334b86a2ae9faa1da8d6e25508c76e"
     },
     "media/demo.gif": {
-      "bytes": 9096422,
-      "sha256": "4c1138d13600498d2907822551e1c8e333480520068f1be5c7c3df05703e2ba9"
+      "bytes": 9199726,
+      "sha256": "0dd89ae8a938f35928bb8de5f969aaf705e9adbb1bb6b05200ce02cade921cfe"
     },
     "media/example-rooftop-view.png": {
       "bytes": 569629,
