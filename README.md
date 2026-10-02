@@ -11,16 +11,16 @@
 
 ## 2. How to use it
 
-The tool is a web page; it needs no installation. Open the link above in a desktop browser with WebGL2 (recent Chrome, Edge, Firefox or Safari). The first visit shows a short introduction; **Help** in the top bar opens it again.
+The tool is a web page; it needs no installation. Open the link above in a desktop browser with WebGL2 (recent Chrome, Edge, Firefox or Safari). The first visit shows a short introduction; **Help** in the top bar opens it again. New here? **See a worked example** in the introduction loads a complete study in one click.
 
 The tool works in four steps. In each step you choose one method; the panel then offers the other methods as buttons if you want to switch, **Proceed** moves on and **Return** goes back.
 
-1. **Site.** *Open spot on the plan*: find the area with a neighbourhood or a downtown address (suggestions appear as you type), then click open ground or draw a boundary. *Replace a building* or *Replace several buildings*: click buildings in the plan, then use them as the site.
+1. **Site.** *Open spot on the plan*: optionally find an area with a neighbourhood or a downtown address (suggestions appear as you type; **Place site here** puts the site at the address), then click open ground or draw a boundary. *Replace a building* or *Replace several buildings*: click buildings in the plan, then use them as the site.
 2. **Build.** *Build on the platform*: stack and size blocks (height, width, depth, rotation, offsets). *Import a model*: a Rhino `.3dm` or `.obj` file, read on your device. Existing buildings under the proposal are shown as demolished; a checkbox keeps them.
 3. **View.** *View from a protected cone*: stand at the City's open-data origin of one of the 24 protected views. *View from a building*: stand on a modelled roof. *Drag and view*: press a spot in the plan, drag toward what you want to see and release. The small plan inset shows where you stand and which way you look.
-4. **Output.** See which mapped view corridors overlap the proposal in plan, optionally test a study ceiling, then choose the **PDF contents** and **Export PDF**. Every protected view whose corridor overlaps the proposal gets a page with existing and proposed views from its origin point, a key plan and a section. **Start a new study** clears everything.
+4. **Output.** A one-sentence summary, then the mapped view corridors that overlap the proposal in plan; optionally test a study ceiling (your own assumption, not a City limit), then choose the **PDF contents** and **Export PDF**. Every protected view whose corridor overlaps the proposal gets a page with existing and proposed views from its origin point, a key plan and a section. **Start a new study** clears everything.
 
-**Style** in the top bar switches between Studio, Illustrated garden, Landscape collage and Night. **Layers** adds labels, roads and an experimental 2022 aerial photo texture.
+The strip above the map summarizes the study as you work; **?** at its end explains each number. **Style** in the top bar switches between Studio, Illustrated garden, Landscape collage and Night. **Layers** adds labels, roads and an experimental 2022 aerial photo texture. The map also works from the keyboard: arrow keys move the view, + and − zoom, and Enter acts at the centre of the view.
 
 ## 3. Source
 
