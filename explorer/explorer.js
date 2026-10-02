@@ -784,6 +784,10 @@ function restoreBuildings() { const replacing = state.flow.methods.site === 'rep
   if (replacing) { resetStage('site'); applyFlowTool(); } else { state.removed = []; state.multiSel = []; state.showExisting = false; }
   state.clearOverlaps = false; refreshPanels(); requestRender(); writeHash();
   setHint(replacing ? 'Buildings restored and automatic demolition is off. Choose a building or a group again to set the site.' : 'All context buildings restored, and automatic demolition is off (Build step). Your study boundary and proposal remain.'); }
+// in Build, once the height stops changing, the city view refits if the tower's top has left the frame
+let refitTimer = null, refitTop = null;
+function scheduleRefit() { const P = proposalBox(); if (!P || state.flow.stage !== 'build' || state.mode !== 'overview' || !proposalShown()) return; if (refitTop !== null && Math.abs(P.top - refitTop) < 0.01) return; refitTop = P.top; clearTimeout(refitTimer);
+  refitTimer = setTimeout(() => { const Q = proposalBox(); if (!Q || !lastCam || state.mode !== 'overview' || state.flow.stage !== 'build') return; const q = project(lastCam.vp, [Q.cx, Q.cy, Q.top]); if (q[3] <= 0 || q[1] > 0.9 || Math.abs(q[0]) > 1) focusSite(); }, 700); }
 function focusSite() {
   if (!state.site) return false; const m = state.boundary.length >= 3 ? SiteGeometry.metrics(state.boundary) : null;
   const span = m ? Math.max(m.bounds[2]-m.bounds[0], m.bounds[3]-m.bounds[1]) : 120;
@@ -1178,7 +1182,7 @@ function refreshPanels() { updateCleared(); refreshStudyUI(); const P = proposal
     $('cleared-text').textContent = !state.clearOverlaps ? 'Buildings your proposal overlaps are kept. Tick the box to treat them as demolished.' : `${state.cleared.length} existing building${state.cleared.length === 1 ? '' : 's'} under your proposal ${state.cleared.length === 1 ? 'is' : 'are'} shown as demolished to make room. This is a study assumption, not an approval.`; }
   const bi = $('building-info'); if (state.selected !== null && assets.ready) { const c = (state.selectedExt ? assets.extIndex : assets.index).columns, i = state.selected, b = c.bbox[i]; bi.textContent = `${state.selectedExt ? 'Extension building (current OSM, © OpenStreetMap contributors)' : 'Existing building (supplied model)'} osm_id ${c.osm_id[i]} · ${c.osm_type[i] || '—'} · height_m ${c.height_m[i] === null ? '—' : c.height_m[i]} (${HS[c.height_source[i]]}) · ≈ ${fmt(b[3] - b[0], 0)} × ${fmt(b[4] - b[1], 0)} m · top z ${fmt(b[5])} m. Model bounding dimensions; not a parcel survey.`; bi.classList.remove('hidden'); }
   else bi.classList.add('hidden');
-  refreshLiveStudy(); $('step-status').textContent = stepStatus(); refreshFlowUI(); refreshCaption();
+  refreshLiveStudy(); $('step-status').textContent = stepStatus(); refreshFlowUI(); refreshCaption(); scheduleRefit();
   $('tech-json').textContent = JSON.stringify(technicalState(), null, 1); if (state.flow.stage === 'output') { renderReport(); window.__report?.renderBuilder(); } }
 function technicalState() { const m = assets.manifest; const P = proposalBox(); const c = selectedCone();
   return { schema: 'vancouver-site-study/1', name: state.studyName, resume_hash: serializeHash(), saved_at: new Date().toISOString(), imported_geometry_included: false, label: 'VISUAL EXPLORATION AND TEACHING ONLY — NOT A PROTECTED-VIEW ASSESSMENT', regulatory_applicability: 'NOT ASSESSED', coordinates: assets.unified ? 'model XY metres, Z up; rebuilt SRTM ground, building bases shifted vertically (see context_rebuild)' : 'model metres, Z up, untransformed (see source.display_transform)',
