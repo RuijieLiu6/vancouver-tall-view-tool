@@ -1,7 +1,7 @@
 {
   "format": "vancouver-static-pages/1",
   "file_count": 59,
-  "total_bytes": 51523045,
+  "total_bytes": 51524675,
   "files": {
     ".github/workflows/pages.yml": {
       "bytes": 591,
@@ -40,8 +40,8 @@
       "sha256": "935953f809619aed16321659323fb92619ceca36503d9c0419881eefe9d13cd0"
     },
     "explorer/address-search.js": {
-      "bytes": 20849,
-      "sha256": "b7339a5b2c8b16def3becb41d7f2be42a6e69c4c5bb5e9bfff7c9275144d9738"
+      "bytes": 20912,
+      "sha256": "d476f269f73e09c3ee203b5e665f57f588dcf64e4f4e2bd5f90000e2c655056b"
     },
     "explorer/aerial-context.js": {
       "bytes": 14439,
@@ -64,20 +64,20 @@
       "sha256": "de24ba485f7c6e95e719f6136bd81eb59642b41dfe2362371d521348ec21befa"
     },
     "explorer/explorer.css": {
-      "bytes": 93627,
-      "sha256": "f31bacf7e61a0ee6def45cfe2add67d6e85a86487513a45f4da72748964e187a"
+      "bytes": 93913,
+      "sha256": "5a8c7ed5250e0a439fcdc26c3c370d9a00cad299dd66e009a3e55ef9af2a19ef"
     },
     "explorer/explorer.js": {
-      "bytes": 200982,
-      "sha256": "0012ad8cc8cb04f55c203605bfaf4e4f7e272fa62301cd90289541865097519c"
+      "bytes": 202197,
+      "sha256": "c585c92a5d5abd506152f511b7e79dc1dc3c123d1f8427d454a9b3a0584aaec8"
     },
     "explorer/flow-selftest.js": {
       "bytes": 8361,
       "sha256": "d9e63df0150179947f58959d5df8100cf90034a4249fba4946f840a4d24933ca"
     },
     "explorer/index.html": {
-      "bytes": 44126,
-      "sha256": "c9524d242679eb2550c659237194d94c016c8d35774aaf0d5d80da799b275344"
+      "bytes": 44128,
+      "sha256": "cd6646b83de771fe6292b79c4e66b8b2031a68cb0153758a8f5690b43ba345b1"
     },
     "explorer/intro.js": {
       "bytes": 7562,
@@ -92,8 +92,8 @@
       "sha256": "54b67c465a03a5d5ec8458e8a073d0fa086e33364e0adb9d3c072c3d2829a8e2"
     },
     "explorer/report.js": {
-      "bytes": 60562,
-      "sha256": "ca6ee2b1a5a15fd15ea682125b7d406cd01935a49be70afe25b7f3b32ffce200"
+      "bytes": 60626,
+      "sha256": "12885498a296b42314cbb7bc013e28f6aa3a3d1d32928876d4c0273d29a50c0b"
     },
     "explorer/rooftop-selftest.js": {
       "bytes": 7296,

@@ -983,3 +983,6 @@ body[data-scene-style="night"] .pm-address .pm-label { color: #f2efe9; }
 #btn-face { position: absolute; right: 10px; top: 52px; z-index: 4; font-size: 12.5px; padding: 6px 11px; background: var(--accent); border-color: var(--accent); color: #fff; }
 #btn-face:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
 @media (max-width: 860px) { #btn-face { top: auto; bottom: 150px; } }
+#btn-face, body[data-scene-style] #btn-face { background: #365f54; border-color: #365f54; color: #fff; }
+#btn-face:hover, body[data-scene-style] #btn-face:hover { background: #294a42; border-color: #294a42; }
+.site-step.collapsed .site-step-open { min-height: 32px; padding: 4px 8px; }

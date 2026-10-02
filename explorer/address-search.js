@@ -114,7 +114,7 @@
     X.applyFlowTool?.();
     root.__aerialContext?.setCenterModel(candidate.x, candidate.y);
     X.setAddressPin?.(candidate);
-    setStatus(`${candidate.label} is marked on the plan. Click open ground near it to place your site, or use “Place site here”. ${X.state?.site ? 'Your current site has not moved.' : 'Your site is not placed yet.'}`, 'success');
+    setStatus(X.state?.site ? `${candidate.label} is marked on the plan. Your site has not moved: click the plan to move it, or choose “Place site here”.` : `${candidate.label} is marked on the plan. Click open ground near it to place your site, or choose “Place site here”.`, 'success');
   }
   function renderResults(items) {
     results.replaceChildren();
