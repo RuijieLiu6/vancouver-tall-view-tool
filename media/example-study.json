@@ -1,0 +1,885 @@
+{
+ "schema": "vancouver-site-study/1",
+ "name": "Example - Shangri-La Vancouver (1128 W Georgia St)",
+ "resume_hash": "#style=collage&name=Example+-+Shangri-La+Vancouver+%281128+W+Georgia+St%29&boundary=-233.830%2C311.460%3B-199.210%2C311.460%3B-197.870%2C329.950%3B-197.870%2C339.430%3B-199.210%2C364.890%3B-233.830%2C364.890&removed=s%3Aw360939772%2Cs%3Aw360939773%2Cs%3Aw360939774%2Cs%3Aw360939775&existing=0&layers=labels%2Croads&step=3&flow=output&fm=multi%2Cplatform%2Croof&site=-216.123%2C338.145&parts=201%2C29%2C43%2C0%2C0%2CShangri-La%2520Vancouver&pm=boxes&rot=0&obs=-305.253%2C101.423&osrc=rooftop&roof=s%3Aw238647499&eye=1.6&fov=60&mode=observer&wedge=1&allcones=0&bd=1&bz=unknown&cref=height&ch=120&area=footprint&cam=-0.750%2C0.360%2C820.000%2C-216.123%2C338.145%2C120.522&icam=-0.900%2C0.350%2C400.000&look=1.211%2C0.306",
+ "saved_at": "2026-10-02T14:58:44.838Z",
+ "imported_geometry_included": false,
+ "label": "VISUAL EXPLORATION AND TEACHING ONLY \u2014 NOT A PROTECTED-VIEW ASSESSMENT",
+ "regulatory_applicability": "NOT ASSESSED",
+ "coordinates": "model XY metres, Z up; rebuilt SRTM ground, building bases shifted vertically (see context_rebuild)",
+ "step": 3,
+ "flow": {
+  "stage": "output",
+  "methods": {
+   "site": "multi",
+   "build": "platform",
+   "view": "roof"
+  }
+ },
+ "site": {
+  "x": -216.123,
+  "y": 338.145,
+  "z": 40.52234993896309
+ },
+ "study_area": {
+  "boundary_model_xy": [
+   [
+    -233.83,
+    311.46
+   ],
+   [
+    -199.21,
+    311.46
+   ],
+   [
+    -197.87,
+    329.95
+   ],
+   [
+    -197.87,
+    339.43
+   ],
+   [
+    -199.21,
+    364.89
+   ],
+   [
+    -233.83,
+    364.89
+   ]
+  ],
+  "area": 1891.896300000004,
+  "perimeter": 176.18373115865256,
+  "centre": [
+   -216.12289830843253,
+   338.14521911639645
+  ],
+  "bounds": [
+   -233.83,
+   311.46,
+   -197.87,
+   364.89
+  ],
+  "lengths": [
+   34.620000000000005,
+   18.538492387462373,
+   9.480000000000018,
+   25.495238771190177,
+   34.620000000000005,
+   53.43000000000001
+  ],
+  "units": "metres; horizontal area in square metres",
+  "status": "user-defined study boundary, not a legal parcel; total horizontal study area may include water; vacancy, ownership and redevelopment eligibility unknown"
+ },
+ "hypothetical_removals": [
+  {
+   "osm_id": "w360939772",
+   "source": "supplied"
+  },
+  {
+   "osm_id": "w360939773",
+   "source": "supplied"
+  },
+  {
+   "osm_id": "w360939774",
+   "source": "supplied"
+  },
+  {
+   "osm_id": "w360939775",
+   "source": "supplied"
+  }
+ ],
+ "cleared_for_proposal": {
+  "enabled": true,
+  "buildings": [
+   {
+    "osm_id": "w360939771",
+    "source": "supplied"
+   }
+  ],
+  "method": "model roof under the proposal footprint (shrunk 0.5 m) or a building vertex inside it"
+ },
+ "existing_comparison_visible": false,
+ "display_layers": {
+  "labels": true,
+  "roads": true,
+  "sources": false,
+  "extent": false,
+  "aerial": false
+ },
+ "visual_style": "collage",
+ "proposal_mode": "boxes",
+ "blocks": [
+  {
+   "h": 201,
+   "w": 29,
+   "d": 43,
+   "dx": 0,
+   "dy": 0,
+   "name": "Shangri-La Vancouver",
+   "rotation": 0
+  }
+ ],
+ "imported": null,
+ "proposal": {
+  "footprint_bbox": [
+   -230.623,
+   316.645,
+   40.52234993896309,
+   -201.623,
+   359.645,
+   241.5223499389631
+  ],
+  "base_z_model_relative": 40.52234993896309,
+  "top_z_model_relative": 241.5223499389631,
+  "parts": [
+   {
+    "name": "Shangri-La Vancouver",
+    "box": [
+     -230.623,
+     316.645,
+     40.52234993896309,
+     -201.623,
+     359.645,
+     241.5223499389631
+    ],
+    "rotation": 0,
+    "footprint": [
+     [
+      -230.623,
+      316.645
+     ],
+     [
+      -201.623,
+      316.645
+     ],
+     [
+      -201.623,
+      359.645
+     ],
+     [
+      -230.623,
+      359.645
+     ]
+    ]
+   }
+  ]
+ },
+ "observer": {
+  "source": "rooftop",
+  "ground": {
+   "x": -305.253,
+   "y": 101.423,
+   "z": 59.441707611083984,
+   "ground": "roof",
+   "building": {
+    "id": "w238647499",
+    "source": "supplied",
+    "index": 682,
+    "height_m": 23.4,
+    "height_source": "floor count"
+   }
+  },
+  "eye_height_m": 1.6,
+  "eye_height_reference": "above modelled roof surface",
+  "roof_model_height_unverified": true,
+  "visibility_status": "exploratory visualisation, not a verified sightline or regulatory assessment",
+  "eye": [
+   -305.253,
+   101.423,
+   61.041707611083986
+  ],
+  "yaw_rad": 1.211,
+  "pitch_rad": 0.306,
+  "fov_deg": 60
+ },
+ "viewpoint": null,
+ "plan_overlap": {
+  "status": "evaluated in plan only",
+  "approximation": "rotated block footprints",
+  "corridors": [
+   {
+    "view_number": "3.2.1",
+    "name": "Queen Elizabeth Park",
+    "relation": "overlap"
+   }
+  ],
+  "regulatory_applicability": "NOT ASSESSED"
+ },
+ "study_ceiling": {
+  "enabled": false,
+  "reference": "height",
+  "height_above_base_m": 120,
+  "elevation_model_m": null
+ },
+ "view_cones_source": {
+  "dataset": "view-cones",
+  "portal": "City of Vancouver Open Data Portal",
+  "dataset_page": "https://opendata.vancouver.ca/explore/dataset/view-cones/",
+  "metadata_api": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/view-cones",
+  "export_api": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/view-cones/exports/geojson",
+  "accessed": "2026-09-23T21:27:17-07:00",
+  "license": "Open Government Licence - Vancouver",
+  "license_url": "https://opendata.vancouver.ca/pages/licence/",
+  "portal_modified": "2026-09-21T13:35:44+00:00",
+  "portal_data_processed": "2026-09-21T13:35:44+00:00",
+  "records": 24,
+  "title": "View cones",
+  "description": "<div><p>This dataset contains the boundaries of the City's protected views.  Development within the polygons is limited in height to maintain these public views. </p><p>\n<strong>Note:</strong> To understand view cone implications on individual sites, please email <a href=\"mailto:views@vancouver.caviews@vancouver.ca\">views@vancouver.ca</a></p></div> <h3>Data currency</h3><div><p>The extract for this dataset is updated as needed. There may be no change in data content from one week to the next because there is no change in source data. Priorities and resources will also determine how fast a change in reality is reflected in the database.\u00a0 </p></div> <h3>Data accuracy</h3><div><p>These view corridors have been entered accurately, but the authoritative source for these is the City's bylaws.</p></div> <h3>Websites for further information</h3><div><ul><li>\n<a href=\"https://vancouver.ca/your-government/vanmap.aspx\">VanMap - View Cones </a></li><li>\n<a href=\"http://vancouver.ca/home-property-development/protecting-vancouvers-views.aspx\">Protecting Vancouver's views</a></li></ul></div>",
+  "sha256_geojson": "843383585c4a732ed18f9624628651b7aaa478cb195cfc1e8a3ef2aefd215980",
+  "crs": "GeoJSON export, WGS84 longitude/latitude (EPSG:4326) as served by the portal",
+  "portal_caveat_verbatim": "The extract for this dataset is updated as needed. There may be no change in data content from one week to the next because there is no change in source data. (portal description)",
+  "use_in_tool": "plan outlines of the view cones and candidate origin positions, mapped into model coordinates with the checked earth-anchor transformation; the heights of the horizontal lower boundaries are NOT in this dataset unless a field says so",
+  "city_view_pages": {
+   "status": "listed in the dataset's url field; automated access returned HTTP 403 (Cloudflare) on 2026-09-23, so they were NOT read",
+   "verification_needed": "Origin elevations and cone height data have not been verified against the per-view pages; no height data from those pages is used here."
+  },
+  "heights": "The dataset holds plan polygons only. No maximum geodetic heights, no origin elevations, no datum statement. The tool therefore never uses a City height; the guideline check runs on a user-declared hypothetical boundary."
+ },
+ "transformation": {
+  "anchor": {
+   "latitude": 49.2827,
+   "longitude": -123.1207,
+   "model_xy": [
+    0,
+    0
+   ],
+   "north": "+Y"
+  },
+  "method": "equirectangular about the earth anchor: x = (lon - -123.1207) * 111320.0 * cos(49.2827 deg), y = (lat - 49.2827) * 110574.0; checked against 8 OpenStreetMap footprints, max residual 0.1 m; absolute accuracy inherits OpenStreetMap",
+  "check_points": [
+   {
+    "osm_id": "w184923406",
+    "model": [
+     -516.5,
+     -148.4
+    ],
+    "projected": [
+     -516.48,
+     -148.37
+    ],
+    "residual_m": [
+     0.02,
+     0.03
+    ],
+    "distance_m": 0.04
+   },
+   {
+    "osm_id": "w311569755",
+    "model": [
+     -587.8,
+     606.9
+    ],
+    "projected": [
+     -587.86,
+     606.9
+    ],
+    "residual_m": [
+     -0.06,
+     0
+    ],
+    "distance_m": 0.06
+   },
+   {
+    "osm_id": "w49288682",
+    "model": [
+     -526.6,
+     -781.6
+    ],
+    "projected": [
+     -526.59,
+     -781.61
+    ],
+    "residual_m": [
+     0.01,
+     -0.01
+    ],
+    "distance_m": 0.02
+   },
+   {
+    "osm_id": "w136258928",
+    "model": [
+     1027.6,
+     165.4
+    ],
+    "projected": [
+     1027.55,
+     165.37
+    ],
+    "residual_m": [
+     -0.05,
+     -0.03
+    ],
+    "distance_m": 0.05
+   },
+   {
+    "osm_id": "w143524452",
+    "model": [
+     855.7,
+     -885.4
+    ],
+    "projected": [
+     855.66,
+     -885.42
+    ],
+    "residual_m": [
+     -0.04,
+     -0.02
+    ],
+    "distance_m": 0.04
+   },
+   {
+    "osm_id": "w223173357",
+    "model": [
+     -959.4,
+     -20.2
+    ],
+    "projected": [
+     -959.47,
+     -20.19
+    ],
+    "residual_m": [
+     -0.07,
+     0.01
+    ],
+    "distance_m": 0.08
+   },
+   {
+    "osm_id": "w311594529",
+    "model": [
+     -869.8,
+     816.7
+    ],
+    "projected": [
+     -869.87,
+     816.71
+    ],
+    "residual_m": [
+     -0.07,
+     0.01
+    ],
+    "distance_m": 0.07
+   },
+   {
+    "osm_id": "w160286918",
+    "model": [
+     -1333,
+     -2174.2
+    ],
+    "projected": [
+     -1333,
+     -2174.18
+    ],
+    "residual_m": [
+     0,
+     0.02
+    ],
+    "distance_m": 0.02
+   }
+  ],
+  "max_residual_m": 0.08,
+  "vertical": "not transformed: model z datum unknown (ASSET_INVENTORY U2)"
+ },
+ "context_rebuild": {
+  "generated_at": "2026-09-24T15:17:32-07:00",
+  "generator": "tools/build_unified_context.py",
+  "target_extent_model_m": [
+   -3238.63,
+   -5083.1,
+   5674.22,
+   3939.94
+  ],
+  "purpose": "coherent full-extent context for visual exploration; original Rhino and prior generated assets remain untouched",
+  "sources": {
+   "supplied_context": {
+    "file": "sources/Vancouver DT context.3dm",
+    "sha256": "c1614721fd113a448ecbf4f390e6374d5d879fff46229ee711efc69c3ab432ca"
+   },
+   "extension_context": {
+    "manifest": "generated_assets/context/extension_manifest.json",
+    "source": "current OpenStreetMap via Overpass"
+   },
+   "elevation": {
+    "file": "external_data/extension_terrain/srtm_grid.json",
+    "sha256": "3f05632a0bae62c470108ef38f351cce8fcf1f5b3c0caf5d2049456d14f44c6f",
+    "source": "NASA SRTM 1 arc-second via Open Topo Data, sampled about 60 m; EGM96 heights"
+   },
+   "coastline": {
+    "ways": 143,
+    "vertices": 6372,
+    "polygonized_faces": 6,
+    "sea_faces": 1,
+    "sea_area_m2": 20948468.04,
+    "source_file": "external_data/shoreline/coastline_overpass.json",
+    "sha256": "c4c35067dabbe9d9928e371d7d4ec2934634f0483639120e2c6168c503ec365e",
+    "source": "OpenStreetMap natural=coastline via Overpass; (c) OpenStreetMap contributors, ODbL",
+    "classification": "OSM directed coastline: land on left, sea on right"
+   },
+   "inland_water": {
+    "closed_water_ways": 92,
+    "water_way_file": "external_data/shoreline/inland_water_ways.json",
+    "water_way_sha256": "a55e8af2094e22af5468d40a5a7c7f91229c289702962cdba4a85a9657518887",
+    "source_water_meshes": [
+     "water.bin",
+     "extension_water.bin"
+    ],
+    "legacy_marine_components_discarded": 1,
+    "inland_parts": 84,
+    "inland_area_m2": 288936.15,
+    "note": "Closed OSM water ways plus supplied/extension OSM-derived water faces; full multipolygon relation metadata unavailable from bounded Overpass response"
+   }
+  },
+  "methods": {
+   "terrain": {
+    "grid_vertices": 22800,
+    "grid_cells": 22499,
+    "input_triangles": 44998,
+    "fully_under_water": 10860,
+    "partially_clipped": 2101,
+    "replacement_triangles": 9299,
+    "method": "SRTM grid, each cell divided southwest-to-northeast; exact XY subtraction of mapped water; clipped vertices sampled on the same triangular planes"
+   },
+   "water": {
+    "ocean_triangles": 2932,
+    "inland_triangles": 2799,
+    "ocean_level_m": 0,
+    "inland_level_method": "flat per polygon at the minimum nearby SRTM shoreline sample, approximate EGM96 height",
+    "inland_level_range_m": [
+     0,
+     125.69
+    ]
+   },
+   "parks": {
+    "input_triangles": 19134,
+    "output_triangles": 97226,
+    "method": "clip existing park mesh triangles to unified land triangles; drape vertices 0.15 m above matching terrain"
+   },
+   "roads": {
+    "land_segments": 20091,
+    "source_water_crossing_segments_retained_at_source_z": 5,
+    "method": "split roads at terrain triangles and drape 0.5 m above land; preserve supplied-source Z for water crossings as bridge/deck context"
+   },
+   "buildings": {
+    "count": 9897,
+    "on_land": 9837,
+    "on_ocean": 57,
+    "on_inland_water": 3,
+    "median_z_shift_m": 0.48,
+    "min_z_shift_m": -12.24,
+    "max_z_shift_m": 21.61,
+    "old_ground_sources": {
+     "terrain": 9836,
+     "water": 57,
+     "height_tag": 4,
+     "mesh_minimum": 0
+    },
+    "elevated_parts_preserved": 568,
+    "method": "uniform per-object Z translation by new triangulated surface minus old triangulated surface at footprint-bbox centre; original clearance, XY/index topology and height span retained"
+   },
+   "ext_buildings": {
+    "count": 51510,
+    "on_land": 51508,
+    "on_ocean": 2,
+    "on_inland_water": 0,
+    "median_z_shift_m": 0,
+    "min_z_shift_m": -0.98,
+    "max_z_shift_m": 2.21,
+    "old_ground_sources": {
+     "terrain": 51282,
+     "water": 0,
+     "height_tag": 228,
+     "mesh_minimum": 0
+    },
+    "elevated_parts_preserved": 54,
+    "method": "uniform per-object Z translation by new triangulated surface minus old triangulated surface at footprint-bbox centre; original clearance, XY/index topology and height span retained"
+   },
+   "backdrop": {
+    "kept_source_triangles": 23772,
+    "fully_removed_inside_target": 108,
+    "clipped_at_target": 32,
+    "result_triangles": 23822,
+    "method": "source SRTM mountain backdrop clipped to outside the full unified target rectangle"
+   }
+  },
+  "files": {
+   "terrain": {
+    "file": "unified_terrain.bin",
+    "byte_length": 1104396,
+    "positions": {
+     "dtype": "float32",
+     "components": 3,
+     "byte_offset": 0,
+     "count": 50697
+    },
+    "indices": {
+     "dtype": "uint32",
+     "byte_offset": 608364,
+     "count": 124008,
+     "triangles": 41336
+    },
+    "bbox": [
+     -3238.6298828125,
+     -5083.10009765625,
+     0,
+     5674.22021484375,
+     3939.93994140625,
+     129
+    ]
+   },
+   "water": {
+    "file": "unified_water.bin",
+    "byte_length": 275088,
+    "positions": {
+     "dtype": "float32",
+     "components": 3,
+     "byte_offset": 0,
+     "count": 17193
+    },
+    "indices": {
+     "dtype": "uint32",
+     "byte_offset": 206316,
+     "count": 17193,
+     "triangles": 5731
+    },
+    "bbox": [
+     -3238.6298828125,
+     -4993.03515625,
+     0,
+     5674.22021484375,
+     3939.93994140625,
+     125.6921615600586
+    ]
+   },
+   "parks": {
+    "file": "unified_parks.bin",
+    "byte_length": 4666848,
+    "positions": {
+     "dtype": "float32",
+     "components": 3,
+     "byte_offset": 0,
+     "count": 291678
+    },
+    "indices": {
+     "dtype": "uint32",
+     "byte_offset": 3500136,
+     "count": 291678,
+     "triangles": 97226
+    },
+    "bbox": [
+     -3238.6298828125,
+     -5083.10009765625,
+     0.15000000596046448,
+     5674.22021484375,
+     3939.93994140625,
+     129.14999389648438
+    ]
+   },
+   "roads": {
+    "file": "unified_roads.bin",
+    "byte_length": 482304,
+    "positions": {
+     "dtype": "float32",
+     "components": 3,
+     "byte_offset": 0,
+     "count": 40192
+    },
+    "segments": 20096
+   },
+   "shoreline": {
+    "file": "unified_shoreline.bin",
+    "byte_length": 70200,
+    "positions": {
+     "dtype": "float32",
+     "components": 3,
+     "byte_offset": 0,
+     "count": 5850
+    },
+    "segments": 2925
+   },
+   "buildings": {
+    "file": "unified_buildings.bin",
+    "byte_length": 9722568,
+    "positions": {
+     "dtype": "float32",
+     "components": 3,
+     "byte_offset": 0,
+     "count": 505090
+    },
+    "indices": {
+     "dtype": "uint32",
+     "byte_offset": 6061080,
+     "count": 915372,
+     "triangles": 305124
+    },
+    "bbox": [
+     -3238.340087890625,
+     -2350.3701171875,
+     -1.4997308254241943,
+     2623.830078125,
+     3939.909912109375,
+     241.53436279296875
+    ]
+   },
+   "ext_buildings": {
+    "file": "unified_ext_buildings.bin",
+    "byte_length": 16473300,
+    "positions": {
+     "dtype": "float32",
+     "components": 3,
+     "byte_offset": 0,
+     "count": 590318
+    },
+    "indices": {
+     "dtype": "uint32",
+     "byte_offset": 7083816,
+     "count": 2347371,
+     "triangles": 782457
+    },
+    "bbox": [
+     -3255.902587890625,
+     -5135.4990234375,
+     0,
+     5778.7578125,
+     3962.806396484375,
+     152.6031951904297
+    ]
+   },
+   "backdrop": {
+    "file": "unified_backdrop.bin",
+    "byte_length": 435492,
+    "positions": {
+     "dtype": "float32",
+     "components": 3,
+     "byte_offset": 0,
+     "count": 12469
+    },
+    "indices": {
+     "dtype": "uint32",
+     "byte_offset": 149628,
+     "count": 71466,
+     "triangles": 23822
+    },
+    "bbox": [
+     -17377.265625,
+     1912.93017578125,
+     0,
+     20422.734375,
+     30712.9296875,
+     1728
+    ]
+   }
+  },
+  "buildings_index": "unified_buildings_index.json",
+  "ext_buildings_index": "unified_ext_buildings_index.json",
+  "counts": {
+   "terrain_triangles": 41336,
+   "water_triangles": 5731,
+   "park_triangles": 97226,
+   "road_segments": 20096,
+   "shoreline_segments": 2925,
+   "buildings": 9897,
+   "ext_buildings": 51510
+  },
+  "caveats": [
+   "Visual context only; not a survey, parcel map, building entitlement or protected-view ruling.",
+   "SRTM uses EGM96 heights; the supplied Rhino terrain vertical datum is unknown and remains available unchanged for comparison.",
+   "The final 23 m at the north target edge repeats the cached SRTM edge elevations; east edge is interpolated within cached samples.",
+   "Ocean geometry follows current directed OSM coastline; inland water includes current closed OSM ways and previously exported OSM-derived water faces. Multipolygon relation metadata was unavailable from the bounded query.",
+   "Buildings retain supplied OSM footprint meshes and estimated/measured heights; only whole-object Z placement changes.",
+   "Roads over water retain supplied source Z as approximate bridge/deck hints; bridge geometry is not verified."
+  ],
+  "elapsed_s": 13.8
+ },
+ "context_extension": {
+  "purpose": "context EXTENSION outside the supplied model so that all 24 Table 1 view origins lie on a placement surface; distinct provenance from the supplied model",
+  "target_extent_model_m": [
+   -3238.63,
+   -5083.1,
+   5674.22,
+   3939.94
+  ],
+  "counts": {
+   "buildings": 51510,
+   "building_triangles": 782457,
+   "by_height_source": {
+    "measured": 3940,
+    "levels": 2955,
+    "estimated": 44615
+   },
+   "skipped": {
+    "inside_supplied": 62,
+    "open_or_tiny": 0,
+    "degenerate": 0,
+    "relation_or_node": 0
+   },
+   "terrain_triangles": 25630,
+   "water_polygons": 19,
+   "park_polygons": 97,
+   "road_segments": 5669,
+   "labels": 16
+  },
+  "height_rules": {
+   "measured": "OSM height tag (metres)",
+   "levels": "3.2 m x building:levels + 1.0 m when levels >= 2, else 3.2 m x levels (matched 60 of 61 sampled supplied-model buildings)",
+   "estimated": "per building type from the supplied model"
+  },
+  "sources": {
+   "buildings_water_parks_roads_labels": {
+    "source": "OpenStreetMap via Overpass API (https://overpass-api.de/api/interpreter), current data at access time; (c) OpenStreetMap contributors, Open Database License (ODbL)",
+    "accessed": "2026-09-24T00:05:03-07:00",
+    "tiles_model_xy": [
+     [
+      -3238.63,
+      -5083.1,
+      -267.67999999999984,
+      -2351.63
+     ],
+     [
+      -267.67999999999984,
+      -5083.1,
+      2703.2700000000004,
+      -2351.63
+     ],
+     [
+      2703.2700000000004,
+      -5083.1,
+      5674.22,
+      -2351.63
+     ],
+     [
+      2632.6,
+      -2351.63,
+      5674.22,
+      794.1549999999997
+     ],
+     [
+      2632.6,
+      794.1549999999997,
+      5674.22,
+      3939.9399999999996
+     ]
+    ],
+    "tiles_latlon": [
+     "49.236730,-123.165299,49.261433,-123.124386",
+     "49.236730,-123.124386,49.261433,-123.083474",
+     "49.236730,-123.083474,49.261433,-123.042561",
+     "49.261433,-123.084447,49.289882,-123.042561",
+     "49.289882,-123.084447,49.318332,-123.042561"
+    ],
+    "queries": {
+     "buildings": "way[building] out geom",
+     "extras": "way natural=water | landuse=reservoir | leisure=park | highway motorway..tertiary; node place neighbourhood/suburb/quarter"
+    },
+    "note": "the supplied model was built from 2022 OSM data; this extension uses current OSM, so newer or removed buildings differ"
+   },
+   "terrain": {
+    "source": "NASA SRTM 1 arc-second (SRTMGL1), public domain, served by Open Topo Data (https://www.opentopodata.org), dataset 'srtm30m', bilinear interpolation",
+    "api": "https://api.opentopodata.org/v1/srtm30m",
+    "accessed": "2026-09-24T00:02:24-07:00",
+    "spacing_m": 60,
+    "points": 22650,
+    "target_model_extent": [
+     -3238.63,
+     -5083.1,
+     5674.22,
+     3939.94
+    ],
+    "vertical_reference": "metres above the EGM96 geoid; the supplied model's vertical datum is unknown, so the extension terrain is approximate",
+    "use_in_tool": "terrain of the context EXTENSION outside the supplied model's extent (placement surface there); never used in any check"
+   }
+  },
+  "caveats": [
+   "current OSM vs the supplied model's 2022 extraction",
+   "SRTM ~60 m terrain (EGM96) vs the supplied terrain of unknown source and datum; a south-edge display ribbon interpolates the gap, while the irregular east/coastal edge remains unstitched",
+   "bases are draped at the footprint centroid; multipolygon relations are skipped",
+   "extension buildings are context only; never a site by themselves"
+  ]
+ },
+ "check": null,
+ "guideline_source": {
+  "title": "Public Views Guidelines",
+  "publisher": "City of Vancouver",
+  "approved": "2024-07-10 (Council)",
+  "amended": "2026-02-04",
+  "pages": 8,
+  "local_copy": "sources/guidelines-public-views.pdf",
+  "accessed": "2026-09-22",
+  "text_extract": "research/source_extracts/guidelines-public-views.txt",
+  "status": "Council-approved design guideline, not a by-law; wording is 'should' and 'may be considered' (s.2, p.3)"
+ },
+ "mode": "observer",
+ "cameras": {
+  "overview": {
+   "az": -0.75,
+   "el": 0.36,
+   "dist": 820,
+   "target": [
+    -216.123,
+    338.145,
+    120.522
+   ]
+  },
+  "inspect": {
+   "az": -0.9,
+   "el": 0.35,
+   "dist": 400
+  },
+  "observer": {
+   "yaw": 1.211,
+   "pitch": 0.306
+  }
+ },
+ "source": {
+  "filename": "Vancouver DT context.3dm",
+  "relative_path": "sources/Vancouver DT context.3dm",
+  "sha256": "c1614721fd113a448ecbf4f390e6374d5d879fff46229ee711efc69c3ab432ca",
+  "size_bytes": 53437495,
+  "modified": "2026-09-22T20:27:34-07:00",
+  "model_units": "Meters",
+  "object_count": 11316,
+  "layer_count": 33
+ },
+ "display_transform": {
+  "translation_m": [
+   0,
+   0,
+   0
+  ],
+  "rotation_deg": 0,
+  "scale": 1,
+  "axis_convention": "model X/Y/Z as stored, Z up",
+  "note": "No transformation applied: browser coordinates equal model coordinates in metres. Stored as float32."
+ },
+ "counts": {
+  "buildings": 9897,
+  "building_triangles": 305124,
+  "terrain_meshes": 5,
+  "terrain_triangles": 19298,
+  "park_triangles": 17660,
+  "water_triangles": 3659,
+  "road_segments": 5505,
+  "shoreline_segments": 2489,
+  "labels": 18,
+  "skipped_objects": 0
+ },
+ "unverified": {
+  "earth_anchor": {
+   "latitude": 49.2827,
+   "longitude": -123.1207,
+   "elevation": 0,
+   "model_north": [
+    0,
+    1,
+    0
+   ],
+   "model_base_point": [
+    0,
+    0,
+    0
+   ]
+  },
+  "building_heights": "OSM-derived; height_source counts: {\"measured\": 1441, \"levels\": 3656, \"estimated\": 4800}; 2022 extraction is user-reported",
+  "terrain": "source, resolution and vertical datum not recorded; z values are model-relative, not verified geodetic elevations",
+  "caveat": "Nothing here verifies the model's projection, placement, scale or vertical datum."
+ }
+}

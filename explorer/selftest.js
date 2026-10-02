@@ -56,7 +56,7 @@
     // 11 step 4: hypothetical check equals the API/Python for the stacked boxes; explanation and clause cards present
     X.setStep(2); $('chk-bz-unknown').checked = false; $('chk-bz-unknown').dispatchEvent(new Event('change')); const P2 = X.proposalBox(); const bz = P2.base + 100; setNum('check-bz', bz); const res = await X.runCheck();
     const clauseRefs = [...document.querySelectorAll('#clause-cards .ref')].map((e) => e.textContent); const expectedPen = P2.top - bz;
-    record(11, !!res && res.overall_result === 'INTERSECTS' && near(res.max_penetration_m, expectedPen, 1e-6) && res.parts.length === 2 && res.parts[0].result.geometric_result === 'BELOW_BOUNDARY' && res.regulatory_applicability === 'NOT ASSESSED' && /HYPOTHETICAL/.test(res.label) && /above your ceiling/.test($('check-badge').textContent) && /design assumption/.test($('check-explain').textContent) && clauseRefs.some((t) => /3\.1\.5/.test(t)) && clauseRefs.some((t) => /p\.3/.test(t)),
+    record(11, !!res && res.overall_result === 'INTERSECTS' && near(res.max_penetration_m, expectedPen, 1e-6) && res.parts.length === 2 && res.parts[0].result.geometric_result === 'BELOW_BOUNDARY' && res.regulatory_applicability === 'NOT ASSESSED' && /HYPOTHETICAL/.test(res.label) && /above your (study )?ceiling/.test($('check-badge').textContent) && /design assumption/.test($('check-explain').textContent) && clauseRefs.some((t) => /3\.1\.5/.test(t)) && clauseRefs.some((t) => /p\.3/.test(t)),
       { overall: res && res.overall_result, max_penetration: res && res.max_penetration_m, expected: +expectedPen.toFixed(6), per_part: res && res.parts.map((p) => p.result.geometric_result), clause_cards: clauseRefs.length });
     // 12 unknown height -> CANNOT_DETERMINE
     $('chk-bz-unknown').checked = true; $('chk-bz-unknown').dispatchEvent(new Event('change')); const res2 = await X.runCheck();
@@ -79,7 +79,7 @@
     // 16 PDF report: valid header, six pages, at least five embedded views
     await X.runCheck(); const blob = await X.buildPdfReport(); const bytes = new Uint8Array(await blob.arrayBuffer()); const head = String.fromCharCode(...bytes.slice(0, 8)); const txt = new TextDecoder('latin1').decode(bytes);
     const nImg = (txt.match(/\/Subtype \/Image/g) || []).length; const nPages = (txt.match(/\/Type \/Page\b/g) || []).length;
-    record(16, head.startsWith('%PDF-1.4') && nPages === 6 && nImg >= 5 && bytes.length > 20000 && /%%EOF/.test(txt.slice(-40)), { bytes: bytes.length, pages: nPages, images: nImg });
+    const expectedPages = window.__report.pagePlan(window.__report.defaults()).length; record(16, head.startsWith('%PDF-1.4') && nPages === expectedPages && nPages >= 6 && nImg >= 5 && bytes.length > 20000 && /%%EOF/.test(txt.slice(-40)), { bytes: bytes.length, pages: nPages, images: nImg });
     if (new URLSearchParams(location.search).get('pdfdump') === '1') { const pre = document.createElement('pre'); pre.id = 'pdf-b64'; pre.style.display = 'none'; let b64 = ''; for (let i = 0; i < bytes.length; i += 0x8000) b64 += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); pre.textContent = btoa(b64); document.body.appendChild(pre); }
     // 17 mountain backdrop: present when the server has it; drawn only in the observer view
     const bmResp = await window.ProjectAPI.fetch('/generated/backdrop_manifest.json'); const hasBd = bmResp.ok; const bd = X.assets.backdrop;

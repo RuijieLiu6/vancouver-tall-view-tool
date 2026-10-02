@@ -41,6 +41,8 @@
   const fileUrl = file => new URL(file, scriptBase).href;
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet'; stylesheet.href = fileUrl('explorer.css');
+  stylesheet.onload = () => document.documentElement.classList.add('app-styled'); // reveals the page (see index.html)
+  stylesheet.onerror = () => { document.documentElement.classList.add('app-styled'); const strip = document.getElementById('error-strip'); if (strip) { strip.textContent = 'The page styles could not be loaded. Reload the page to try again.'; strip.classList.remove('hidden'); } };
   document.head.appendChild(stylesheet);
   const load = (src) => new Promise((resolve, reject) => {
     const script = document.createElement('script'); script.src = src;
@@ -48,14 +50,16 @@
     document.body.appendChild(script);
   });
   (async () => {
-    const files = ['browser-api.js'];
+    const files = ['intro.js', 'browser-api.js'];
     if (window.VANCOUVER_STATIC) files.push('browser-check.js', 'browser-rhino.js');
-    files.push('site-geometry.js', 'proposal-geometry.js', 'pdf.js', 'explorer.js');
+    files.push('site-geometry.js', 'proposal-geometry.js', 'inset-camera.js', 'pdf.js', 'explorer.js', 'aerial-context.js', 'address-search.js', 'report.js');
     for (const file of files) await load(fileUrl(file));
     const query = new URLSearchParams(location.search);
     if (query.get('studytest') === '1') await load(fileUrl('study-selftest.js'));
     if (query.get('surfacetest') === '1') await load(fileUrl('surface-selftest.js'));
     if (query.get('workflowtest') === '1') await load(fileUrl('workflow-selftest.js'));
+    if (query.get('rooftest') === '1') await load(fileUrl('rooftop-selftest.js'));
+    if (query.get('flowtest') === '1') await load(fileUrl('flow-selftest.js'));
     if (query.get('selftest') === '1') await load(fileUrl('selftest.js'));
   })().catch(error => {
     const strip = document.getElementById('error-strip');

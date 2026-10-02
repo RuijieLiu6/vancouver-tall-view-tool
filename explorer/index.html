@@ -3,10 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vancouver View-Protection Lab — Site Explorer</title>
-<script>if (location.protocol === 'file:') document.documentElement.classList.add('local-entry');</script>
+<title>Vista — Vancouver View Protection Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap">
+<script>if (location.protocol === 'file:') document.documentElement.classList.add('local-entry');
+// Keep the page hidden until explorer.css arrives (entry.js marks it), so unstyled icons never flash; first visits start dark under the intro.
+(function () { var q = new URLSearchParams(location.search), d = document.documentElement, seen = false; try { seen = localStorage.getItem('vancouver-view-lab-intro-seen/1') === '1'; } catch (e) {}
+  var testing = ['selftest', 'workflowtest', 'studytest', 'surfacetest', 'rooftest', 'flowtest'].some(function (k) { return q.get(k) === '1'; });
+  if (!testing && q.get('intro') !== '0' && (q.get('intro') === '1' || !seen)) d.classList.add('intro-pending');
+  setTimeout(function () { d.classList.add('app-styled'); }, 4000); })();</script>
 <style>
+  html:not(.local-entry):not(.app-styled) body { visibility: hidden; }
+  html.intro-pending:not(.app-styled) { background: #0a0c0b; }
+  .ico { width: 20px; height: 20px; fill: none; stroke: currentColor; }
+  .icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
   #local-entry { display: none; }
+  dialog#intro::backdrop { background: #0a0c0b; }
   html.local-entry body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #edf2ef; color: #223b32; font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
   html.local-entry body > :not(#local-entry) { display: none !important; }
   html.local-entry #local-entry { display: block; box-sizing: border-box; width: min(540px, calc(100% - 40px)); margin: 30px auto; padding: 30px; background: white; border: 1px solid #d6e0da; border-radius: 14px; }
@@ -19,6 +32,42 @@
 <script src="../runtime-config.js"></script>
 </head>
 <body>
+<svg class="icon-sprite" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21.5s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10.5" r="2.3"/></symbol>
+    <symbol id="i-replace" viewBox="0 0 24 24"><rect x="2.5" y="9" width="7" height="11.5" stroke-dasharray="2 2"/><rect x="14.5" y="6" width="7" height="14.5"/><path d="M8 5.5h7.5M13.5 3.5l2 2-2 2"/><path d="M1.5 20.5h21"/></symbol>
+    <symbol id="i-multi" viewBox="0 0 24 24"><rect x="1.5" y="3.5" width="21" height="18" rx="1.5" stroke-dasharray="2.2 2"/><rect x="4.5" y="11" width="4.5" height="7.5"/><rect x="10" y="7" width="4.5" height="11.5"/><rect x="15.5" y="12.5" width="4" height="6"/></symbol>
+    <symbol id="i-blocks" viewBox="0 0 24 24"><rect x="4" y="14" width="16" height="7"/><rect x="7" y="8.5" width="10" height="5.5"/><rect x="9.5" y="3.5" width="5" height="5"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M4 14.5v5h16v-5"/><path d="M12 15.5V3.5M7.5 8 12 3.5 16.5 8"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1.8 12S5.6 5.5 12 5.5 22.2 12 22.2 12 18.4 18.5 12 18.5 1.8 12 1.8 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-cone" viewBox="0 0 24 24"><circle cx="4.5" cy="12" r="2.2"/><path d="M6.6 11.2 21.5 4.5M6.6 12.8l14.9 6.7"/><path d="M19.5 5.5c1.6 4.2 1.6 8.8 0 13" stroke-dasharray="2 1.8"/></symbol>
+    <symbol id="i-roof" viewBox="0 0 24 24"><rect x="2.5" y="11.5" width="9" height="10"/><circle cx="7" cy="8" r="1.8"/><path d="M8.7 7.3 21.5 3.5M8.7 8.7l12.8 4"/></symbol>
+    <symbol id="i-drag" viewBox="0 0 24 24"><circle cx="5.5" cy="18.5" r="2.5"/><path d="M7.5 16.5 18 6"/><path d="M12 6h6v6"/></symbol>
+    <symbol id="i-report" viewBox="0 0 24 24"><path d="M5.5 2.5h9l4 4v15h-13z"/><path d="M14.5 2.5v4h4"/><path d="M8.5 11.5h7M8.5 14.5h7M8.5 17.5h4"/></symbol>
+  </defs>
+</svg>
+
+<dialog id="intro" class="intro" aria-labelledby="intro-title" aria-describedby="intro-lede">
+  <div class="intro-shell">
+    <header class="intro-head">
+      <p class="intro-kicker">Vista · Vancouver View Protection Tool</p>
+      <h1 id="intro-title" tabindex="-1">Explore a building in Vancouver’s protected views</h1>
+      <p id="intro-lede" class="intro-lede">Place a building, choose where to look from, and see where it overlaps the City’s mapped view corridors, in four steps.</p>
+    </header>
+    <div class="intro-stage" id="intro-stage" role="img" aria-label="Animation: a pin marks a site, blocks stack into a building, an eye on a nearby roof looks toward it, and a report appears."></div>
+    <ol class="intro-steps">
+      <li class="intro-step" data-n="1"><span class="intro-step-icon"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg></span><b>Select site</b><span class="intro-step-text">Choose where your building goes.</span></li>
+      <li class="intro-step" data-n="2"><span class="intro-step-icon"><svg class="ico" aria-hidden="true"><use href="#i-blocks"/></svg></span><b>Build</b><span class="intro-step-text">Shape it with blocks, or import a model.</span></li>
+      <li class="intro-step" data-n="3"><span class="intro-step-icon"><svg class="ico" aria-hidden="true"><use href="#i-eye"/></svg></span><b>Select view</b><span class="intro-step-text">Choose where to look from.</span></li>
+      <li class="intro-step" data-n="4"><span class="intro-step-icon"><svg class="ico" aria-hidden="true"><use href="#i-report"/></svg></span><b>Get the report</b><span class="intro-step-text">See the results and download a PDF.</span></li>
+    </ol>
+    <footer class="intro-foot">
+      <p class="intro-note">A teaching tool, not a City assessment. Your files stay on your device.</p>
+      <span class="intro-examples"><span class="intro-ex-label">Or start from a real tower:</span><button class="btn" type="button" data-open-example="shangri-la">Shangri-La</button><button class="btn" type="button" data-open-example="vancouver-house">Vancouver House</button><button class="btn" type="button" data-open-example="butterfly">The Butterfly</button></span>
+      <button id="intro-start" class="btn primary intro-start" type="button">Start exploring</button>
+    </footer>
+  </div>
+</dialog>
 <section id="local-entry" aria-labelledby="local-entry-title">
   <h1 id="local-entry-title">Open Vancouver Site Explorer</h1>
   <p id="local-entry-status" role="status">Connecting to your local project…</p>
@@ -29,17 +78,11 @@
 </section>
 <header class="app-header">
   <div class="title-block">
-    <h1>Vancouver View-Protection Lab <span class="thin">Site Explorer</span></h1>
-    <p class="subtitle">City context · your proposal · mapped view corridors · live massing studies. Teaching tool, not a protected-view assessment.</p>
+    <h1><span class="brand-mark" aria-hidden="true"><svg class="ico"><use href="#i-eye"/></svg></span><span class="brand-copy"><span class="brand-title">Vista</span><span class="brand-subtitle">Vancouver View Protection Tool</span></span></h1>
   </div>
-  <label class="style-picker">Palette<select id="scene-style" aria-label="View palette"><option value="classic">Studio</option><option value="illustrated">Illustrated garden</option><option value="collage">Landscape collage</option></select></label>
-  <div class="status-chips" id="status-chips">
-    <span class="chip" title="Building heights come from OpenStreetMap tags, floor counts or type estimates; the 2022 extraction date is user-reported.">Heights: OSM, unverified</span>
-    <span class="chip" id="chip-terrain" title="Terrain source, resolution and vertical datum are not recorded. Elevations are model-relative.">Terrain z: model-relative</span>
-    <span class="chip" id="chip-cones" title="City open-data 'view-cones' polygons mapped with a transformation checked against 8 OSM footprints (max 0.1 m). By-laws are authoritative; cone heights are not in the data.">View cones: plan only, heights unknown</span>
-    <span class="chip hidden" id="chip-extension" title="Context generated outside the supplied model from current OpenStreetMap footprints (© OpenStreetMap contributors, ODbL; heights by the supplied model's rules) on SRTM terrain, so that all 24 view origins have ground. Distinct tint; lower provenance.">Extension: OSM + SRTM, all origins covered</span>
-    <span class="chip hidden" id="chip-backdrop" title="Distant mountains from NASA SRTM via Open Topo Data, drawn only in the observer view; approximate, never checked against.">Mountains: SRTM backdrop, approximate</span>
-    <a class="chip chip-link" href="/synthetic/" title="The tested synthetic box-vs-boundary checker">Synthetic checker ↗</a>
+  <div class="header-actions">
+    <button id="btn-intro" class="btn intro-open" type="button" aria-haspopup="dialog">Help</button>
+    <label class="style-picker">Style<select id="scene-style" aria-label="Scene style"><option value="collage">Day</option><option value="night">Night</option></select></label>
   </div>
 </header>
 
@@ -48,84 +91,194 @@
 <main class="layout">
   <button id="btn-panel-toggle" class="panel-toggle" type="button" aria-expanded="true">Controls</button>
   <aside id="panel" class="panel">
-    <div class="study-save"><label>Study name<input id="study-name" type="text" value="Untitled study" maxlength="80"></label><div class="row"><button id="btn-save-study" class="btn" type="button">Save study</button><button id="btn-open-study" class="btn" type="button">Open study</button></div><input id="file-study" class="hidden" type="file" accept=".json"><p class="small muted">Save a JSON beside your iteration notes. Imported geometry must be reopened separately.</p></div>
-    <nav class="steps" id="steps">
-      <button class="step-tab active" data-step="1" type="button"><b>1</b> Explore</button>
-      <button class="step-tab" data-step="2" type="button"><b>2</b> View study</button>
-      <button class="step-tab" data-step="3" type="button"><b>3</b> Report</button>
+    <nav class="flow-rail" id="flow-rail" aria-label="Study steps">
+      <button class="flow-step" data-stage="site" type="button"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg><span class="flow-step-text"><b>1 · Site</b><span class="pill" id="pill-site">not set</span></span></button>
+      <button class="flow-step" data-stage="build" type="button"><svg class="ico" aria-hidden="true"><use href="#i-blocks"/></svg><span class="flow-step-text"><b>2 · Build</b><span class="pill" id="pill-proposal">none</span></span></button>
+      <button class="flow-step" data-stage="view" type="button"><svg class="ico" aria-hidden="true"><use href="#i-eye"/></svg><span class="flow-step-text"><b>3 · View</b><span class="pill" id="pill-view">none</span></span></button>
+      <button class="flow-step" data-stage="output" type="button"><svg class="ico" aria-hidden="true"><use href="#i-report"/></svg><span class="flow-step-text"><b>Output</b><span class="pill" id="pill-output">locked</span></span></button>
     </nav>
-    <p id="hint" class="hint">Loading the context model…</p>
+    <div id="example-banner" class="example-banner hidden" role="note"><p id="example-banner-text"></p><button id="btn-example-close" class="btn link" type="button" aria-label="Hide the worked example note">✕</button></div>
+    <p id="hint" class="hint" role="status" aria-live="polite">Loading the context model…</p>
 
-    <!-- STAGE 1: EXPLORE (site, proposal and viewpoint together) -->
-    <section class="step-body" data-step="1">
-      <details class="sec" id="sec-site" open>
-        <summary>Site <span class="pill" id="pill-site">not set</span></summary>
-        <p class="small muted">Choose a starting point, or draw a study boundary in plan. Open ground in this model does not establish vacancy or ownership.</p>
-        <label class="field">Go to a place<select id="place-select"><option value="">Choose a neighbourhood…</option></select></label>
-        <div class="site-actions">
-          <button id="btn-open-ground" class="btn primary" type="button">Choose open ground</button>
-          <button id="btn-draw-site" class="btn" type="button">Draw boundary</button>
-          <button id="btn-find-building" class="btn" type="button">Select a building</button>
+    <!-- 1 · SITE -->
+    <section class="flow-stage" data-stage="site" aria-labelledby="stage-site-title">
+      <header class="stage-head"><h2 id="stage-site-title">Select a site</h2><p class="stage-active" data-active-for="site"></p></header>
+      <div class="method-switch hidden" data-switch-for="site" role="group" aria-label="Other ways to do this step"></div>
+      <div class="method-chooser" data-chooser="site">
+        <p class="chooser-q">How do you want to choose where your building goes?</p>
+        <div class="method-grid">
+          <button class="method-card" type="button" data-stage="site" data-method="point"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg><b>Open spot on the plan</b><span>Search an address or neighbourhood, then pick a spot or draw a boundary.</span></button>
+          <button class="method-card" type="button" data-stage="site" data-method="replace"><svg class="ico" aria-hidden="true"><use href="#i-replace"/></svg><b>Replace a building</b><span>Pick one existing building; its outline (approximate) becomes your site.</span></button>
+          <button class="method-card" type="button" data-stage="site" data-method="multi"><svg class="ico" aria-hidden="true"><use href="#i-multi"/></svg><b>Replace several buildings</b><span>Pick a group of buildings; their combined area becomes your site.</span></button>
         </div>
-        <div id="draw-actions" class="row wrap hidden"><button id="btn-finish-boundary" class="btn primary" type="button">Finish boundary</button><button id="btn-undo-vertex" class="btn" type="button">Undo vertex</button><button id="btn-cancel-boundary" class="btn" type="button">Cancel</button></div>
+        <p class="example-link">New here? Start from a real Vancouver tower: <button class="btn link" type="button" data-open-example="shangri-la">Shangri-La</button> · <button class="btn link" type="button" data-open-example="vancouver-house">Vancouver House</button> · <button class="btn link" type="button" data-open-example="butterfly">The Butterfly</button></p>
+        <button class="btn link method-keep hidden" type="button" data-keep="site"></button>
+      </div>
+
+      <div class="method-body hidden" data-stage="site" data-method="point">
+        <section class="site-step" id="site-find" aria-labelledby="site-step-1">
+          <h3 id="site-step-1"><span class="site-step-n">1</span>Find an area <span class="site-step-opt">(optional)</span><span class="site-step-done">Area located</span><button id="btn-site-find-open" class="btn link site-step-open" type="button" aria-controls="site-find" aria-expanded="false">Change area</button></h3>
+          <div class="site-alt" data-alt-step="find" data-alt="neighbourhood">
+            <h4><span class="site-alt-k">A</span><label for="place-select">Choose a neighbourhood</label></h4>
+            <select id="place-select"><option value="">Choose a neighbourhood…</option></select>
+          </div>
+          <p class="site-or"><span>or</span></p>
+          <div class="site-alt" data-alt-step="find" data-alt="address">
+            <h4 id="address-search-title"><span class="site-alt-k">B</span>Type a downtown address</h4>
+            <div class="address-search" aria-labelledby="address-search-title">
+                <form id="address-search-form" class="address-search-form" role="search">
+                <label for="address-query" class="visually-hidden">Street address in downtown Vancouver</label>
+                <input id="address-query" type="search" placeholder="e.g. 801 W Georgia St" autocomplete="off" spellcheck="false" maxlength="180">
+                <button id="address-submit" class="btn primary" type="submit">Search</button>
+                </form>
+                <ul id="address-suggest" class="address-suggest hidden" role="listbox" aria-label="Address suggestions"></ul>
+              <p id="address-status" class="address-status" role="status" aria-live="polite">Enter an address and choose Search.</p>
+                <ul id="address-results" class="address-results" aria-label="Downtown address matches"></ul>
+                <p class="address-source">Approximate address point: confirm its position on the plan.</p>
+                <details class="address-credits"><summary>Address sources and limits</summary><p class="address-source">Address points may mark a parcel or entrance, not a verified building or roof. Searching does not move your site; “Place site here” does.</p><p class="address-source">Suggestions use City of Vancouver <a href="https://opendata.vancouver.ca/explore/dataset/property-addresses/" target="_blank" rel="noopener noreferrer">property addresses</a> (Open Government Licence – Vancouver) and the <a href="https://www2.gov.bc.ca/gov/content/data/geographic-data-services/location-services/geocoder" target="_blank" rel="noopener noreferrer">BC Address Geocoder</a> · © Province of British Columbia · <a href="https://www2.gov.bc.ca/gov/content/data/policy-standards/data-policies/open-data/open-government-licence-bc" target="_blank" rel="noopener noreferrer">Open Government Licence – BC</a>.</p></details>
+            </div>
+          </div>
+        </section>
+        <section class="site-step" aria-labelledby="site-step-2">
+          <h3 id="site-step-2"><span class="site-step-n">2</span>Place your site</h3>
+          <div class="site-alt" data-alt-step="place" data-alt="spot">
+            <h4><span class="site-alt-k">A</span>Pick a spot on the plan</h4>
+            <p>Click open ground in the plan.</p>
+            <button id="btn-open-ground" class="btn primary" type="button">Show the plan</button>
+            <div class="inline-proceed hidden" data-proceed-for="spot" role="status"><span class="ip-check" aria-hidden="true">✓</span><span class="ip-text">Site placed</span><button class="btn primary" type="button" data-proceed>Proceed to Build ›</button></div>
+          </div>
+          <p class="site-or"><span>or</span></p>
+          <div class="site-alt" data-alt-step="place" data-alt="boundary">
+            <h4><span class="site-alt-k">B</span>Draw a boundary</h4>
+            <p>Click the corners of your study area. The site sits at its centre and the area is measured.</p>
+            <button id="btn-draw-site" class="btn" type="button">Draw boundary</button>
+            <div id="draw-actions" class="row wrap hidden"><button id="btn-finish-boundary" class="btn primary" type="button">Finish boundary</button><button id="btn-undo-vertex" class="btn" type="button">Undo vertex</button><button id="btn-cancel-boundary" class="btn" type="button">Cancel</button></div>
+            <details class="why"><summary>Size a rectangular study area</summary><div class="grid2"><label>East–west (m)<input id="site-width" type="number" min="2" max="2000" value="60"></label><label>North–south (m)<input id="site-depth" type="number" min="2" max="2000" value="80"></label></div><button id="btn-rectangle" class="btn" type="button">Apply rectangle</button><p class="small muted">Centred on your site point, or on the middle of the plan if there is none yet.</p></details>
+            <div class="inline-proceed hidden" data-proceed-for="boundary" role="status"><span class="ip-check" aria-hidden="true">✓</span><span class="ip-text">Boundary measured</span><button class="btn primary" type="button" data-proceed>Proceed to Build ›</button></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="method-body hidden" data-stage="site" data-method="replace">
+        <p class="method-howto"><b>Click an existing building</b> in the plan, check its details, then choose <b>Replace this building</b>. Picking another building and replacing it swaps the choice.</p>
+        <p id="building-info" class="data muted small hidden"></p>
+        <button id="btn-replace-building" class="btn primary hidden" type="button">Replace this building</button>
+        <div class="inline-proceed hidden" data-proceed-for="replace" role="status"><span class="ip-check" aria-hidden="true">✓</span><span class="ip-text">Building replaced</span><button class="btn primary" type="button" data-proceed>Proceed to Build ›</button></div>
+      </div>
+
+      <div class="method-body hidden" data-stage="site" data-method="multi">
+        <p class="method-howto"><b>Click buildings</b> in the plan to add or remove them from your group, then choose <b>Use as site</b>. Their combined outline becomes the study boundary.</p>
+        <ul id="multi-list" class="multi-list" aria-label="Buildings selected for replacement"></ul>
+        <div class="row wrap"><button id="btn-multi-apply" class="btn primary" type="button" disabled>Use as site</button><button id="btn-multi-clear" class="btn" type="button" disabled>Clear selection</button></div>
+        <div class="inline-proceed hidden" data-proceed-for="multi" role="status"><span class="ip-check" aria-hidden="true">✓</span><span class="ip-text">Site set from your group</span><button class="btn primary" type="button" data-proceed>Proceed to Build ›</button></div>
+      </div>
+
+      <div class="stage-common hidden" data-stage="site">
         <div id="site-metrics" class="site-metrics" aria-live="polite"><b>Start with a place</b><span>Plan view makes boundaries and distances easier to read.</span></div>
         <p id="site-info" class="data muted">No site yet.</p>
-        <details class="why"><summary>Size a rectangular study area</summary><div class="grid2"><label>East–west (m)<input id="site-width" type="number" min="2" max="2000" value="60"></label><label>North–south (m)<input id="site-depth" type="number" min="2" max="2000" value="80"></label></div><button id="btn-rectangle" class="btn" type="button">Apply around site point</button></details>
-        <p id="building-info" class="data muted small hidden"></p>
-        <button id="btn-replace-building" class="btn hidden" type="button">Use building area as study site</button>
         <div id="replacement-controls" class="hidden"><p id="replacement-info" class="small"></p><label class="checks"><span><input id="chk-existing" type="checkbox"> Compare existing (hide proposal)</span></label><button id="btn-restore-buildings" class="btn" type="button">Restore all buildings</button></div>
         <div class="row wrap"><button id="btn-fit-site" class="btn" type="button" disabled>Focus site</button><button id="btn-clear-site" class="btn" type="button">Clear site</button><button id="btn-reset-context" class="btn" type="button">Fit whole city</button></div>
-      </details>
+        <p class="small muted">Open ground or a model footprint does not establish vacancy, ownership or a legal parcel.</p>
+      </div>
+    </section>
 
-      <details class="sec" id="sec-proposal" open>
-        <summary>Proposal <span class="pill" id="pill-proposal">none</span></summary>
-        <div class="seg small">
-          <button id="pmode-boxes" class="seg-btn active" type="button">Stacked blocks</button>
-          <button id="pmode-import" class="seg-btn" type="button">My model (.3dm / .obj)</button>
+    <!-- 2 · BUILD -->
+    <section class="flow-stage hidden" data-stage="build" aria-labelledby="stage-build-title">
+      <header class="stage-head"><h2 id="stage-build-title">Build</h2><p class="stage-active" data-active-for="build"></p></header>
+      <div class="method-switch hidden" data-switch-for="build" role="group" aria-label="Other ways to do this step"></div>
+      <div class="method-chooser" data-chooser="build">
+        <p class="chooser-q">How will you make the building?</p>
+        <div class="method-grid two">
+          <button class="method-card" type="button" data-stage="build" data-method="platform"><svg class="ico" aria-hidden="true"><use href="#i-blocks"/></svg><b>Build on the platform</b><span>Stack, size and rotate blocks here.</span></button>
+          <button class="method-card" type="button" data-stage="build" data-method="import"><svg class="ico" aria-hidden="true"><use href="#i-upload"/></svg><b>Import a model</b><span>Bring in a Rhino <code>.3dm</code> or <code>.obj</code> file.</span></button>
         </div>
+        <button class="btn link method-keep hidden" type="button" data-keep="build"></button>
+      </div>
+      <div class="seg small hidden" aria-hidden="true">
+        <button id="pmode-boxes" class="seg-btn active" type="button" tabindex="-1">Stacked blocks</button>
+        <button id="pmode-import" class="seg-btn" type="button" tabindex="-1">My model (.3dm / .obj)</button>
+      </div>
+      <div class="method-body hidden" data-stage="build" data-method="platform">
         <div id="boxes-ui">
           <div id="parts-list"></div>
           <div class="row wrap"><button id="btn-add-part" class="btn" type="button">+ Block</button><span class="small muted">Blocks stack; the lowest sits on the terrain at the site. Offsets are from the site point. Positive rotation turns clockwise in plan, around each block’s centre.</span></div>
         </div>
+      </div>
+      <div class="method-body hidden" data-stage="build" data-method="import">
         <div id="import-ui" class="hidden">
-          <input id="file-import" type="file" accept=".3dm,.obj">
+          <label class="file-drop"><svg class="ico" aria-hidden="true"><use href="#i-upload"/></svg><span>Choose a <b>.3dm</b> or <b>.obj</b> file</span><input id="file-import" type="file" accept=".3dm,.obj"></label>
           <div class="grid2">
             <label>.obj units<select id="obj-units"><option value="1">metres</option><option value="0.001">millimetres</option><option value="0.01">centimetres</option><option value="0.3048">feet</option><option value="0.0254">inches</option></select></label>
             <label>Placement<select id="import-placement"><option value="site">Centre on site, base on terrain</option><option value="file">File coordinates = model coordinates</option></select></label>
           </div>
           <p id="import-info" class="data muted small">No model loaded. .3dm is read on the local server (rhino3dm, read-only); .obj in this browser.</p>
         </div>
+      </div>
+      <div class="stage-common hidden" data-stage="build">
         <p id="proposal-info" class="data muted small"></p>
-      </details>
+        <div id="cleared-info" class="cleared-info hidden"><p id="cleared-text"></p><label class="checks"><span><input id="chk-clear-overlaps" type="checkbox" checked> Demolish buildings the proposal overlaps</span></label></div>
+      </div>
+    </section>
 
-      <details class="sec" id="sec-view">
-        <summary>Viewpoint <span class="pill" id="pill-view">none</span></summary>
+    <!-- 3 · VIEW -->
+    <section class="flow-stage hidden" data-stage="view" aria-labelledby="stage-view-title">
+      <header class="stage-head"><h2 id="stage-view-title">Select a view</h2><p class="stage-active" data-active-for="view"></p></header>
+      <div class="method-switch hidden" data-switch-for="view" role="group" aria-label="Other ways to do this step"></div>
+      <div class="method-chooser" data-chooser="view">
+        <p class="chooser-q">Where do you want to look from?</p>
+        <div class="method-grid">
+          <button class="method-card" type="button" data-stage="view" data-method="cone"><svg class="ico" aria-hidden="true"><use href="#i-cone"/></svg><b>Protected view cone</b><span>Stand at one of the City’s 24 public viewpoints.</span></button>
+          <button class="method-card" type="button" data-stage="view" data-method="roof"><svg class="ico" aria-hidden="true"><use href="#i-roof"/></svg><b>From a building</b><span>Stand on an existing rooftop facing your proposal.</span></button>
+          <button class="method-card" type="button" data-stage="view" data-method="drag"><svg class="ico" aria-hidden="true"><use href="#i-drag"/></svg><b>Drag and view</b><span>Press any spot on the plan and drag to aim.</span></button>
+        </div>
+        <button class="btn link method-keep hidden" type="button" data-keep="view"></button>
+      </div>
+
+      <div class="method-body hidden" data-stage="view" data-method="cone">
         <label class="field">Protected public view (Table 1)<select id="view-select"><option value="">— none —</option></select></label>
         <p id="view-info" class="data muted small">Choose a public place to see its corridor and look toward your proposal.</p>
-        <div class="row wrap">
-          <button id="btn-observer-at-origin" class="btn primary" type="button" disabled>View from here</button>
-          <button id="btn-look" class="btn" type="button">Look toward proposal</button>
-          <button id="btn-clear-observer" class="btn" type="button">Clear observer</button>
-        </div>
-        <p id="obs-info" class="data muted small">No observer. Use the <b>Observer</b> tool to stand anywhere on the terrain.</p>
+        <button id="btn-observer-at-origin" class="btn primary" type="button" disabled>View from here</button>
+        <label class="checks"><span><input id="chk-cones" type="checkbox"> Show all cone outlines</span></label>
+      </div>
+
+      <div class="method-body hidden" data-stage="view" data-method="roof">
+        <p class="method-howto"><b>Click a roof</b> in the plan, or pick a nearby building below. Your eye sits above the modelled roof and faces the proposal.</p>
+        <button id="btn-find-building" class="btn" type="button">Pick a roof on the map</button>
+        <div class="rooftop-intro"><b id="rooftop-nearby-title">Rooftops near your site</b><div id="rooftop-nearby" class="rooftop-nearby" role="group" aria-labelledby="rooftop-nearby-title"></div><p class="small muted">Roof heights are approximate. These are study viewpoints; roof access is unknown.</p></div>
+        <button id="btn-observer-on-building" class="btn primary hidden" type="button">View from this roof</button>
+      </div>
+
+      <div class="method-body hidden" data-stage="view" data-method="drag">
+        <div class="drag-demo" aria-hidden="true"><svg viewBox="0 0 120 54"><circle class="dd-spot" cx="22" cy="40" r="5"/><path class="dd-wedge" d="M22 40 L104 8 L110 30 Z"/><path class="dd-path" d="M22 40 L98 16"/><circle class="dd-cursor" cx="98" cy="16" r="3.5"/></svg></div>
+        <p class="method-howto"><b>Press</b> a spot on the plan, <b>drag</b> toward what you want to see, and <b>release</b> to stand there at eye level. A plain click faces your proposal.</p>
+        <button id="btn-drag-again" class="btn" type="button">Pick a spot on the plan</button>
+      </div>
+
+      <div class="stage-common hidden" data-stage="view">
+        <p id="obs-info" class="data muted small">Choose a rooftop, a ground point or a public viewpoint.</p>
+        <div class="row wrap"><button id="btn-look" class="btn" type="button">Look toward proposal</button><button id="btn-clear-observer" class="btn" type="button">Clear viewpoint</button></div>
         <div class="grid3">
           <label>Eye height (m)<input id="eye-h" type="number" min="0.5" max="100" step="0.1" value="1.6"></label>
           <label>Field of view (°)<input id="fov" type="number" min="20" max="110" step="1" value="60"></label>
-          <label class="checks"><span><input id="chk-wedge" type="checkbox" checked> Camera wedge</span><span><input id="chk-cones" type="checkbox"> All cone outlines</span><span><input id="chk-backdrop" type="checkbox" checked> Mountains</span></label>
+          <label class="checks"><span><input id="chk-wedge" type="checkbox" checked> Viewing angle</span><span><input id="chk-backdrop" type="checkbox" checked> Mountains</span></label>
         </div>
         <details class="why"><summary>Where this comes from</summary><p class="small muted">Table 1 of the <i>Public Views Guidelines</i> (pp.4–6) lists 24 views. Plan cones: City open-data <code>view-cones</code> polygons, mapped with a transformation checked against 8 OpenStreetMap footprints (max 0.1 m). Origins are the polygon apexes; the by-laws are authoritative. Cone heights are not published in the dataset and are never invented. The wedge is exploratory camera geometry, not the City cone. Mountains: NASA SRTM via Open Topo Data, approximate, observer view only.</p></details>
-      </details>
+      </div>
     </section>
 
-    <!-- STAGE 2: LIVE VIEW STUDY -->
-    <section class="step-body hidden" data-step="2">
-      <div class="study-intro"><h2>Views at your proposal</h2><span class="live-indicator">Updates as you edit</span></div>
+    <!-- OUTPUT -->
+    <section class="flow-stage hidden" data-stage="output" aria-labelledby="stage-output-title">
+      <header class="stage-head"><h2 id="stage-output-title">Output</h2><p class="stage-active">Results update live as you return and edit earlier steps.</p></header>
+      <p id="study-sentence" class="study-sentence" aria-live="polite"></p>
+      <p class="caveat-lead">Not a pass/fail assessment. Corridor overlap is checked in plan; the study ceiling is your own assumption, not a City height limit.</p>
+      <div class="study-intro"><h3>Mapped view corridors at your site</h3><span class="live-indicator">Updates as you edit</span></div>
       <p id="view-study-summary" class="data">Place a proposal to find overlapping mapped view corridors.</p>
       <button id="btn-study-site" class="btn primary" type="button">Choose a site</button>
       <div id="view-matches" class="view-matches"></div>
-      <p class="small muted">Corridor overlap is measured in plan. City height limits are unavailable here, so this does not establish a policy conflict.</p>
-      <details class="height-study" open>
-        <summary>Height experiment <span class="small muted">optional</span></summary>
+      <p id="view-near" class="view-near small hidden"></p>
+      <p class="caveat small">Plan overlap only: changing the height does not change this list. City view-cone height limits are unavailable, so this cannot decide whether a building meets the policy.</p>
+      <details class="height-study">
+        <summary>Your height experiment <span class="small muted">optional</span></summary>
         <label class="checks"><span><input id="enable-height-study" type="checkbox"> Compare with a study ceiling</span></label>
         <p class="small muted">Set your own design assumption, then adjust the proposal to explore clearance. This ceiling is not a City height limit.</p>
         <input id="chk-bz-unknown" type="checkbox" checked hidden aria-hidden="true" tabindex="-1">
@@ -148,34 +301,65 @@
       <p id="check-live-status" class="small" role="status">No study ceiling set.</p>
       <div id="check-error" class="hidden" role="alert"><p id="check-error-text"></p><button id="btn-run-check" class="btn" type="button">Retry calculation</button></div>
       <div id="check-result" class="check-result hidden">
-        <div class="badge-row"><span id="check-badge" class="badge">—</span><span class="small muted">your assumption · not a policy verdict</span></div>
+        <div class="badge-row"><span id="check-badge" class="badge" role="status" aria-live="polite">—</span><span class="badge-note">Your own assumption, not a City height limit</span></div>
         <p id="check-numbers" class="data small"></p>
         <p id="check-explain" class="small"></p>
         <details class="why"><summary>Part-by-part measurements</summary><div id="check-parts" class="small"></div></details>
       </div>
-      <div id="study-proposal-slot"></div>
       <details class="why" id="clauses-details"><summary>Guideline text and interpretation</summary><div id="clause-cards" class="cards"></div></details>
-    </section>
 
-    <!-- STAGE 3: REPORT -->
-    <section class="step-body hidden" data-step="3">
-      <div class="row wrap">
-        <button id="btn-download-pdf" class="btn primary" type="button">Download PDF report</button>
-        <button id="btn-download-state" class="btn" type="button">JSON</button>
-        <button id="btn-download-image" class="btn" type="button">Current view PNG</button>
+      <details class="why"><summary>Text summary of the study</summary><div id="report" class="report small"></div></details>
+
+      <section class="pdf-builder" aria-labelledby="pdf-builder-title">
+        <div class="pb-head"><h3 id="pdf-builder-title">PDF contents</h3><span id="pb-state" class="pb-state">Default</span><button id="pb-reset" class="btn link" type="button">Reset to default</button></div>
+        <p class="small muted">Tick what to include and pick a layout for each page. Views whose corridor overlaps your building in plan are included by default.</p>
+        <div id="pb-list" class="pb-list"></div>
+        <div class="pb-add"><label for="pb-add-view">Add another protected view</label><div class="row"><select id="pb-add-view"></select><button id="pb-add" class="btn" type="button">Add</button></div></div>
+        <div class="grid2 pb-meta"><label>Report title<input id="pb-title" type="text" maxlength="90"></label><label>Prepared by<input id="pb-author" type="text" maxlength="80" placeholder="Your name (optional)" autocomplete="name"></label></div>
+        <label class="field pb-style">Rendering style<select id="pb-style"><option value="collage">Day</option><option value="current">Same as the app</option></select></label>
+      </section>
+
+      <div class="output-export">
+        <button id="btn-download-pdf" class="btn primary" type="button">Export PDF</button>
+        <p id="pdf-summary" class="small"></p>
+        <p id="pdf-status" class="small muted" role="status" aria-live="polite">Rendered on your device; nothing is uploaded.</p>
+        <div class="row wrap"><button id="btn-download-state" class="btn" type="button">Study data (JSON)</button><button id="btn-download-image" class="btn" type="button">Current view (PNG)</button></div>
       </div>
-      <p id="pdf-status" class="small muted">The PDF follows a fixed template: summary, city overview and plan, observer view, two inspection views, the live view study and assumptions, and the unverified items.</p>
-      <div id="report" class="report small"></div>
+      <div class="new-study">
+        <button id="btn-new-study" class="btn" type="button">Start a new study</button>
+        <div id="new-study-confirm" class="new-study-confirm hidden" role="alertdialog" aria-labelledby="new-study-q">
+          <p id="new-study-q"><b>Start again from Site?</b> This clears your site, building, viewpoint and height experiment. Save the study first if you want to keep it.</p>
+          <div class="row wrap"><button id="btn-new-study-save" class="btn" type="button">Save study first</button><button id="btn-new-study-go" class="btn primary" type="button">Clear and start</button><button id="btn-new-study-cancel" class="btn link" type="button">Cancel</button></div>
+        </div>
+      </div>
     </section>
 
-    <div class="row nav-row">
-      <button id="btn-back" class="btn" type="button">‹ Back</button>
-      <span id="step-status" class="small muted"></span>
-      <button id="btn-next" class="btn primary" type="button">Next ›</button>
+    <div class="flow-nav" id="flow-nav">
+      <p id="flow-need" class="flow-need small" role="status"></p>
+      <button id="btn-flow-back" class="btn hidden" type="button">‹ Back</button>
+      <button id="btn-flow-next" class="btn primary hidden" type="button" aria-describedby="flow-need">Proceed ›</button>
+      <button id="btn-nav-pdf" class="btn primary hidden" type="button" title="Export the selected PDF pages">Export PDF</button>
     </div>
+    <p id="step-status" class="small muted step-status"></p>
+
+    <details class="details study-file">
+      <summary>Study file</summary>
+      <div class="study-save"><label>Study name<input id="study-name" type="text" value="Untitled study" maxlength="80"></label><div class="row"><button id="btn-save-study" class="btn" type="button">Save study</button><button id="btn-open-study" class="btn" type="button">Open study</button></div><input id="file-study" class="hidden" type="file" accept=".json"><p class="small muted">Save a JSON beside your iteration notes. Imported geometry must be reopened separately.</p></div>
+    </details>
 
     <details id="technical" class="details">
       <summary>Technical details</summary>
+      <p class="small muted">Model readout</p>
+      <p id="tech-readout" class="data small"></p>
+      <p class="small muted">Data status</p>
+      <div class="status-chips" id="status-chips">
+        <span class="chip" title="Building heights come from OpenStreetMap tags, floor counts or type estimates; the 2022 extraction date is user-reported.">Heights: OSM, unverified</span>
+        <span class="chip" id="chip-terrain" title="Terrain source, resolution and vertical datum are not recorded. Elevations are model-relative.">Terrain z: model-relative</span>
+        <span class="chip" id="chip-cones" title="City open-data 'view-cones' polygons mapped with a transformation checked against 8 OSM footprints (max 0.1 m). By-laws are authoritative; cone heights are not in the data.">View cones: plan only, heights unknown</span>
+        <span class="chip hidden" id="chip-extension" title="Context generated outside the supplied model from current OpenStreetMap footprints (© OpenStreetMap contributors, ODbL; heights by the supplied model's rules) on SRTM terrain, so that all 24 view origins have ground. Distinct tint; lower provenance.">Extension: OSM + SRTM, all origins covered</span>
+        <span class="chip hidden" id="chip-backdrop" title="Distant mountains from NASA SRTM via Open Topo Data, drawn only in the observer view; approximate, never checked against.">Mountains: SRTM backdrop, approximate</span>
+        <a class="chip chip-link" href="/synthetic/" title="The tested synthetic box-vs-boundary checker">Synthetic checker ↗</a>
+      </div>
       <ul class="small caveats">
         <li>Context: source Rhino geometry is preserved. When rebuilt context is available, ground and water are replaced and building bases are aligned to it; XY footprints and building heights are retained.</li>
         <li>View cones and origins: City open-data polygons converted with an equirectangular mapping about the earth anchor, identified from and checked against 8 OpenStreetMap footprints (max residual 0.1 m). Absolute accuracy inherits OpenStreetMap's.</li>
@@ -187,8 +371,17 @@
   </aside>
 
   <section id="viewport" class="viewport">
-    <canvas id="gl" tabindex="0" aria-label="3D view of the Vancouver study model"></canvas>
+    <canvas id="gl" tabindex="0" aria-label="3D view of the Vancouver study model" aria-describedby="gl-keys"></canvas>
+    <p id="gl-keys" class="visually-hidden">Keyboard: arrow keys look around or move the map, plus and minus zoom, and Enter acts at the centre of the view, like a click there. While drawing a boundary, Space adds a corner at the centre and Enter finishes.</p>
     <div id="labels" class="labels" aria-hidden="true"></div>
+    <div id="plan-markers" class="plan-markers" aria-hidden="true">
+      <svg id="pm-link" class="pm-link"><line id="pm-link-line"/></svg>
+      <div id="pm-proposal" class="pm-proposal nm nm-prop hidden"><i class="ring"></i><i class="ring r2"></i><span class="nm-dot big"><svg class="ico"><use href="#i-blocks"/></svg></span><span class="pm-label">Proposal</span></div>
+      <div id="pm-address" class="pm-address hidden"><span class="pm-addr-dot"></span><span class="pm-label" id="pm-address-label">Address</span></div>
+      <div id="pm-site" class="pm-proposal pm-site nm nm-prop hidden"><i class="ring"></i><i class="ring r2"></i><span class="nm-dot big"><svg class="ico"><use href="#i-pin"/></svg></span><span class="pm-label">Your site</span></div>
+      <div id="pm-observer" class="pm-observer hidden"><svg class="pm-fan" viewBox="-70 -70 140 140"><path id="pm-fan-path"/></svg><i class="ring nm-eye-ring"></i><i class="ring r2 nm-eye-ring"></i><span class="pm-eye"><svg class="ico"><use href="#i-eye"/></svg></span><span class="pm-label" id="pm-observer-label">You</span></div>
+    </div>
+    <button id="btn-face" class="btn face-btn hidden" type="button" title="Turn to face your building again">Face my building</button>
     <div class="vp-toolbar">
       <div class="seg tiny" id="modes">
         <button id="mode-overview" class="seg-btn active" type="button" title="Orbit the city">City</button>
@@ -196,10 +389,11 @@
         <button id="mode-inspect" class="seg-btn" type="button" title="Orbit the proposal">Inspect</button>
         <button id="btn-plan" class="seg-btn" type="button" title="North-up orthographic plan · drag to pan">Plan</button>
       </div>
-      <div class="seg tiny" id="tools">
+      <div class="seg tiny flow-managed" id="tools">
         <button id="tool-site" class="seg-btn active" type="button" title="Click terrain to set the site">Site point</button>
         <button id="tool-boundary" class="seg-btn" type="button" title="Draw a measured study boundary in plan">Boundary</button>
-        <button id="tool-observer" class="seg-btn" type="button" title="Click terrain to place the observer">Observer</button>
+        <button id="tool-observer" class="seg-btn" type="button" title="Click terrain to place the observer">Ground view</button>
+        <button id="tool-rooftop" class="seg-btn" type="button" title="Click an existing roof to view toward your proposal">Rooftop</button>
         <button id="tool-identify" class="seg-btn" type="button" title="Click a building to identify it">Identify</button>
       </div>
       <div class="seg tiny hidden" id="inspect-shortcuts">
@@ -211,10 +405,28 @@
     <div class="view-utilities">
       <button id="btn-focus" class="btn" type="button" title="Fit the current study site">Focus site</button>
       <button id="btn-zoom-in" class="btn" type="button" aria-label="Zoom in">+</button><button id="btn-zoom-out" class="btn" type="button" aria-label="Zoom out">−</button>
-      <details class="layer-menu"><summary>Layers</summary><label><input id="layer-labels" type="checkbox" checked> Place labels</label><label><input id="layer-roads" type="checkbox" checked> Roads</label><label><input id="layer-sources" type="checkbox"> Distinguish data sources</label><label><input id="layer-extent" type="checkbox"> Coverage outlines</label><p>Context heights remain approximate. Source tint is a display aid.</p></details>
+      <details class="layer-menu"><summary>Layers</summary><label><input id="layer-labels" type="checkbox" checked> Place labels</label><label><input id="layer-roads" type="checkbox" checked> Roads</label><label><input id="layer-sources" type="checkbox"> Distinguish data sources</label><label><input id="layer-extent" type="checkbox"> Coverage outlines</label><label><input id="layer-aerial" type="checkbox"> Aerial photo texture <em>(experimental)</em></label><p>Context heights remain approximate. Source tint is a display aid.</p></details>
     </div>
     <div id="live-feedback" class="live-feedback hidden" role="status"></div>
+    <dl id="metrics" class="metrics hidden" aria-label="Study at a glance">
+      <div><dt>Height</dt><dd id="m-height">–</dd></div>
+      <div><dt>Site</dt><dd id="m-site">–</dd></div>
+      <div><dt>Plan overlaps</dt><dd id="m-views">–</dd></div>
+      <div title="Existing buildings hidden because your building’s footprint covers them"><dt>Demolished</dt><dd id="m-demolished">–</dd></div>
+      <div><dt>Viewpoint</dt><dd id="m-view">–</dd></div>
+      <div><dt id="m-ceiling-dt">Your ceiling</dt><dd id="m-ceiling">–</dd></div>
+      <div class="m-help"><button id="btn-metrics-help" class="btn link" type="button" aria-expanded="false" aria-controls="metrics-help" title="What these numbers mean">?</button></div>
+    </dl>
+    <div id="metrics-help" class="metrics-help hidden" role="region" aria-label="What the numbers mean">
+      <p><b>Height</b> Your building’s height above the ground at the site.</p>
+      <p><b>Site</b> A point, or the area of the boundary you drew.</p>
+      <p><b>Plan overlaps</b> How many of the City’s 24 mapped protected-view corridors your footprint overlaps in plan. Heights are not assessed.</p>
+      <p><b>Demolished</b> Existing buildings hidden because your footprint covers them. You can keep them in Build.</p>
+      <p><b>Viewpoint</b> Where you look from: a rooftop, the ground, or a protected view’s origin.</p>
+      <p><b>Study ceiling</b> Your own test height, set in Output › Your height experiment. Not a City limit.</p>
+    </div>
     <div id="scene-status" class="scene-status">Study scene</div>
+    <p id="aerial-note" class="aerial-note hidden" role="status"></p>
     <div id="view-caption" class="view-caption"></div>
     <div id="map-scale" class="map-scale hidden"><span id="scale-label"></span><i id="scale-line"></i><small>plan distance</small></div>
     <div id="north-cue" class="north-cue" aria-label="North">N <span>↑</span></div>
@@ -222,20 +434,26 @@
     <div id="draw-prompt" class="draw-prompt hidden" role="status">Click corners · Enter to finish · Esc to cancel</div>
     <div id="legend" class="legend">
       <span><i class="sw sw-city"></i>Existing</span><span><i class="sw sw-terrain"></i>Terrain</span><span><i class="sw sw-water"></i>Water</span>
-      <span><i class="sw sw-proposal"></i>Proposal</span><span><i class="sw sw-observer"></i>Observer · ray</span><span><i class="sw sw-wedge"></i>Camera wedge</span>
+      <span><i class="sw sw-proposal"></i>Proposal</span><span><i class="sw sw-observer"></i>Observer · ray</span><span><i class="sw sw-wedge"></i>Viewing angle</span>
       <span><i class="sw sw-cone"></i>View cone</span><span><i class="sw sw-plane"></i>Study ceiling</span><span><i class="sw sw-site"></i>Study boundary</span>
     </div>
-    <div id="inset-frame" class="inset-frame hidden"><span>observer ▶ proposal</span></div>
+    <div id="inset-frame" class="inset-frame hidden" role="img" aria-label="Location map, north up">
+      <span id="inset-legend" class="inset-legend"><b id="inset-eye-key"><i class="lg-eye"></i><em id="inset-eye-label">viewpoint</em></b><b id="inset-prop-key"><i class="lg-prop"></i><em id="inset-prop-label">proposal</em></b><b class="inset-north">N ↑</b></span>
+      <span id="inset-coverage" class="inset-coverage hidden">Model coverage ends here</span>
+      <div class="inset-markers" aria-hidden="true"><svg class="inset-link"><defs><radialGradient id="beam-grad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="scale(80)"><stop offset="0" stop-color="#1a9fd0" stop-opacity=".55"/><stop offset="1" stop-color="#1a9fd0" stop-opacity="0"/></radialGradient></defs><g id="inset-beam"><path id="inset-beam-path" fill="url(#beam-grad)"/></g><line id="inset-link-line"/></svg>
+        <div id="im-prop" class="nm nm-prop im-icon"><i class="im-square"></i></div>
+        <div id="im-eye" class="nm nm-eye im-icon"><i class="im-preview-dot"></i><svg class="ico"><use href="#i-eye"/></svg></div></div></div>
     <div id="loading" class="loading"><div class="bar"><div id="progress" class="fill"></div></div><div id="loading-text">Loading…</div></div>
   </section>
 </main>
 
-<footer class="statusbar"><span id="status-coverage">Coverage: —</span></footer>
+<footer class="statusbar"><span class="statusbar-note">Teaching tool, not a protected-view assessment.</span><span id="status-coverage">Coverage: —</span></footer>
 
 <script>
   var entry = document.createElement('script');
   entry.src = location.protocol === 'file:' ? './entry.js' : (window.VANCOUVER_STATIC ? new URL('explorer/entry.js', window.VANCOUVER_STATIC_BASE).href : '/explorer/entry.js');
   document.body.appendChild(entry);
 </script>
+
 </body>
 </html>

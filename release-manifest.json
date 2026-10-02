@@ -1,7 +1,7 @@
 {
   "format": "vancouver-static-pages/1",
-  "file_count": 50,
-  "total_bytes": 41905738,
+  "file_count": 60,
+  "total_bytes": 51989438,
   "files": {
     ".github/workflows/pages.yml": {
       "bytes": 591,
@@ -12,8 +12,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "README.md": {
-      "bytes": 2583,
-      "sha256": "a30ee3555844deee10ba247acffc9df3e72b6d59fee8844847f134ca6257b39c"
+      "bytes": 8373,
+      "sha256": "e67b80e375000fb1b39fb602ea33b9fe5115dcc57a6bf57544b3f3145441d91c"
     },
     "data/context.json": {
       "bytes": 7679,
@@ -39,6 +39,14 @@
       "bytes": 36357,
       "sha256": "935953f809619aed16321659323fb92619ceca36503d9c0419881eefe9d13cd0"
     },
+    "explorer/address-search.js": {
+      "bytes": 20994,
+      "sha256": "6308d61d47ecfaabe360efccceff79b55ba0dff8ae35d5d4b2d7156db60ba51b"
+    },
+    "explorer/aerial-context.js": {
+      "bytes": 14439,
+      "sha256": "d971b870d0fd68b3f8e6f77afc5b55aef02cb89080a741266b4615e3eec298f9"
+    },
     "explorer/browser-api.js": {
       "bytes": 3108,
       "sha256": "0652d3691055b243dac358a15aff3ed8d62c4b0b56b4654225bf2c910a368add"
@@ -52,32 +60,52 @@
       "sha256": "423bb75586bbf848d7480671ea06b4218998a2ab9b2d8224b91c9c5940759730"
     },
     "explorer/entry.js": {
-      "bytes": 3270,
-      "sha256": "349131b6923060d84bdc19ae50c1fbb54b89469eb4d8075c9c55e5d937aa9f6e"
+      "bytes": 3919,
+      "sha256": "d1508b471060bbc0f2f0f9df6ae6a2f2d61f0fb66a2f959b467ba262b48dc809"
     },
     "explorer/explorer.css": {
-      "bytes": 36870,
-      "sha256": "3a754694e3b4730f6286eac0a7066ebcab02b9e522012effc43ba2e8692c6c1c"
+      "bytes": 89048,
+      "sha256": "40eb606c8a83b4d4663774f59e376bb147823546d2c4ca569522c7ddbdf505b5"
     },
     "explorer/explorer.js": {
-      "bytes": 141610,
-      "sha256": "10baa1b3a68c38cc11a4a23fd94ad4503f3050086f9be28d027c4919bb10e6ab"
+      "bytes": 216477,
+      "sha256": "73b0ce738b6d47eaccdb856ea7b609702161831460e2a550d30521893063a418"
+    },
+    "explorer/flow-selftest.js": {
+      "bytes": 10751,
+      "sha256": "b5d566ce98c595478523ab26e2800b62f797b56715b87a40f38b8bd54debed37"
     },
     "explorer/index.html": {
-      "bytes": 21376,
-      "sha256": "2a8484dacda599bf674679858fd00b3bef251dc64411e33a121ac52649300692"
+      "bytes": 47153,
+      "sha256": "6927b77188e57d0d0cfa0a40d89c7ffa4a7d6538336e4f6ba536240662e52a8f"
+    },
+    "explorer/inset-camera.js": {
+      "bytes": 3122,
+      "sha256": "68d97507184db78b84492522df83e44166f8b89db259eba0738bd7aaa5c480f1"
+    },
+    "explorer/intro.js": {
+      "bytes": 7562,
+      "sha256": "52fcb55c4b6303650e8e39c33cb56bcb4abec8a266c72178b3122521dd636238"
     },
     "explorer/pdf.js": {
-      "bytes": 6692,
-      "sha256": "a2b9afbcb5a2a5ebeb18f3c8737999f2fcd267aaa3e5990823e2eb8e5dcd543c"
+      "bytes": 11601,
+      "sha256": "65d157b51141e31f269d642ab2c4d671f293ee02800e6599c8ff99ca325e0164"
     },
     "explorer/proposal-geometry.js": {
       "bytes": 4662,
       "sha256": "54b67c465a03a5d5ec8458e8a073d0fa086e33364e0adb9d3c072c3d2829a8e2"
     },
+    "explorer/report.js": {
+      "bytes": 61257,
+      "sha256": "479ccbc6f15b46c93d17d7a1684c973e13e587ece0e124e4a36021d4697d9ac8"
+    },
+    "explorer/rooftop-selftest.js": {
+      "bytes": 7296,
+      "sha256": "d51497846bdfade519fa1e7a38a35d4e63a6a9f82517369b5c314a135528aeaa"
+    },
     "explorer/selftest.js": {
-      "bytes": 16718,
-      "sha256": "e05934f51e61feab281ea5ec6b30156c22d0dd744736386823f6c9abaab5055e"
+      "bytes": 16837,
+      "sha256": "d1dae560e06eb08e9e1c363afde683b1c3d7eb7f979949ccf90672ebc7fe694f"
     },
     "explorer/server-ready.js": {
       "bytes": 151,
@@ -180,8 +208,20 @@
       "sha256": "a7395ea08048891de69ae2e75529772ec6dabf29372e0a538cdeca03cf775255"
     },
     "index.html": {
-      "bytes": 356,
-      "sha256": "59dd86f3385ebbe62853b1cc0edd9049ca334b86a2ae9faa1da8d6e25508c76e"
+      "bytes": 367,
+      "sha256": "5b74563d20fc39953ee3651f0e171636aa95d763395c90862b460528672fffc7"
+    },
+    "media/demo.gif": {
+      "bytes": 9199726,
+      "sha256": "0dd89ae8a938f35928bb8de5f969aaf705e9adbb1bb6b05200ce02cade921cfe"
+    },
+    "media/example-rooftop-view.png": {
+      "bytes": 569629,
+      "sha256": "fb425fcf61a008a8abd24c5276ca0688b813f8756991c47a3b49dde4c17f4681"
+    },
+    "media/example-study.json": {
+      "bytes": 24624,
+      "sha256": "49158c823dab141ecadc6bf4d96e3bb4a8cab383e9bc6a892c3af3b8e7224149"
     },
     "runtime-config.js": {
       "bytes": 111,
