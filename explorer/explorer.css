@@ -1021,3 +1021,6 @@ body[data-scene-style="night"] .metrics .m-help .btn.link { color: #eee; border-
 .site-step.collapsed .site-step-opt { display: none; }
 .metrics .m-help, .metrics .m-help .btn { pointer-events: auto; } /* the strip ignores the pointer; its "?" must not */
 @media (max-width: 1400px) { .draw-prompt { top: 124px; z-index: 5; } }
+/* The reason a step cannot proceed sits in the sticky bar, right above the disabled button */
+.flow-nav { flex-wrap: wrap; }
+.flow-nav .flow-need { flex: 1 0 100%; order: -1; margin: 0 0 4px; font-size: 13px; }
