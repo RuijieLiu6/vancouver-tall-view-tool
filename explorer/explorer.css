@@ -1000,3 +1000,6 @@ body[data-scene-style="night"] .pm-address .pm-label { color: #f2efe9; }
 /* A crosshair marks where Enter acts while the map has keyboard focus */
 .viewport:has(#gl:focus-visible)::after { content: ''; position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 2px solid var(--ink); border-radius: 50%; box-shadow: 0 0 0 2px #fff; pointer-events: none; z-index: 3; }
 #gl:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.study-sentence { margin: 4px 0 14px; font-size: 16px; line-height: 1.45; font-weight: 300; color: var(--ink); }
+.study-sentence:empty { display: none; }
+.study-intro .live-indicator { display: none; } /* the stage line already says results update live */

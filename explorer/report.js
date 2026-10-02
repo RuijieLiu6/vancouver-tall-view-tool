@@ -132,6 +132,7 @@ function drawCover(D, p, opts, ctx) {
   const area = st.boundary.length >= 3 ? X.formatArea(SiteGeometry.metrics(st.boundary).area) : st.site ? 'Point site' : '-';
   const stats = [[P ? fmt(P.top - P.base, 0) + ' m' : '-', 'proposal height'], [area, 'study area'], [String(ctx.met), ctx.met === 1 ? 'corridor overlap in plan' : 'corridor overlaps in plan']];
   stats.forEach(([v, l], i) => { const x = M + i * 88; D.text(p, x, y, v, v.length > 9 ? 12 : 16, true, i === 2 && ctx.met ? PAL.clay : PAL.sage); D.paragraph(p, x, y + 12, l, 7, 80, { color: PAL.muted }); }); y += 44;
+  const sentence = X.studySentence?.(P, X.planAnalysis()); if (sentence) y = D.paragraph(p, M, y - 6, sentence, 9, L - M - 24, { color: PAL.ink, leading: 1.38 }) + 12; // the study in one sentence, as in the Output step
   D.line(p, M, y, L - 24, y, PAL.line, 0.6); y += 18; D.text(p, M, y, 'CONTENTS', 7, true, PAL.sage, { spacing: 1 }); y += 14;
   for (const [name, page] of ctx.contents) { if (y > PH - 120) break; D.text(p, M, y, name, 8.5, false, PAL.ink); D.text(p, L - 24, y, String(page), 8.5, true, PAL.muted, { align: 'right' }); D.line(p, M + Pdf.textWidth(name, 8.5) + 4, y - 2.5, L - 30 - Pdf.textWidth(String(page), 8.5, true), y - 2.5, PAL.line, 0.5, { dash: [1, 2] }); y += 14; }
   D.roundRect(p, M, PH - 92, L - M - 24, 64, 6, { fill: PAL.white, stroke: PAL.line, width: 0.6 });
