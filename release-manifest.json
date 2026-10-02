@@ -1,7 +1,7 @@
 {
   "format": "vancouver-static-pages/1",
   "file_count": 59,
-  "total_bytes": 51912894,
+  "total_bytes": 51913114,
   "files": {
     ".github/workflows/pages.yml": {
       "bytes": 591,
@@ -68,8 +68,8 @@
       "sha256": "7c879360586e464f5e416e6bf969837fce6c39d5b8d367faba1c62442d259ab5"
     },
     "explorer/explorer.js": {
-      "bytes": 210990,
-      "sha256": "977fb2a0383e2fe8e934773db009bcc5f3891ed23a2571692762ae698522ff17"
+      "bytes": 211023,
+      "sha256": "fe8738862d4e29a57703cffe28a997569b7dd4448f81be6c315a6669069a8bca"
     },
     "explorer/flow-selftest.js": {
       "bytes": 8361,
@@ -92,8 +92,8 @@
       "sha256": "54b67c465a03a5d5ec8458e8a073d0fa086e33364e0adb9d3c072c3d2829a8e2"
     },
     "explorer/report.js": {
-      "bytes": 61070,
-      "sha256": "317684afec06a7bcf64cc8e931b3321c6698066c7a261c3c2be78b516f6eb205"
+      "bytes": 61257,
+      "sha256": "479ccbc6f15b46c93d17d7a1684c973e13e587ece0e124e4a36021d4697d9ac8"
     },
     "explorer/rooftop-selftest.js": {
       "bytes": 7296,

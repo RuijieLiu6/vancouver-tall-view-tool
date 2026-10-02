@@ -15,6 +15,7 @@ const PAL = { paper: '#f7f5ed', paper2: '#efece0', ink: '#29342e', muted: '#5d6b
   sage: '#426b61', sageLight: '#dfe5d3', sageMid: '#9db3a5', water: '#b8cacc', amber: '#c99a3b', amberLight: '#f3e3bd', white: '#ffffff', sky: '#eef1ec', building: '#c9ccc2', red: '#a64235' };
 const fmt = (v, d = 1) => (v === null || v === undefined || !Number.isFinite(+v)) ? '-' : (+v).toFixed(d);
 const deg = (r) => r * 180 / Math.PI;
+const upDown = (a) => `${fmt(Math.abs(a), 1)}° ${a < 0 ? 'down' : 'up'}`; // an angle to the proposal top, never "-2° up"
 const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
@@ -163,7 +164,7 @@ function drawSummary(D, p, opts, ctx, tpl) {
   if (!sel.length) { y = D.paragraph(p, rx, y, 'No protected view is selected. Open the report options to add views.', 8, rw, { color: PAL.muted }); }
   for (const c of sel) { if (y > PH - 120) { D.text(p, rx, y, `+ ${sel.length - sel.indexOf(c)} more on the following pages`, 7.5, false, PAL.muted, { italic: true }); y += 12; break; }
     D.text(p, cols[0], y, c.id, 8, true, PAL.sage); const l = Pdf.wrap(`${c.cone.name} → ${c.row?.subject || 'subject'}`, 7.3, 122 * k); l.slice(0, 2).forEach((ln, k) => D.text(p, cols[1], y + k * 9, ln, 7.3, false, PAL.ink));
-    chip(D, p, cols[2], y + 1, relationShort(c.relation), c.relation === 'none' ? 'context' : c.relation, { size: 6.5 }); D.text(p, cols[3], y, c.topAngle == null ? '-' : fmt(c.topAngle, 1) + '° up', 7.5, true, PAL.ink); D.text(p, cols[3], y + 9, (c.near / 1000).toFixed(2) + ' km away', 6.5, false, PAL.muted);
+    chip(D, p, cols[2], y + 1, relationShort(c.relation), c.relation === 'none' ? 'context' : c.relation, { size: 6.5 }); D.text(p, cols[3], y, c.topAngle == null ? '-' : upDown(c.topAngle), 7.5, true, PAL.ink); D.text(p, cols[3], y + 9, (c.near / 1000).toFixed(2) + ' km away', 6.5, false, PAL.muted);
     y += Math.max(22, l.slice(0, 2).length * 9 + 8); D.line(p, rx, y - 9, rx + rw, y - 9, PAL.paper2, 0.5); }
   y = Math.max(y + 4, PH - 132); D.roundRect(p, rx, y, rw, 84, 6, { fill: PAL.paper });
   D.paragraph(p, rx + 10, y + 15, `“In plan” compares the proposal footprint with the City's mapped view-cone polygons. “Angle to top” is the geometric angle from a 1.6 m eye at each origin point to the top of the proposal; it does not show whether the proposal is visible past other buildings. The City's horizontal lower boundary for each cone is not in the open data, so these pages cannot show whether the building rises into a cone; clause 3.1.1 asks that no part of a building encroach into it.`, 6.9, rw - 20, { color: PAL.muted, leading: 1.32 });
@@ -229,13 +230,13 @@ function coneFrame(D, p, st, caps, label, c, fx, top, iw, ih) { const to = frame
     const G = st.G; for (const v of [G.left, G.right]) { const a = to([v[0], v[1], G.eyeZ]), b = to([v[0], v[1], G.eyeZ + 1500]); const seg = a && b ? lineThroughFrame(a, b, fx, top, iw, ih) : null; if (seg) { D.line(p, seg[0][0], seg[0][1], seg[1][0], seg[1][1], PAL.white, 2.2, { alpha: 0.85 }); D.line(p, seg[0][0], seg[0][1], seg[1][0], seg[1][1], PAL.sage, 1, { dash: [5, 3] }); } }
     if (P) { const cs = []; for (const qx of [P.box[0], P.box[3]]) for (const qy of [P.box[1], P.box[4]]) for (const qz of [P.box[2], P.box[5]]) { const q = to([qx, qy, qz]); if (q) cs.push(q); }
       if (cs.length) { const bx = boundsOf(cs, 3); if (bx[2] > fx && bx[0] < fx + iw && bx[3] > top && bx[1] < top + ih) { D.roundRect(p, bx[0], bx[1], bx[2] - bx[0], bx[3] - bx[1], 3, { stroke: PAL.clay, width: 1.3, dash: label === 'Existing' ? [3, 2] : null });
-        tag(D, p, Math.min(fx + iw - 4, Math.max(fx + 4, bx[0])), Math.max(top + 12, bx[1] - 4), label === 'Existing' ? 'proposal site (not built)' : `proposal · top ${fmt(st.topAngle, 1)}° up`, { size: 6.3, bold: true, color: PAL.clayDark }); } } }
+        tag(D, p, Math.min(fx + iw - 4, Math.max(fx + 4, bx[0])), Math.max(top + 12, bx[1] - 4), label === 'Existing' ? 'proposal site (not built)' : `proposal · top ${upDown(st.topAngle)}`, { size: 6.3, bold: true, color: PAL.clayDark }); } } }
   });
   tag(D, p, fx + 6, top + 14, label.toUpperCase(), { size: 7, bold: true, color: PAL.white, fill: label === 'Existing' ? PAL.muted : PAL.sage, alpha: 0.95 });
   tag(D, p, fx + iw / 2, top + 14, `toward ${row?.subject || 'the view subject'}`, { size: 6.5, align: 'center', color: PAL.ink }); }
 function coneFacts(D, p, st, fx, y, fw, maxY) { const row = st.row;
   const facts = [['Origin', row?.origin_point || '-'], ['Subject', row?.subject || '-'], ['Approved', row?.date_approved || '-'], ['In plan', relationText(st.relation) + (st.relation === 'none' && st.gap != null ? ` · ${fmt(st.gap, 0)} m away` : '')],
-    ['Distance', `${fmt(st.near, 0)} m from origin to proposal`], ['Top of proposal', st.topAngle == null ? '-' : `${fmt(st.topAngle, 1)}° above the eye`], ['Cone spread', `${fmt(st.cone.spread_deg ?? deg(st.G.half * 2), 1)}° in plan`], ['Lower boundary', 'Not in open data']];
+    ['Distance', `${fmt(st.near, 0)} m from origin to proposal`], ['Top of proposal', st.topAngle == null ? '-' : `${fmt(Math.abs(st.topAngle), 1)}° ${st.topAngle < 0 ? 'below' : 'above'} the eye`], ['Cone spread', `${fmt(st.cone.spread_deg ?? deg(st.G.half * 2), 1)}° in plan`], ['Lower boundary', 'Not in open data']];
   for (const [k, v] of facts) { D.text(p, fx, y, k.toUpperCase(), 5.8, true, PAL.faint, { spacing: 0.4 }); y = D.paragraph(p, fx, y + 8.5, v, 7.3, fw, { color: k === 'Lower boundary' ? PAL.clayDark : PAL.ink, bold: k === 'In plan' }) + 4; if (y > maxY) break; } }
 function drawConePage(D, p, st, opts, caps, tpl) {
   const row = st.row; header(D, p, `Protected view ${st.id}`, `${st.cone.name}`, st.relation === 'none' ? 'Context view' : 'Protected view');
@@ -275,7 +276,7 @@ function drawObserver(D, p, opts, tpl) {
     D.circle(p, e[0], e[1], 7, { fill: PAL.white, stroke: PAL.sage, width: 1.6 }); D.circle(p, e[0], e[1], 2.4, { fill: PAL.sage }); tag(D, p, e[0] + 10, e[1] + 3, 'you', { bold: true, color: PAL.sage, size: 7 });
     northArrow(D, p, kx + kw - 18, 74 + 22, 10); D.text(p, kx + 10, 74 + 16, 'Where you stand', 8, true, PAL.ink); }
   let y = 74 + ih + 18; const kind = st.observerSource === 'origin' ? `the open-data origin of protected view ${st.viewpoint || ''}` : st.observerSource === 'rooftop' ? `a modelled rooftop (building ${st.observer.building?.id || ''}; roof height and access unverified)` : 'a ground point you chose';
-  D.paragraph(p, M, y, `Seen from ${kind}, eye ${fmt(st.eyeH, 1)} m ${st.observerSource === 'rooftop' ? 'above the roof' : 'above the ground'}.${P ? ` Its nearest facade is ${fmt(d, 0)} m away; its top is ${fmt(ang, 0)}° above eye level.` : ''}${fitted ? ` Eye position unchanged; for this page the camera is tilted and widened to a ${fmt(fov, 0)}° vertical field (you looked with ${fmt(st.fov, 0)}°), so more of the building shows.` : ` Vertical field ${fmt(fov, 0)}°.`} Exploratory rendering, not a verified sightline.`, 8.5, PW - 2 * M, { color: PAL.ink });
+  D.paragraph(p, M, y, `Seen from ${kind}, eye ${fmt(st.eyeH, 1)} m ${st.observerSource === 'rooftop' ? 'above the roof' : 'above the ground'}.${P ? ` Its nearest facade is ${fmt(d, 0)} m away; its top is ${fmt(Math.abs(ang), 0)}° ${ang < 0 ? 'below' : 'above'} eye level.` : ''}${fitted ? ` Eye position unchanged; for this page the camera is tilted and widened to a ${fmt(fov, 0)}° vertical field (you looked with ${fmt(st.fov, 0)}°), so more of the building shows.` : ` Vertical field ${fmt(fov, 0)}°.`} Exploratory rendering, not a verified sightline.`, 8.5, PW - 2 * M, { color: PAL.ink });
 }
 function drawInspect(D, p, opts, tpl) {
   const two = tpl === 'two'; header(D, p, 'Context views', two ? 'The proposal from north and south' : 'The proposal from four sides', 'Context'); const P = X.proposalBox(), h = P.top - P.base, gap = 10, iw = (PW - 2 * M - gap) / 2, ih = two ? PH - 74 - 70 : (PH - 74 - 44 - gap - 22) / 2;
