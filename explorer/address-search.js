@@ -132,7 +132,7 @@
       if (X.assets.ready && X.landZAt(item.x, item.y) !== null) {
         const siteButton = root.document.createElement('button'); siteButton.type = 'button'; siteButton.className = 'btn'; siteButton.textContent = 'Place site here';
         siteButton.addEventListener('click', () => {
-          if (X.placeSite(item.x, item.y)) { X.state.flow.alt.place = 'spot'; X.focusSite(); X.refreshPanels(); setStatus(`Site point placed at the geocoder point for ${item.label}. It is an address reference, not a parcel boundary.`, 'success'); }
+          if (X.placeSite(item.x, item.y)) { X.state.flow.alt.place = 'spot'; X.focusSite(); X.refreshPanels(); setStatus(`Site point placed at the geocoder point for ${item.label}. It is an address reference, not a parcel boundary.`, 'success'); X.setHint?.(`Site placed at ${item.label}. Choose Proceed to Build when ready.`); }
           else setStatus('No modelled land at this address point. Click open ground nearby instead.', 'warning');
         });
         actions.appendChild(siteButton);

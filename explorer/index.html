@@ -244,7 +244,7 @@
       <div class="method-body hidden" data-stage="view" data-method="roof">
         <p class="method-howto"><b>Click a roof</b> in the plan, or pick a nearby building below. Your eye sits above the modelled roof and faces the proposal.</p>
         <button id="btn-find-building" class="btn" type="button">Pick a roof on the map</button>
-        <div class="rooftop-intro"><b>Rooftops near your site</b><div id="rooftop-nearby" class="rooftop-nearby"></div><p class="small muted">Roof heights are approximate. These are study viewpoints; roof access is unknown.</p></div>
+        <div class="rooftop-intro"><b id="rooftop-nearby-title">Rooftops near your site</b><div id="rooftop-nearby" class="rooftop-nearby" role="group" aria-labelledby="rooftop-nearby-title"></div><p class="small muted">Roof heights are approximate. These are study viewpoints; roof access is unknown.</p></div>
         <button id="btn-observer-on-building" class="btn primary hidden" type="button">View from this roof</button>
       </div>
 
@@ -299,7 +299,7 @@
       <p id="check-live-status" class="small" role="status">No study ceiling set.</p>
       <div id="check-error" class="hidden" role="alert"><p id="check-error-text"></p><button id="btn-run-check" class="btn" type="button">Retry calculation</button></div>
       <div id="check-result" class="check-result hidden">
-        <div class="badge-row"><span id="check-badge" class="badge">—</span><span class="badge-note">Your own assumption, not a City height limit</span></div>
+        <div class="badge-row"><span id="check-badge" class="badge" role="status" aria-live="polite">—</span><span class="badge-note">Your own assumption, not a City height limit</span></div>
         <p id="check-numbers" class="data small"></p>
         <p id="check-explain" class="small"></p>
         <details class="why"><summary>Part-by-part measurements</summary><div id="check-parts" class="small"></div></details>
@@ -369,7 +369,8 @@
   </aside>
 
   <section id="viewport" class="viewport">
-    <canvas id="gl" tabindex="0" aria-label="3D view of the Vancouver study model"></canvas>
+    <canvas id="gl" tabindex="0" aria-label="3D view of the Vancouver study model" aria-describedby="gl-keys"></canvas>
+    <p id="gl-keys" class="visually-hidden">Keyboard: arrow keys look around or move the map, plus and minus zoom, and Enter acts at the centre of the view, like a click there.</p>
     <div id="labels" class="labels" aria-hidden="true"></div>
     <div id="plan-markers" class="plan-markers" aria-hidden="true">
       <svg id="pm-link" class="pm-link"><line id="pm-link-line"/></svg>

@@ -658,7 +658,7 @@ function refreshNearbyRooftops() {
   if (!shownChosen && state.observerSource === 'rooftop' && state.observer && centre !== state.observer) { const o = state.observer, dx = o.x - centre.x, dy = o.y - centre.y, compass = ['E','NE','N','NW','W','SW','S','SE'][Math.round(((Math.atan2(dy, dx) + 2 * Math.PI) % (2 * Math.PI)) / (Math.PI / 4)) % 8], g = terrainZAt(o.x, o.y);
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn roof-chosen'; b.setAttribute('aria-pressed', 'true'); b.textContent = `Selected · ${Math.round(Math.hypot(dx, dy))} m ${compass} · roof${g === null ? '' : ' about ' + Math.round(Math.max(0, o.z - g)) + ' m high'}`; b.addEventListener('click', () => setMode('observer')); fragment.insertBefore(b, fragment.firstChild); count++; }
   if (!count) { const help = document.createElement('p'); help.className = 'small muted'; help.textContent = 'No modelled roofs within 600 m of this site point.'; fragment.appendChild(help); }
-  list.replaceChildren(fragment);
+  const hadFocus = list.contains(document.activeElement); list.replaceChildren(fragment); if (hadFocus) list.querySelector('[aria-pressed="true"]')?.focus();
 }
 function invalidateRoofObserver() {
   const b = state.observer?.building; if (state.observerSource !== 'rooftop' || !b) return false;
@@ -1007,8 +1007,10 @@ function flowGo(stage, opts = {}) {
   applyFlowTool(); if (stage === 'output') { renderCheck(); window.__report?.renderBuilder(); }
   setHint(stage === 'view' && !flowChoosing(stage) && state.observerSource === 'rooftop' && flowMethod(stage) === 'roof' ? 'You’re viewing from a roof. Drag to look around, or choose another roof.' : stage === 'view' && !flowChoosing(stage) && state.observerSource === 'exploratory' && state.observer && flowMethod(stage) === 'drag' ? 'You’re standing here. Drag to look around, or pick another spot on the plan.' : FLOW_HINTS[flowChoosing(stage) ? stage : flowMethod(stage) || stage]);
   if (!opts.quiet) $('panel').scrollTop = 0;
-  refreshPanels(); requestRender(); writeHash(); return true;
+  refreshPanels(); requestRender(); writeHash(); if (!opts.quiet) focusStageHeading(); return true;
 }
+// keyboard and screen-reader users land on the new step's heading instead of losing focus to the page body
+function focusStageHeading() { const a = document.activeElement; if (a && a !== document.body && !$('panel').contains(a)) return; const h = document.querySelector('.flow-stage:not(.hidden) .stage-head h2'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
 function chooseMethod(stage, method) {
   if (!FLOW_METHODS[stage]?.includes(method)) return false;
   if (state.flow.stage !== stage && !flowGo(stage)) return false;
@@ -1018,7 +1020,7 @@ function chooseMethod(stage, method) {
   applyFlowTool();
   if (stage === 'site' || method === 'roof' || method === 'drag') { if (state.mode !== 'plan') planView(); revealMap(); }
   if (stage === 'build' && proposalBox()) { if (state.mode === 'plan') setMode('overview'); focusSite(); }
-  setHint(FLOW_HINTS[method]); refreshPanels(); requestRender(); writeHash(); return true;
+  setHint(FLOW_HINTS[method]); refreshPanels(); requestRender(); writeHash(); focusStageHeading(); return true;
 }
 function changeMethod(stage) { state.flow.choosing = stage; applyFlowTool(); setHint(FLOW_HINTS[stage] + (flowMethod(stage) ? ' Choosing a different method clears this step’s current result.' : '')); refreshPanels(); }
 function flowBack() { const i = FLOW.indexOf(state.flow.stage); if (i > 0) flowGo(FLOW[i - 1]); }
@@ -1293,7 +1295,19 @@ document.querySelectorAll('.method-keep').forEach((el) => el.addEventListener('c
 $('btn-site-find-open')?.addEventListener('click', () => { $('site-find').classList.remove('collapsed'); $('btn-site-find-open').setAttribute('aria-expanded', 'true'); $('place-select').focus(); });
 // one click opens the README's worked example (a full study in the URL), the way KPF's tools and Spotless start from a preset scenario
 const EXAMPLE_HASH = "#style=collage&name=Example+-+120+m+tower+at+Georgia+and+Cambie&boundary=&removed=&existing=0&layers=labels%2Croads&step=1&flow=view&fm=point%2Cplatform%2Croof&site=700.000%2C-300.000&parts=120%2C30%2C30%2C0%2C0%2CTower&pm=boxes&rot=0&obs=908.820%2C28.073&osrc=rooftop&roof=s%3Aw363410790&eye=1.6&fov=60&mode=observer&wedge=1&allcones=0&bd=1&bz=126.50949961344486&cref=height&ch=100&area=footprint&cam=-1.150%2C0.850%2C6500.000%2C-303.015%2C794.155%2C20.000&icam=-0.900%2C0.350%2C400.000&look=-2.138%2C-0.126";
-document.querySelectorAll('[data-open-example]').forEach((b) => b.addEventListener('click', () => { try { localStorage.setItem('vancouver-view-lab-intro-seen/1', '1'); } catch (_) { /* storage blocked */ } location.assign(location.pathname + '?intro=0' + EXAMPLE_HASH); }));
+document.querySelectorAll('[data-open-example]').forEach((b) => b.addEventListener('click', () => { if (state.site && !confirm('Open the worked example? It replaces your current study. To keep yours, cancel and use Study file › Save study first.')) return; try { localStorage.setItem('vancouver-view-lab-intro-seen/1', '1'); } catch (_) { /* storage blocked */ } location.assign(location.pathname + '?intro=0' + EXAMPLE_HASH); }));
+// keyboard route for the map: arrows look, orbit or pan; +/- zoom; Enter acts at the centre of the view (place a site, add a corner, pick a roof, stand here)
+canvas.addEventListener('keydown', (e) => { if (!assets.ready) return; const k = e.key, f = e.shiftKey ? 4 : 1, r = canvas.getBoundingClientRect(); let used = true;
+  if (k.startsWith('Arrow')) { const dx = k === 'ArrowLeft' ? -1 : k === 'ArrowRight' ? 1 : 0, dy = k === 'ArrowUp' ? -1 : k === 'ArrowDown' ? 1 : 0;
+    if (state.mode === 'observer' && state.observer) { const o = state.cams.observer; o.yaw -= dx * 0.05 * f; o.pitch = clamp(o.pitch - dy * 0.035 * f, -1.48, 1.48); }
+    else if (state.mode === 'plan') { const o = state.cams.overview, d = o.dist * 0.04 * f; o.target[0] += dx * d; o.target[1] -= dy * d; }
+    else { const o = state.mode === 'inspect' ? state.cams.inspect : state.cams.overview; o.az -= dx * 0.07 * f; o.el = clamp(o.el - dy * 0.04 * f, 0.03, 1.55); } }
+  else if (k === '+' || k === '=') zoomBy(-0.15); else if (k === '-' || k === '_') zoomBy(0.15);
+  else if (k === 'Enter' || k === ' ') { const cx = r.left + r.width / 2, cy = r.top + r.height / 2; if (state.tool === 'aim' && state.mode !== 'observer') { if (beginAim(cx, cy)) endAim(false); } else handleClick(cx, cy, 0); }
+  else used = false;
+  if (used) { e.preventDefault(); e.stopPropagation(); requestRender(); } });
+// pressed state for the camera and tool buttons, which otherwise show it by colour only
+document.querySelectorAll('.vp-toolbar .seg-btn, [id^="pmode-"]').forEach((b) => { const sync = () => b.setAttribute('aria-pressed', String(b.classList.contains('active'))); sync(); new MutationObserver(sync).observe(b, { attributes: true, attributeFilter: ['class'] }); });
 $('btn-face')?.addEventListener('click', () => { if (lookTowardProposal()) setHint('Now facing your building. Your viewpoint has not moved.'); });
 $('btn-flow-back').addEventListener('click', flowBack); $('btn-flow-next').addEventListener('click', flowNext); $('btn-nav-pdf')?.addEventListener('click', async (e) => { const b = e.currentTarget; b.textContent = 'Exporting…'; await window.__report?.exportPdf(); b.textContent = 'Export PDF'; $('flow-need').textContent = $('pdf-status').textContent; });
 document.querySelectorAll('[data-proceed]').forEach(b => b.addEventListener('click', flowNext));
@@ -1343,7 +1357,7 @@ $('chk-existing').addEventListener('change', e => { state.showExisting=e.target.
 $('btn-fit-site').addEventListener('click', focusSite); $('btn-focus').addEventListener('click', focusSite);
 $('btn-zoom-in').addEventListener('click', () => zoomBy(-0.35)); $('btn-zoom-out').addEventListener('click', () => zoomBy(0.35));
 for (const key of Object.keys(state.layers)) $('layer-'+key).addEventListener('change',e=>{ state.layers[key]=e.target.checked; if (key === 'aerial') { aerial.error = null; aerial.tried = null; refreshAerialStatus(); aerialFollow(); } requestRender(); writeHash(); });
-window.addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (state.drawing && e.key==='Enter') { e.preventDefault(); finishBoundary(); } if (state.drawing && e.key==='Escape') { e.preventDefault(); cancelBoundary(); } });
+window.addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (state.drawing && e.key==='Enter' && !/BUTTON|CANVAS/.test(e.target.tagName)) { e.preventDefault(); finishBoundary(); } if (state.drawing && e.key==='Escape') { e.preventDefault(); cancelBoundary(); } });
 if (matchMedia('(max-width: 860px)').matches) { $('panel').classList.add('collapsed'); $('btn-panel-toggle').setAttribute('aria-expanded','false'); }
 
 
@@ -1432,7 +1446,7 @@ let lastPdfPages = 0;
 async function buildPdfReport(opts, onProgress) { if (!window.__report) throw new Error('report.js not loaded'); const r = await window.__report.build(opts, onProgress); lastPdfPages = r.pages; return r.blob; }
 
 // ------------------------------------------------------------------ public hook (self-test, debugging)
-window.__explorer = { setAddressPin, loadAerial, aerial, updateCleared, isReplaced, startNewStudy, captureScene, proposalShown, partFootprint, highestRoofAtXY, formatArea, planAnalysis, renderClauseCards, SCENE_STYLES, HS, applyFlowTool, flowGo, chooseMethod, changeMethod, flowBack, flowNext, stageComplete, toggleMultiBuilding, applyMultiSelection, replaceSingleBuilding, beginAim, aimDragTo, endAim, setSceneStyle, planAnalysis, refreshLiveStudy, resultLabel, serializeHash, openStudy, landZAt, beginBoundary, addBoundaryPoint, finishBoundary, cancelBoundary, rectangleSite, replaceSelectedBuilding, restoreBuildings, focusSite, focusLocation, planView, applyPick, isRemoved, state, assets, ready: readyPromise, placeSite, placeObserver, placeObserverAtOrigin, lookTowardProposal, setMode, setTool, setStep, aimAtProposal, resetToContext, inspectFrom, selectView, selectedCone, addPart, renderPartsList, setProposalMode, parseObj, installImport, runCheck, evaluationArea,
+window.__explorer = { setHint, setAddressPin, loadAerial, aerial, updateCleared, isReplaced, startNewStudy, captureScene, proposalShown, partFootprint, highestRoofAtXY, formatArea, planAnalysis, renderClauseCards, SCENE_STYLES, HS, applyFlowTool, flowGo, chooseMethod, changeMethod, flowBack, flowNext, stageComplete, toggleMultiBuilding, applyMultiSelection, replaceSingleBuilding, beginAim, aimDragTo, endAim, setSceneStyle, planAnalysis, refreshLiveStudy, resultLabel, serializeHash, openStudy, landZAt, beginBoundary, addBoundaryPoint, finishBoundary, cancelBoundary, rectangleSite, replaceSelectedBuilding, restoreBuildings, focusSite, focusLocation, planView, applyPick, isRemoved, state, assets, ready: readyPromise, placeSite, placeObserver, placeObserverAtOrigin, lookTowardProposal, setMode, setTool, setStep, aimAtProposal, resetToContext, inspectFrom, selectView, selectedCone, addPart, renderPartsList, setProposalMode, parseObj, installImport, runCheck, evaluationArea,
   terrainZAt, groundZAt, roofZAt, preferredRoofPoint, placeRoofObserver, placeRooftopAtXY, viewFromSelectedRoof, proposalBox, proposalParts, proposalCentre, observerEye, observerForward, pickRay, rayFromClient, applyHash, refreshPanels, technicalState, explainCheck, buildPdfReport,
   renderOnce: () => { needsRender = false; render(); return lastCam; }, camera: () => lastCam, canvas, gl,
   readPixel: (fx, fy) => { const px = new Uint8Array(4); gl.readPixels(Math.round(fx * (canvas.width - 1)), Math.round(fy * (canvas.height - 1)), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); return Array.from(px); },
