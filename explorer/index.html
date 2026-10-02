@@ -97,6 +97,7 @@
       <button class="flow-step" data-stage="view" type="button"><svg class="ico" aria-hidden="true"><use href="#i-eye"/></svg><span class="flow-step-text"><b>3 · View</b><span class="pill" id="pill-view">none</span></span></button>
       <button class="flow-step" data-stage="output" type="button"><svg class="ico" aria-hidden="true"><use href="#i-report"/></svg><span class="flow-step-text"><b>Output</b><span class="pill" id="pill-output">locked</span></span></button>
     </nav>
+    <div id="example-banner" class="example-banner hidden" role="note"><p><b>Worked example</b> · a 120 m tower at Georgia and Cambie, seen from a rooftop. Explore any step, or use <b>Output › Start a new study</b> for your own.</p><button id="btn-example-close" class="btn link" type="button" aria-label="Hide the worked example note">✕</button></div>
     <p id="hint" class="hint" role="status" aria-live="polite">Loading the context model…</p>
 
     <!-- 1 · SITE -->
@@ -270,6 +271,7 @@
     <section class="flow-stage hidden" data-stage="output" aria-labelledby="stage-output-title">
       <header class="stage-head"><h2 id="stage-output-title">Output</h2><p class="stage-active">Results update live as you return and edit earlier steps.</p></header>
       <p id="study-sentence" class="study-sentence" aria-live="polite"></p>
+      <p class="caveat-lead">Not a pass/fail result: this shows plan overlap only and does not check City height limits.</p>
       <div class="study-intro"><h3>Mapped view corridors at your site</h3><span class="live-indicator">Updates as you edit</span></div>
       <p id="view-study-summary" class="data">Place a proposal to find overlapping mapped view corridors.</p>
       <button id="btn-study-site" class="btn primary" type="button">Choose a site</button>
@@ -411,7 +413,7 @@
       <div><dt>Height</dt><dd id="m-height">–</dd></div>
       <div><dt>Site</dt><dd id="m-site">–</dd></div>
       <div><dt>Plan overlaps</dt><dd id="m-views">–</dd></div>
-      <div><dt>Demolished</dt><dd id="m-demolished">–</dd></div>
+      <div title="Existing buildings hidden because your building’s footprint covers them"><dt>Demolished</dt><dd id="m-demolished">–</dd></div>
       <div><dt>Viewpoint</dt><dd id="m-view">–</dd></div>
       <div><dt id="m-ceiling-dt">Your ceiling</dt><dd id="m-ceiling">–</dd></div>
     </dl>

@@ -1003,3 +1003,9 @@ body[data-scene-style="night"] .pm-address .pm-label { color: #f2efe9; }
 .study-sentence { margin: 4px 0 14px; font-size: 16px; line-height: 1.45; font-weight: 300; color: var(--ink); }
 .study-sentence:empty { display: none; }
 .study-intro .live-indicator { display: none; } /* the stage line already says results update live */
+.caveat-lead { margin: -6px 0 14px; padding-left: 10px; border-left: 2px solid var(--accent); font-size: 13px; line-height: 1.45; color: var(--ink); }
+.study-sentence:empty + .caveat-lead { display: none; }
+.example-banner { display: flex; align-items: flex-start; gap: 8px; margin: 10px 12px 0; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); font-size: 13px; line-height: 1.45; }
+.example-banner p { margin: 0; flex: 1; }
+.example-banner .btn.link { padding: 0 2px; text-decoration: none; font-size: 14px; }
+.example-banner.hidden { display: none; }

@@ -126,11 +126,11 @@
       note.textContent = item.descriptor === 'cityAddress' ? 'City of Vancouver civic address point' : item.descriptor === 'parcelPoint' ? 'Parcel reference point (BC Address Geocoder)' : 'Address reference point (BC Address Geocoder)';
       li.appendChild(note);
       const actions = root.document.createElement('div'); actions.className = 'address-result-actions';
-      const locateButton = root.document.createElement('button'); locateButton.type = 'button'; locateButton.className = 'btn primary'; locateButton.textContent = 'Locate on model';
+      const locateButton = root.document.createElement('button'); locateButton.type = 'button'; locateButton.className = 'btn'; locateButton.textContent = 'Zoom to address';
       locateButton.addEventListener('click', () => locate(item)); actions.appendChild(locateButton);
       // The search lives in the Site step: it can place the site point explicitly, never a roof observer.
       if (X.assets.ready && X.landZAt(item.x, item.y) !== null) {
-        const siteButton = root.document.createElement('button'); siteButton.type = 'button'; siteButton.className = 'btn'; siteButton.textContent = 'Place site here';
+        const siteButton = root.document.createElement('button'); siteButton.type = 'button'; siteButton.className = 'btn primary'; siteButton.textContent = 'Place site here';
         siteButton.addEventListener('click', () => {
           if (X.placeSite(item.x, item.y)) { X.state.flow.alt.place = 'spot'; X.focusSite(); X.refreshPanels(); setStatus(`Site point placed at the geocoder point for ${item.label}. It is an address reference, not a parcel boundary.`, 'success'); X.setHint?.(`Site placed at ${item.label}. Choose Proceed to Build when ready.`); }
           else setStatus('No modelled land at this address point. Click open ground nearby instead.', 'warning');

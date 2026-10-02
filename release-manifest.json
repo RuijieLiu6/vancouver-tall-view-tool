@@ -1,7 +1,7 @@
 {
   "format": "vancouver-static-pages/1",
   "file_count": 59,
-  "total_bytes": 51532256,
+  "total_bytes": 51534624,
   "files": {
     ".github/workflows/pages.yml": {
       "bytes": 591,
@@ -41,7 +41,7 @@
     },
     "explorer/address-search.js": {
       "bytes": 20994,
-      "sha256": "65155f746c060c0b1e3486e9509ec44ac87322bc600ce7dceb4f1c76031df185"
+      "sha256": "6308d61d47ecfaabe360efccceff79b55ba0dff8ae35d5d4b2d7156db60ba51b"
     },
     "explorer/aerial-context.js": {
       "bytes": 14439,
@@ -64,20 +64,20 @@
       "sha256": "de24ba485f7c6e95e719f6136bd81eb59642b41dfe2362371d521348ec21befa"
     },
     "explorer/explorer.css": {
-      "bytes": 95176,
-      "sha256": "5423c2cf5831a4318e69803e8838c92034e690abf277717529bb8fb17591567b"
+      "bytes": 95833,
+      "sha256": "2748aaffac31815108fab9da882ea14e4755c20cc90ff342129875c38bb2d857"
     },
     "explorer/explorer.js": {
-      "bytes": 207406,
-      "sha256": "c0f33d26c2833a9e9e23d9a6b19396044ae196d1c11c53f1622607b72aef52c7"
+      "bytes": 208443,
+      "sha256": "8311724d6d5597df7edc06ce81385b5ed03bc58bb2fcdba613a140daf2fa185a"
     },
     "explorer/flow-selftest.js": {
       "bytes": 8361,
       "sha256": "d9e63df0150179947f58959d5df8100cf90034a4249fba4946f840a4d24933ca"
     },
     "explorer/index.html": {
-      "bytes": 44845,
-      "sha256": "023b5f79d3aa2627d9319f26631adfdadea075929a1a0115e8dbf1ebebd9deb6"
+      "bytes": 45410,
+      "sha256": "ccb110f632be04ebe5cde14132459a1cc1fa3a617dbad0e0b5101082d012eb0e"
     },
     "explorer/intro.js": {
       "bytes": 7562,
@@ -92,8 +92,8 @@
       "sha256": "54b67c465a03a5d5ec8458e8a073d0fa086e33364e0adb9d3c072c3d2829a8e2"
     },
     "explorer/report.js": {
-      "bytes": 60846,
-      "sha256": "c72aaa24d82839279c5236d2d50e781fd7571fef706322394a0d9718eb1ea0ea"
+      "bytes": 60955,
+      "sha256": "a49101aef5ecd4efa296bd6242c1199e7a1f84d426cc1b2a9bf94884fa866d9e"
     },
     "explorer/rooftop-selftest.js": {
       "bytes": 7296,
