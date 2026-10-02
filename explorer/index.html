@@ -51,8 +51,8 @@
   <div class="intro-shell">
     <header class="intro-head">
       <p class="intro-kicker">ARCH 540 · Vancouver View-Protection Lab</p>
-      <h1 id="intro-title" tabindex="-1">Test a building against Vancouver’s views</h1>
-      <p id="intro-lede" class="intro-lede">Place a building in Vancouver and see how it meets the city’s protected views, in four steps.</p>
+      <h1 id="intro-title" tabindex="-1">Explore a building in Vancouver’s protected views</h1>
+      <p id="intro-lede" class="intro-lede">Place a building, choose where to look from, and see where it overlaps the City’s mapped view corridors, in four steps.</p>
     </header>
     <div class="intro-stage" id="intro-stage" role="img" aria-label="Animation: a pin marks a site, blocks stack into a building, an eye on a nearby roof looks toward it, and a report appears."></div>
     <ol class="intro-steps">
@@ -117,8 +117,7 @@
 
       <div class="method-body hidden" data-stage="site" data-method="point">
         <section class="site-step" id="site-find" aria-labelledby="site-step-1">
-          <h3 id="site-step-1"><span class="site-step-n">1</span>Find the area<span class="site-step-done">Area located</span><button id="btn-site-find-open" class="btn link site-step-open" type="button" aria-controls="site-find" aria-expanded="false">Change area</button></h3>
-          <p class="site-step-note">Skip this if the area is already in view.</p>
+          <h3 id="site-step-1"><span class="site-step-n">1</span>Find an area <span class="site-step-opt">(optional)</span><span class="site-step-done">Area located</span><button id="btn-site-find-open" class="btn link site-step-open" type="button" aria-controls="site-find" aria-expanded="false">Change area</button></h3>
           <div class="site-alt" data-alt-step="find" data-alt="neighbourhood">
             <h4><span class="site-alt-k">A</span><label for="place-select">Choose a neighbourhood</label></h4>
             <select id="place-select"><option value="">Choose a neighbourhood…</option></select>
@@ -135,8 +134,8 @@
                 <ul id="address-suggest" class="address-suggest hidden" role="listbox" aria-label="Address suggestions"></ul>
               <p id="address-status" class="address-status" role="status" aria-live="polite">Enter an address and choose Search.</p>
                 <ul id="address-results" class="address-results" aria-label="Downtown address matches"></ul>
-                <p class="address-source">Address points are approximate (a parcel or entrance); they do not verify a building or roof. Finding an address leaves your site in place.</p>
-                <details class="address-credits"><summary>Address sources and licences</summary><p class="address-source">Suggestions use City of Vancouver <a href="https://opendata.vancouver.ca/explore/dataset/property-addresses/" target="_blank" rel="noopener noreferrer">property addresses</a> (Open Government Licence – Vancouver) and the <a href="https://www2.gov.bc.ca/gov/content/data/geographic-data-services/location-services/geocoder" target="_blank" rel="noopener noreferrer">BC Address Geocoder</a> · © Province of British Columbia · <a href="https://www2.gov.bc.ca/gov/content/data/policy-standards/data-policies/open-data/open-government-licence-bc" target="_blank" rel="noopener noreferrer">Open Government Licence – BC</a>.</p></details>
+                <p class="address-source">Approximate address point: confirm its position on the plan.</p>
+                <details class="address-credits"><summary>Address sources and limits</summary><p class="address-source">Address points may mark a parcel or entrance, not a verified building or roof. Searching does not move your site; “Place site here” does.</p><p class="address-source">Suggestions use City of Vancouver <a href="https://opendata.vancouver.ca/explore/dataset/property-addresses/" target="_blank" rel="noopener noreferrer">property addresses</a> (Open Government Licence – Vancouver) and the <a href="https://www2.gov.bc.ca/gov/content/data/geographic-data-services/location-services/geocoder" target="_blank" rel="noopener noreferrer">BC Address Geocoder</a> · © Province of British Columbia · <a href="https://www2.gov.bc.ca/gov/content/data/policy-standards/data-policies/open-data/open-government-licence-bc" target="_blank" rel="noopener noreferrer">Open Government Licence – BC</a>.</p></details>
             </div>
           </div>
         </section>
@@ -271,7 +270,7 @@
     <section class="flow-stage hidden" data-stage="output" aria-labelledby="stage-output-title">
       <header class="stage-head"><h2 id="stage-output-title">Output</h2><p class="stage-active">Results update live as you return and edit earlier steps.</p></header>
       <p id="study-sentence" class="study-sentence" aria-live="polite"></p>
-      <p class="caveat-lead">Not a pass/fail result: this shows plan overlap only and does not check City height limits.</p>
+      <p class="caveat-lead">Not a pass/fail assessment. Corridor overlap is checked in plan; the study ceiling is your own assumption, not a City height limit.</p>
       <div class="study-intro"><h3>Mapped view corridors at your site</h3><span class="live-indicator">Updates as you edit</span></div>
       <p id="view-study-summary" class="data">Place a proposal to find overlapping mapped view corridors.</p>
       <button id="btn-study-site" class="btn primary" type="button">Choose a site</button>
@@ -409,14 +408,23 @@
       <details class="layer-menu"><summary>Layers</summary><label><input id="layer-labels" type="checkbox" checked> Place labels</label><label><input id="layer-roads" type="checkbox" checked> Roads</label><label><input id="layer-sources" type="checkbox"> Distinguish data sources</label><label><input id="layer-extent" type="checkbox"> Coverage outlines</label><label><input id="layer-aerial" type="checkbox"> Aerial photo texture <em>(experimental)</em></label><p>Context heights remain approximate. Source tint is a display aid.</p></details>
     </div>
     <div id="live-feedback" class="live-feedback hidden" role="status"></div>
-    <dl id="metrics" class="metrics hidden" aria-label="Study at a glance" aria-live="polite">
+    <dl id="metrics" class="metrics hidden" aria-label="Study at a glance">
       <div><dt>Height</dt><dd id="m-height">–</dd></div>
       <div><dt>Site</dt><dd id="m-site">–</dd></div>
       <div><dt>Plan overlaps</dt><dd id="m-views">–</dd></div>
       <div title="Existing buildings hidden because your building’s footprint covers them"><dt>Demolished</dt><dd id="m-demolished">–</dd></div>
       <div><dt>Viewpoint</dt><dd id="m-view">–</dd></div>
       <div><dt id="m-ceiling-dt">Your ceiling</dt><dd id="m-ceiling">–</dd></div>
+      <div class="m-help"><button id="btn-metrics-help" class="btn link" type="button" aria-expanded="false" aria-controls="metrics-help" title="What these numbers mean">?</button></div>
     </dl>
+    <div id="metrics-help" class="metrics-help hidden" role="region" aria-label="What the numbers mean">
+      <p><b>Height</b> Your building’s height above the ground at the site.</p>
+      <p><b>Site</b> A point, or the area of the boundary you drew.</p>
+      <p><b>Plan overlaps</b> How many of the City’s 24 mapped protected-view corridors your footprint overlaps in plan. Heights are not assessed.</p>
+      <p><b>Demolished</b> Existing buildings hidden because your footprint covers them. You can keep them in Build.</p>
+      <p><b>Viewpoint</b> Where you look from: a rooftop, the ground, or a protected view’s origin.</p>
+      <p><b>Study ceiling</b> Your own test height, set in Output › Your height experiment. Not a City limit.</p>
+    </div>
     <div id="scene-status" class="scene-status">Study scene</div>
     <p id="aerial-note" class="aerial-note hidden" role="status"></p>
     <div id="view-caption" class="view-caption"></div>

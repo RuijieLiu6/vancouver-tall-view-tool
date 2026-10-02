@@ -896,6 +896,7 @@ function studySentence(P, matches) { if (!P || !state.site) return '';
   return `A ${fmt(P.top - P.base, 0)} m ${n === 1 ? 'building' : n + '-block building'} ${site}, ${from}. ${views}${ceil}`; }
 function refreshLiveStudy() { const P=syncCeiling(), matches=planAnalysis(); if ($('study-sentence')) $('study-sentence').textContent = studySentence(P, matches);
   $('btn-study-site').classList.toggle('hidden',!!P);
+  $('view-study-summary').classList.toggle('hidden', !!P && !!assets.cones?.available);
   $('view-study-summary').textContent = !P ? 'Build your proposal to find the mapped view corridors it overlaps in plan.' : !assets.cones?.available ? 'View corridor data unavailable.' : matches.length ? (()=>{ const t=matches.filter(m=>m.relation==='touch').length, o=matches.length-t; return o&&t ? `${o} mapped view corridor${o===1?' overlaps':'s overlap'} your building in plan, and ${t} touch${t===1?'es':''} its edge.` : o ? `${o} mapped view corridor${o===1?' overlaps':'s overlap'} your building in plan.` : `${t} mapped view corridor${t===1?' touches':'s touch'} the edge of your building in plan.`; })() : 'No mapped view corridor overlaps your building in plan.';
   const html=matches.map(m=>`<article class="view-match"><div><b>${esc(m.cone.view_number)} — ${esc(m.cone.name)}</b><span>${m.relation==='touch'?'Touches your footprint edge in plan':'Overlaps your footprint in plan'}${state.pmode==='import'?' · bounding-box estimate':''}</span></div><button class="btn" data-view="${esc(m.cone.view_number)}">View from here</button></article>`).join('');
   // corridors that pass close by without overlapping, so a site next to a famous view is not mistaken for "unaffected"
@@ -943,6 +944,7 @@ function renderCheck() { const r=state.check.result, P=proposalBox(); $('check-r
 // Live metrics strip (after the Spotless New York dashboard): the study at a glance, updated as you work.
 function updateMetrics() {
   const el = $('metrics'); if (!el) return; const P = proposalShown() ? proposalBox() : null, show = !!state.site && state.flow.guided;
+  if (!show) $('metrics-help')?.classList.add('hidden');
   el.classList.toggle('hidden', !show); $('live-feedback').classList.toggle('hidden', show || !P); $('scene-status').classList.toggle('hidden', show); if (!show) return; // the strip replaces the small scene badge
   const r = state.check.result, an = P && assets.cones?.available ? planAnalysis() : null, met = an ? an.length : null, touch = an ? an.filter((m) => m.relation === 'touch').length : 0;
   $('m-height').textContent = P ? `${fmt(P.top - P.base, 0)} m` : '–';
@@ -967,7 +969,7 @@ const METHOD_NAMES = { point: 'Open spot on the plan', replace: 'Replace a build
 const FLOW_HINTS = {
   site: 'Step 1 · Choose how you want to pick your site.', build: 'Step 2 · Choose how you will make your building.', view: 'Step 3 · Choose where you want to look from.',
   output: 'Output · Check the results, choose what goes in the PDF, then Export PDF.',
-  point: 'Find the area with a neighbourhood or an address, then pick a spot or draw a boundary.',
+  point: 'Click open ground to place your site, or find another area below. Draw a boundary if you need an area measurement.',
   replace: 'Click an existing building in the plan to select it for replacement.',
   multi: 'Click buildings in the plan to add them to your group, then choose “Use as site”.',
   platform: 'Edit the blocks. Height, size, rotation and offsets update the model live.',
@@ -1016,7 +1018,9 @@ function flowGo(stage, opts = {}) {
   const from = state.flow.stage; state.flow.stage = stage; if (stage !== 'site') state.showExisting = false; if (from !== stage) state.selected = null; state.flow.choosing = null; state.step = stage === 'output' ? Math.max(2, opts.step || 3) : 1;
   if (!opts.quiet) { // restores and compatibility calls keep the saved camera
     if (stage === 'build' && from !== 'build' && proposalBox() && state.mode !== 'observer') { if (state.mode === 'plan') setMode('overview'); focusSite(); }
-    if (stage !== 'view' && stage !== 'output' && state.mode === 'observer') setMode('overview'); }
+    if (stage !== 'view' && stage !== 'output' && state.mode === 'observer') setMode('overview');
+    // arriving at Output from a far-out city view, frame the proposal so the result has something to look at
+    if (stage === 'output' && from !== 'output' && state.mode === 'overview' && state.cams.overview.dist > 3000 && proposalBox()) focusSite(); }
   applyFlowTool(); if (stage === 'output') { renderCheck(); window.__report?.renderBuilder(); }
   setHint(stage === 'view' && !flowChoosing(stage) && state.observerSource === 'rooftop' && flowMethod(stage) === 'roof' ? 'You’re viewing from a roof. Drag to look around, or choose another roof.' : stage === 'view' && !flowChoosing(stage) && state.observerSource === 'exploratory' && state.observer && flowMethod(stage) === 'drag' ? 'You’re standing here. Drag to look around, or pick another spot on the plan.' : FLOW_HINTS[flowChoosing(stage) ? stage : flowMethod(stage) || stage]);
   if (!opts.quiet) $('panel').scrollTop = 0;
@@ -1124,6 +1128,7 @@ function refreshFlowUI() {
   if (showNext) { next.textContent = `Proceed to ${FLOW_NAMES[FLOW[idx + 1]]} ›`; next.disabled = !stageComplete(stage); }
   $('flow-need').textContent = showNext ? stageNeed(stage) : '';
   panelToggleLabel();
+  const fb = $('btn-focus'); if (fb) fb.textContent = stage === 'output' || stage === 'view' ? 'Focus proposal' : 'Focus site';
   $('btn-open-ground')?.classList.toggle('hidden', state.mode === 'plan'); $('btn-face')?.classList.toggle('hidden', !(state.mode === 'observer' && proposalBox() && proposalShown()));
   // drag and view: once you stand somewhere, the how-to turns into what you can do next
   const dh = document.querySelector('.method-body[data-stage="view"][data-method="drag"] .method-howto'); if (dh) { dh.dataset.base ??= dh.innerHTML; const placed = state.observerSource === 'exploratory' && !!state.observer;
@@ -1324,6 +1329,9 @@ canvas.addEventListener('keydown', (e) => { if (!assets.ready) return; const k =
   if (used) { e.preventDefault(); e.stopPropagation(); requestRender(); } });
 // pressed state for the camera and tool buttons, which otherwise show it by colour only
 document.querySelectorAll('.vp-toolbar .seg-btn, [id^="pmode-"]').forEach((b) => { const sync = () => b.setAttribute('aria-pressed', String(b.classList.contains('active'))); sync(); new MutationObserver(sync).observe(b, { attributes: true, attributeFilter: ['class'] }); });
+// the "?" at the end of the strip opens plain definitions of each number
+$('btn-metrics-help')?.addEventListener('click', (e) => { const box = $('metrics-help'), open = box.classList.toggle('hidden') === false; e.currentTarget.setAttribute('aria-expanded', String(open)); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('metrics-help')?.classList.contains('hidden')) { $('metrics-help').classList.add('hidden'); $('btn-metrics-help').setAttribute('aria-expanded', 'false'); $('btn-metrics-help').focus(); } });
 $('btn-face')?.addEventListener('click', () => { if (lookTowardProposal()) setHint('Now facing your building. Your viewpoint has not moved.'); });
 $('btn-flow-back').addEventListener('click', flowBack); $('btn-flow-next').addEventListener('click', flowNext); $('btn-nav-pdf')?.addEventListener('click', async (e) => { const b = e.currentTarget; b.textContent = 'Exporting…'; await window.__report?.exportPdf(); b.textContent = 'Export PDF'; $('flow-need').textContent = $('pdf-status').textContent; });
 document.querySelectorAll('[data-proceed]').forEach(b => b.addEventListener('click', flowNext));

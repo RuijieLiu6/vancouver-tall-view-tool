@@ -1009,3 +1009,13 @@ body[data-scene-style="night"] .pm-address .pm-label { color: #f2efe9; }
 .example-banner p { margin: 0; flex: 1; }
 .example-banner .btn.link { padding: 0 2px; text-decoration: none; font-size: 14px; }
 .example-banner.hidden { display: none; }
+/* Definitions for the metrics strip */
+.metrics .m-help { display: flex; align-items: center; padding: 0 6px 0 8px; }
+.metrics .m-help .btn.link { width: 24px; height: 24px; padding: 0; border: 1px solid var(--line); border-radius: 50%; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--ink); }
+.metrics-help { position: absolute; left: 238px; top: 84px; z-index: 6; width: min(420px, calc(100% - 260px)); padding: 10px 14px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0, 0, 0, .12); font-size: 13px; line-height: 1.45; }
+.metrics-help p { margin: 4px 0; } .metrics-help b { display: inline-block; min-width: 96px; font-weight: 600; }
+@media (max-width: 1400px) { .metrics-help { left: 10px; top: 132px; width: min(420px, calc(100% - 20px)); } }
+body[data-scene-style="night"] .metrics-help { background: #111; border-color: #333; color: #eee; }
+body[data-scene-style="night"] .metrics .m-help .btn.link { color: #eee; border-color: #444; }
+.site-step-opt { font-weight: 400; color: var(--muted); }
+.site-step.collapsed .site-step-opt { display: none; }
