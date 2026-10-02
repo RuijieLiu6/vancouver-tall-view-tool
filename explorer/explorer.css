@@ -986,3 +986,14 @@ body[data-scene-style="night"] .pm-address .pm-label { color: #f2efe9; }
 #btn-face, body[data-scene-style] #btn-face { background: #365f54; border-color: #365f54; color: #fff; }
 #btn-face:hover, body[data-scene-style] #btn-face:hover { background: #294a42; border-color: #294a42; }
 .site-step.collapsed .site-step-open { min-height: 32px; padding: 4px 8px; }
+/* Worked-example quick start (intro footer and Site chooser) */
+.intro-foot .intro-example { margin-left: auto; }
+.example-link { margin: 12px 0 0; font-size: 13px; line-height: 1.5; }
+.example-link .btn.link { padding: 0; font-size: 13px; }
+/* The strip starts right of the camera buttons instead of centring over them */
+.metrics { left: 238px; transform: none; }
+@media (max-width: 1400px) {
+  .metrics { left: 10px; top: 54px; max-width: calc(100% - 140px); flex-wrap: wrap; row-gap: 6px; }
+  .metrics > div { padding: 0 8px; }
+  .metrics dt { font-size: 10px; letter-spacing: .04em; }
+}
