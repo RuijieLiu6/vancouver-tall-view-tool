@@ -52,7 +52,7 @@
   (async () => {
     const files = ['intro.js', 'browser-api.js'];
     if (window.VANCOUVER_STATIC) files.push('browser-check.js', 'browser-rhino.js');
-    files.push('site-geometry.js', 'proposal-geometry.js', 'pdf.js', 'explorer.js', 'aerial-context.js', 'address-search.js', 'report.js');
+    files.push('site-geometry.js', 'proposal-geometry.js', 'inset-camera.js', 'pdf.js', 'explorer.js', 'aerial-context.js', 'address-search.js', 'report.js');
     for (const file of files) await load(fileUrl(file));
     const query = new URLSearchParams(location.search);
     if (query.get('studytest') === '1') await load(fileUrl('study-selftest.js'));

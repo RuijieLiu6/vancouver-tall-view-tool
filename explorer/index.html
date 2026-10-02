@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vancouver View-Protection Lab — Site Explorer</title>
+<title>Vista — Vancouver View Protection Tool</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap">
@@ -50,7 +50,7 @@
 <dialog id="intro" class="intro" aria-labelledby="intro-title" aria-describedby="intro-lede">
   <div class="intro-shell">
     <header class="intro-head">
-      <p class="intro-kicker">ARCH 540 · Vancouver View-Protection Lab</p>
+      <p class="intro-kicker">Vista · Vancouver View Protection Tool</p>
       <h1 id="intro-title" tabindex="-1">Explore a building in Vancouver’s protected views</h1>
       <p id="intro-lede" class="intro-lede">Place a building, choose where to look from, and see where it overlaps the City’s mapped view corridors, in four steps.</p>
     </header>
@@ -78,7 +78,7 @@
 </section>
 <header class="app-header">
   <div class="title-block">
-    <h1><span class="brand-mark" aria-hidden="true"><svg class="ico"><use href="#i-eye"/></svg></span>Vancouver View-Protection Lab <span class="thin">Site Explorer</span></h1>
+    <h1><span class="brand-mark" aria-hidden="true"><svg class="ico"><use href="#i-eye"/></svg></span><span class="brand-copy"><span class="brand-title">Vista</span><span class="brand-subtitle">Vancouver View Protection Tool</span></span></h1>
   </div>
   <div class="header-actions">
     <button id="btn-intro" class="btn intro-open" type="button" aria-haspopup="dialog">Help</button>
@@ -437,10 +437,12 @@
       <span><i class="sw sw-proposal"></i>Proposal</span><span><i class="sw sw-observer"></i>Observer · ray</span><span><i class="sw sw-wedge"></i>Viewing angle</span>
       <span><i class="sw sw-cone"></i>View cone</span><span><i class="sw sw-plane"></i>Study ceiling</span><span><i class="sw sw-site"></i>Study boundary</span>
     </div>
-    <div id="inset-frame" class="inset-frame hidden"><span id="inset-legend" class="inset-legend"><i class="lg-eye"></i>you <i class="lg-prop"></i>proposal</span>
+    <div id="inset-frame" class="inset-frame hidden" role="img" aria-label="Location map, north up">
+      <span id="inset-legend" class="inset-legend"><b id="inset-eye-key"><i class="lg-eye"></i><em id="inset-eye-label">viewpoint</em></b><b id="inset-prop-key"><i class="lg-prop"></i><em id="inset-prop-label">proposal</em></b><b class="inset-north">N ↑</b></span>
+      <span id="inset-coverage" class="inset-coverage hidden">Model coverage ends here</span>
       <div class="inset-markers" aria-hidden="true"><svg class="inset-link"><defs><radialGradient id="beam-grad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="scale(80)"><stop offset="0" stop-color="#1a9fd0" stop-opacity=".55"/><stop offset="1" stop-color="#1a9fd0" stop-opacity="0"/></radialGradient></defs><g id="inset-beam"><path id="inset-beam-path" fill="url(#beam-grad)"/></g><line id="inset-link-line"/></svg>
         <div id="im-prop" class="nm nm-prop im-icon"><i class="im-square"></i></div>
-        <div id="im-eye" class="nm nm-eye im-icon"><svg class="ico"><use href="#i-eye"/></svg></div></div></div>
+        <div id="im-eye" class="nm nm-eye im-icon"><i class="im-preview-dot"></i><svg class="ico"><use href="#i-eye"/></svg></div></div></div>
     <div id="loading" class="loading"><div class="bar"><div id="progress" class="fill"></div></div><div id="loading-text">Loading…</div></div>
   </section>
 </main>

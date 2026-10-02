@@ -44,7 +44,30 @@
 
     swap('view', 'cone').click();
     record('switching view method clears the previous viewpoint', X.state.observer === null && X.state.flow.methods.view === 'cone' && $('btn-flow-next').disabled);
-    X.selectView('3.2.3'); $('btn-observer-at-origin').click(); $('btn-flow-next').click();
+    X.renderOnce();
+    record('free inspection retains the location map before a cone is selected', !$('inset-frame').classList.contains('hidden') &&
+      /Free inspection/.test($('view-caption').textContent) && $('im-eye').classList.contains('hidden') && $('inset-beam').classList.contains('hidden'));
+    const beforeCamera = JSON.stringify(X.state.cams.overview);
+    X.selectView('3.2.1'); X.renderOnce();
+    record('choosing a cone previews its origin without moving the inspection camera', !X.state.observer && X.state.mode !== 'observer' &&
+      beforeCamera === JSON.stringify(X.state.cams.overview) && !$('inset-frame').classList.contains('hidden') &&
+      $('inset-eye-label').textContent === 'selected view' && $('inset-beam').classList.contains('hidden') && /free inspection/i.test($('obs-info').textContent));
+    $('btn-observer-at-origin').click(); X.renderOnce();
+    record('View from here activates the observer and its map beam', X.state.mode === 'observer' && X.state.observerSource === 'origin' &&
+      !$('inset-frame').classList.contains('hidden') && !$('inset-beam').classList.contains('hidden') && $('inset-eye-label').textContent === 'you' &&
+      /Protected viewpoint 3.2.1/.test($('view-caption').textContent));
+    X.setMode('inspect'); X.renderOnce();
+    record('returning to free inspection keeps the map and removes the eye-level beam', !$('inset-frame').classList.contains('hidden') &&
+      $('inset-beam').classList.contains('hidden') && /Free inspection/.test($('view-caption').textContent));
+    X.setMode('observer'); X.selectView('3.2.3'); X.renderOnce();
+    record('changing the protected view returns to a clearly labelled preview', !X.state.observer && X.state.mode !== 'observer' &&
+      $('mode-overview').classList.contains('active') && !$('mode-observer').classList.contains('active') &&
+      !$('inset-frame').classList.contains('hidden') && $('inset-eye-label').textContent === 'selected view' &&
+      $('inset-beam').classList.contains('hidden') && /Free inspection/.test($('view-caption').textContent));
+    const previewHash = X.serializeHash(); X.applyHash(previewHash); X.renderOnce();
+    record('saved cone selection reopens with a map in free inspection', !X.state.observer &&
+      !$('inset-frame').classList.contains('hidden') && $('inset-eye-label').textContent === 'selected view' && /Free inspection/.test($('view-caption').textContent));
+    $('btn-observer-at-origin').click(); $('btn-flow-next').click();
     record('Output shows results and downloads with Return to View', X.state.flow.stage === 'output' && X.state.step === 3 && $('btn-flow-next').classList.contains('hidden') &&
       $('btn-flow-back').textContent.includes('Return to View') && $('report').textContent.length > 500);
 

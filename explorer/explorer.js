@@ -461,7 +461,7 @@ function drawScene(cam, opts) {
   // transparent geometry last
   gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); gl.useProgram(PM.p); gl.uniform1f(PM.u.uLightMix, 0.0);
   // Filled plan-corridor walls obscure silhouettes in close and eye-level views.
-  if (o.cones && selCone && state.mode === 'overview') { const g = coneGeometry(selCone); dynDraw(PM, gl.TRIANGLES, g.wall, g.wallIdx, C.coneSel); }
+  if (o.cones && selCone && state.mode === 'overview' && !o.plan) { const g = coneGeometry(selCone); dynDraw(PM, gl.TRIANGLES, g.wall, g.wallIdx, C.coneSel); }
   const area = evaluationArea();
   if (area && !state.check.unknown && Number.isFinite(state.check.bz)) { const z = state.check.bz; const m = 4;
     dynDraw(PM, gl.TRIANGLES, new Float32Array([area.x_min - m, area.y_min - m, z, area.x_max + m, area.y_min - m, z, area.x_max + m, area.y_max + m, z, area.x_min - m, area.y_max + m, z]), new Uint32Array([0, 1, 2, 0, 2, 3]), C.plane);
@@ -476,7 +476,9 @@ function wedgeGeometry(aspect) { const eye = observerEye(); if (!eye) return nul
     edges: new Float32Array([...eye, ...q[0], ...eye, ...q[1], ...eye, ...q[2], ...eye, ...q[3], ...q[0], ...q[1], ...q[1], ...q[2], ...q[2], ...q[3], ...q[3], ...q[0]]) }; }
 function resize() { const dpr = Math.min(window.devicePixelRatio || 1, 2); const r = canvas.getBoundingClientRect(); const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr)); if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; requestRender(); } }
 function render() { if (!gl || !PM) return; resize(); const W = canvas.width, H = canvas.height; gl.viewport(0, 0, W, H); gl.disable(gl.SCISSOR_TEST); gl.clearColor(BG[0], BG[1], BG[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); if (!assets.ready) return;
-  const cam = computeCamera(state.mode, W / H); lastCam = cam; drawScene(cam, { markers: state.mode !== 'observer', backdrop: state.mode === 'observer' }); if (state.mode === 'observer' && state.observer) drawInset(W, H); updatePlanMarkers(cam); updateLabels(cam); updateMapCues(cam); aerialFollow(); }
+  const cam = computeCamera(state.mode, W / H); lastCam = cam; drawScene(cam, { markers: state.mode !== 'observer', backdrop: state.mode === 'observer' });
+  const inset = insetContext(); $('inset-frame').classList.toggle('hidden', !inset.visible); if (inset.visible) drawInset(W, H, inset);
+  updatePlanMarkers(cam); updateLabels(cam); updateMapCues(cam); aerialFollow(); }
 // Screen-size markers in Plan and City views: an eye where the observer stands, with a fan for the view direction, and a
 // proposal badge when the building is too small on screen to find. Both keep their size at any zoom.
 const planMarkers = { observer: false, proposal: false }; // which markers replace the older text tags this frame
@@ -511,22 +513,49 @@ function updatePlanMarkers(cam) {
   const link = $('pm-link'); link.classList.toggle('hidden', !(a && b));
   if (a && b) { link.setAttribute('width', rect.width); link.setAttribute('height', rect.height); line.setAttribute('x1', a[0]); line.setAttribute('y1', a[1]); line.setAttribute('x2', b[0]); line.setAttribute('y2', b[1]); }
 }
-function drawInset(W, H) { const dpr = canvas.width / canvas.getBoundingClientRect().width; const fr = $('inset-frame').getBoundingClientRect(), cr = canvas.getBoundingClientRect();
+// Choosing a cone previews its origin; it does not move the eye-level camera.
+function insetContext() {
+  const cone = selectedCone(), observing = state.mode === 'observer' && !!state.observer;
+  const candidate = !observing && state.flow.methods.view === 'cone' && cone ? cone.origin_model_xy : null;
+  const anchor = candidate || observerEye(), target = proposalShown() ? proposalCentre() : state.site ? [state.site.x, state.site.y, state.site.z] : null;
+  const visible = !!(anchor || target) && !!(state.observer || cone || state.flow.stage === 'view');
+  return { anchor, target, observing, preview: !!candidate, visible };
+}
+function drawInset(W, H, context) { const dpr = canvas.width / canvas.getBoundingClientRect().width; const fr = $('inset-frame').getBoundingClientRect(), cr = canvas.getBoundingClientRect();
+  if (fr.width <= 24 || fr.height <= 24) return;
   const iw = Math.round(fr.width * dpr), ih = Math.round(fr.height * dpr), ix = Math.round((fr.left - cr.left) * dpr), iy = Math.round((cr.bottom - fr.bottom) * dpr);
   gl.enable(gl.SCISSOR_TEST); gl.scissor(ix, iy, iw, ih); gl.viewport(ix, iy, iw, ih); gl.clearColor(...(state.sceneStyle==='night'?[...BG,1]:[0.96,0.95,0.92,1])); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  const eye = observerEye(), tgt = proposalCentre(); const centre = tgt ? V.scale(V.add(eye, tgt), 0.5) : eye; const half = Math.max(120, (tgt ? V.len(V.sub(tgt, eye)) : 0) * 0.75); const aspect = iw / ih;
+  const { anchor, target, observing, preview } = context;
+  const bbox = assets.manifest.extent_m.scene_bbox;
+  const bounds = assets.unified?.target_extent_model_m || assets.extension?.target_extent_model_m || [bbox[0], bbox[1], bbox[3], bbox[4]];
+  const frame = InsetCamera.fit({ points: [anchor, target].filter(Boolean), width: fr.width, height: fr.height, bounds, paddingPx: fr.width < 200 ? 10 : 16 });
+  const centre = frame.center, half = frame.half, aspect = frame.aspect;
   const view = lookAt([centre[0], centre[1], 3000], [centre[0], centre[1], 0], [0, 1, 0]); const proj = ortho(-half * aspect, half * aspect, -half, half, 1, 6000); const cam = { eye: [centre[0], centre[1], 3000], vp: mul(proj, view), fogFar: 1e9, aspect };
-  drawScene(cam, { lines: false, wedge: true, cones: true, markers: false }); gl.disable(gl.SCISSOR_TEST); gl.viewport(0, 0, W, H); // only the icons below mark you and the proposal
-  // neon markers over the inset: where you stand and where the proposal is
+  drawScene(cam, { lines: false, wedge: false, cones: true, markers: false, plan: true });
+  if (frame.extentExceeded) { setCommon(PL, cam); gl.disable(gl.DEPTH_TEST); const [x0, y0, x1, y1] = bounds;
+    dynDraw(PL, gl.LINES, new Float32Array([x0,y0,0,x1,y0,0,x1,y0,0,x1,y1,0,x1,y1,0,x0,y1,0,x0,y1,0,x0,y0,0]), null, C.extent); gl.enable(gl.DEPTH_TEST); }
+  gl.disable(gl.SCISSOR_TEST); gl.viewport(0, 0, W, H);
+  $('inset-coverage').classList.toggle('hidden', !frame.extentExceeded);
+  $('inset-frame').classList.toggle('preview', preview);
+  // Fixed location markers remain visible during free inspection; only an active observer has a viewing beam.
   const at = (p) => { const q = project(cam.vp, p); return [(q[0] + 1) / 2 * fr.width, (1 - q[1]) / 2 * fr.height]; }, put = (el, s) => { el.style.transform = `translate(${s[0].toFixed(1)}px, ${s[1].toFixed(1)}px)`; };
-  const se = at([eye[0], eye[1], 0]); put($('im-eye'), se);
+  const se = anchor ? at([anchor[0], anchor[1], 0]) : null;
+  $('im-eye').classList.toggle('hidden', !anchor); $('inset-eye-key').classList.toggle('hidden', !anchor);
+  if (se) put($('im-eye'), se);
+  const eyeLabel = observing ? 'you' : preview ? 'selected view' : 'viewpoint';
+  $('inset-eye-label').textContent = eyeLabel;
   // view beam (as in web maps): points where you look, as wide as your horizontal field of view; turns live while you drag the view
-  const fw = observerForward(), ahead = at([eye[0] + fw[0] * half * 0.2, eye[1] + fw[1] * half * 0.2, 0]), heading = Math.atan2(ahead[1] - se[1], ahead[0] - se[0]);
+  $('inset-beam').classList.toggle('hidden', !observing);
+  if (observing) { const fw = observerForward(), ahead = at([anchor[0] + fw[0] * half * 0.2, anchor[1] + fw[1] * half * 0.2, 0]), heading = Math.atan2(ahead[1] - se[1], ahead[0] - se[0]);
   const hHalf = Math.min(1.45, Math.atan(Math.tan(state.fov * Math.PI / 360) * (W / Math.max(1, H)))), R = 80;
   $('inset-beam-path').setAttribute('d', `M0 0 L${(R * Math.cos(-hHalf)).toFixed(1)} ${(R * Math.sin(-hHalf)).toFixed(1)} A${R} ${R} 0 0 1 ${(R * Math.cos(hHalf)).toFixed(1)} ${(R * Math.sin(hHalf)).toFixed(1)} Z`);
-  $('inset-beam').setAttribute('transform', `translate(${se[0].toFixed(1)} ${se[1].toFixed(1)}) rotate(${(heading * 180 / Math.PI).toFixed(1)})`); const showP = !!tgt && proposalShown(); $('im-prop').classList.toggle('hidden', !showP);
-  if (showP) { const sp = at([tgt[0], tgt[1], 0]); put($('im-prop'), sp); const l = $('inset-link-line'); l.setAttribute('x1', se[0]); l.setAttribute('y1', se[1]); l.setAttribute('x2', sp[0]); l.setAttribute('y2', sp[1]); }
-  $('inset-link-line').style.display = showP ? '' : 'none'; $('inset-legend').classList.toggle('no-proposal', !showP); }
+  $('inset-beam').setAttribute('transform', `translate(${se[0].toFixed(1)} ${se[1].toFixed(1)}) rotate(${(heading * 180 / Math.PI).toFixed(1)})`); }
+  $('im-prop').classList.toggle('hidden', !target); $('inset-prop-key').classList.toggle('hidden', !target);
+  $('inset-prop-label').textContent = proposalShown() ? 'proposal' : 'site';
+  if (target) { const sp = at([target[0], target[1], 0]); put($('im-prop'), sp); if (se) { const l = $('inset-link-line'); l.setAttribute('x1', se[0]); l.setAttribute('y1', se[1]); l.setAttribute('x2', sp[0]); l.setAttribute('y2', sp[1]); } }
+  $('inset-link-line').style.display = target && se ? '' : 'none';
+  $('inset-frame').setAttribute('aria-label', `Location map, north up. ${anchor ? eyeLabel + (preview ? ' ' + state.viewpoint : '') + '. ' : ''}${target ? (proposalShown() ? 'Proposal.' : 'Site.') : ''}${frame.extentExceeded ? ' Model coverage ends at the outlined edge.' : ''}`);
+}
 const labelsEl = $('labels'); const labelNodes = new Map();
 function labelNode(key, cls) { let n = labelNodes.get(key); if (!n) { n = document.createElement('div'); n.className = 'label ' + (cls || ''); labelsEl.appendChild(n); labelNodes.set(key, n); } n.className = 'label ' + (cls || ''); return n; }
 function updateLabels(cam) { const rect = canvas.getBoundingClientRect(); const items = [];
@@ -666,10 +695,11 @@ function lookTowardProposal() { if (!state.observer) { setHint('Place an observe
 function setMode(mode) {
   if (mode === 'observer' && !state.observer) { setHint('Choose a viewpoint first (3 · View).'); return false; }
   if (mode === 'inspect' && !proposalBox()) { setHint('Build a proposal first (2 · Build).'); return false; }
-  state.mode = mode; $('inset-frame').classList.toggle('hidden', mode !== 'observer'); floatBtn.classList.toggle('hidden', mode === 'overview');
+  state.mode = mode; floatBtn.classList.toggle('hidden', mode === 'overview');
   for (const m of ['overview', 'observer', 'inspect']) $('mode-' + m).classList.toggle('active', m === mode); $('btn-plan').classList.toggle('active', mode === 'plan'); $('tools').classList.toggle('hidden', mode === 'observer'); $('inspect-shortcuts').classList.toggle('hidden', mode !== 'inspect');
   if (mode === 'observer') { setHint(state.observerSource === 'rooftop' ? 'You’re viewing from a roof. Drag to look around, or choose another roof.' : 'Eye-level view: drag to look around; “Face my building” turns you back to it.'); }
   else if (mode === 'inspect') setHint('Orbit around the proposal. The camera moves; the building does not.');
+  if (state.flow.stage === 'view' && state.flow.methods.view === 'cone') setHint(protectedViewHint());
   refreshCaption();
   refreshPanels(); requestRender(); writeHash(); return true;
 }
@@ -677,11 +707,13 @@ function setTool(t) { if (t !== 'boundary' && state.drawing) { state.drawing = n
   setHint(t === 'boundary' ? 'Click the corners of your study area. Finish boundary or press Enter; Esc cancels.' : t === 'site' ? 'Click open ground for a site point, or select a building for a replacement study.' : t === 'observer' ? 'Ground observer: click open terrain (Plan helps). Or pick a view and stand at its origin.' : t === 'rooftop' ? 'Rooftop observer: click a visible roof from above. The modelled height is unverified.' : 'Identify: click a building or the ground.'); }
 // the caption under the view always says what a click or drag does right now (mode × active tool)
 function refreshCaption() { const cap = $('view-caption'); if (!cap) return; const m = state.mode, t = state.tool, red = !state.check.unknown && state.check.result?.overall_result === 'INTERSECTS' && proposalShown() ? ' Red marks the part above your study ceiling, not a City limit.' : '';
-  if (m === 'observer') { cap.textContent = `${state.observerSource === 'origin' ? 'From the origin of protected view ' + state.viewpoint : state.observerSource === 'rooftop' ? 'From a rooftop (height approximate)' : 'From the ground'}, eye ${fmt(state.eyeH)} m up · drag to look around · scroll to widen or narrow · not an assessment.${red}`; return; }
-  if (m === 'inspect') { cap.textContent = 'Inspect · drag to orbit your building · scroll to zoom · only the camera moves.' + red; return; }
+  const free = state.flow.stage === 'view' || !!selectedCone() || !!state.observer || m === 'inspect';
+  const enter = state.flow.methods.view === 'cone' ? ' Choose “View from here” to enter the selected viewpoint.' : '';
+  if (m === 'observer') { cap.textContent = `${state.observerSource === 'origin' ? 'Protected viewpoint ' + state.viewpoint + ' · ' + (selectedCone()?.name || '') : state.observerSource === 'rooftop' ? 'From a rooftop (height approximate)' : 'From the ground'}, eye ${fmt(state.eyeH)} m up · drag to look around · scroll to widen or narrow · not an assessment.${red}`; return; }
+  if (m === 'inspect') { cap.textContent = 'Free inspection · orbit your building · scroll to zoom.' + enter + red; return; }
   const act = { site: state.site ? 'click open ground to move your site' : 'click open ground to place your site', boundary: 'click each corner of your site; Enter finishes, Esc cancels', rooftop: 'click a roof to stand on it', replace: 'click a building to select it', multi: 'click buildings to add or remove them', aim: 'press a spot to stand there, drag toward what you want to see, release' }[t];
   const nav = t === 'aim' ? 'right-drag to pan' : m === 'plan' ? 'drag to pan' : 'drag to orbit · right-drag to pan';
-  cap.textContent = `${m === 'plan' ? 'Plan · north up' : 'City'} · ${act ? act + ' · ' : ''}${nav} · scroll to zoom.${red}`;
+  cap.textContent = `${free ? 'Free inspection · ' : ''}${m === 'plan' ? 'Plan · north up' : 'City'} · ${act ? act + ' · ' : ''}${nav} · scroll to zoom.${free ? enter : ''}${red}`;
 }
 function setHint(msg) { $('hint').textContent = msg; }
 function resetToContext() { let e = assets.manifest ? assets.manifest.extent_m.scene_bbox : [-3000, -2300, 0, 2600, 3900, 0]; if (assets.extension) { const t = assets.extension.target_extent_model_m; e = [t[0], t[1], 0, t[2], t[3], 0]; }
@@ -813,13 +845,19 @@ function updateMapCues(cam) {
 function selectedCone() { if (!state.viewpoint || !assets.cones || !assets.cones.available) return null; return assets.cones.cones.find((c) => String(c.view_number) === String(state.viewpoint)) || null; }
 function populateViews() { const sel = $('view-select'); const rows = assets.guideline ? assets.guideline.table_1 : []; sel.innerHTML = '<option value="">Choose a viewpoint…</option>';
   for (const r of rows) { const o = document.createElement('option'); o.value = r.reference; o.textContent = `${r.reference} — ${r.name}`; sel.appendChild(o); } sel.value = state.viewpoint || ''; }
-function selectView(ref) { if (state.observerSource === 'origin' && state.observer && (ref || null) !== state.viewpoint) { state.observer = null; state.observerSource = 'exploratory'; if (state.mode === 'observer') state.mode = 'overview'; } state.viewpoint = ref || null; $('view-select').value = state.viewpoint || ''; const c = selectedCone(); const row = assets.guideline?.table_1.find(r => r.reference === ref); const info = $('view-info'), btn = $('btn-observer-at-origin');
+function selectView(ref) { const changedOrigin = state.observerSource === 'origin' && state.observer && (ref || null) !== state.viewpoint, leaveObserver = changedOrigin && state.mode === 'observer';
+  if (changedOrigin) { state.observer = null; state.observerSource = 'exploratory'; } state.viewpoint = ref || null; $('view-select').value = state.viewpoint || ''; const c = selectedCone(); const row = assets.guideline?.table_1.find(r => r.reference === ref); const info = $('view-info'), btn = $('btn-observer-at-origin');
   if (!ref || !row) { info.textContent = 'Choose a place to look from.'; btn.disabled = true; }
   else { let text = `${row.origin_point} · Looking toward ${row.subject}.`; const ground = c?.origin_inside_model_extent ? groundZAt(...c.origin_model_xy) : null; btn.disabled = !ground;
     if (!c) text += ' View polygon unavailable.'; else if (!ground) text += ' Ground unavailable at this viewpoint.'; else if (ground.source === 'water') text += ' Pier deck is not modelled; eye height is measured from the water.';
     info.textContent = text; }
-  refreshPanels(); requestRender(); writeHash(); }
+  if (state.flow.stage === 'view' && state.flow.methods.view === 'cone') setHint(protectedViewHint());
+  if (leaveObserver) setMode('overview'); else { refreshPanels(); requestRender(); writeHash(); } }
 function placeObserverAtOrigin() { const c = selectedCone(); if (!c || !c.origin_inside_model_extent) return false; const ok = placeObserver(...c.origin_model_xy, 'origin'); if (ok) setHint(`Viewing from ${c.name}. Origin follows the mapped polygon; eye elevation is approximate.`); return ok; }
+function protectedViewHint() {
+  if (state.mode === 'observer' && state.observerSource === 'origin') return `Viewing from ${selectedCone()?.name || 'protected view ' + state.viewpoint}. Drag to look around.`;
+  return selectedCone() ? `Free inspection. ${selectedCone().name} is selected on the map. Choose “View from here” to stand there.` : 'Free inspection. Choose a protected viewpoint, then “View from here” to stand there. The corner map stays visible.';
+}
 function viewFromHere(ref) { if (state.flow.guided) state.flow.methods.view = 'cone'; if (ref) selectView(ref); if (placeObserverAtOrigin()) { if (proposalBox()) lookTowardProposal(); else setMode('observer'); revealMap(); } }
 
 // ------------------------------------------------------------------ proposal UI (parts / import)
@@ -971,7 +1009,7 @@ const FLOW_HINTS = {
   multi: 'Click buildings in the plan to add them to your group, then choose “Use as site”.',
   platform: 'Edit the blocks. Height, size, rotation and offsets update the model live.',
   import: 'Choose a .3dm or .obj file. It is read on your device.',
-  cone: 'Pick a protected view from the list, then choose “View from here”.',
+  cone: 'Free inspection. Choose a protected viewpoint, then “View from here” to stand there. The corner map stays visible.',
   roof: 'Click a roof in the plan, or pick a nearby building in the panel.',
   drag: 'Press a spot on the plan, drag toward what you want to see, and release.',
 };
@@ -1019,7 +1057,7 @@ function flowGo(stage, opts = {}) {
     // arriving at Output from a far-out city view, frame the proposal so the result has something to look at
     if (stage === 'output' && from !== 'output' && state.mode === 'overview' && state.cams.overview.dist > 3000 && proposalBox()) focusSite(); }
   applyFlowTool(); if (stage === 'output') { renderCheck(); window.__report?.renderBuilder(); }
-  setHint(stage === 'view' && !flowChoosing(stage) && state.observerSource === 'rooftop' && flowMethod(stage) === 'roof' ? 'You’re viewing from a roof. Drag to look around, or choose another roof.' : stage === 'view' && !flowChoosing(stage) && state.observerSource === 'exploratory' && state.observer && flowMethod(stage) === 'drag' ? 'You’re standing here. Drag to look around, or pick another spot on the plan.' : FLOW_HINTS[flowChoosing(stage) ? stage : flowMethod(stage) || stage]);
+  setHint(stage === 'view' && !flowChoosing(stage) && flowMethod(stage) === 'cone' ? protectedViewHint() : stage === 'view' && state.mode === 'observer' && !flowChoosing(stage) && state.observerSource === 'rooftop' && flowMethod(stage) === 'roof' ? 'You’re viewing from a roof. Drag to look around, or choose another roof.' : stage === 'view' && state.mode === 'observer' && !flowChoosing(stage) && state.observerSource === 'exploratory' && state.observer && flowMethod(stage) === 'drag' ? 'You’re standing here. Drag to look around, or pick another spot on the plan.' : FLOW_HINTS[flowChoosing(stage) ? stage : flowMethod(stage) || stage]);
   if (!opts.quiet) $('panel').scrollTop = 0;
   refreshPanels(); requestRender(); writeHash(); if (!opts.quiet) focusStageHeading(); return true;
 }
@@ -1174,8 +1212,8 @@ function refreshPanels() { updateCleared(); refreshStudyUI(); const P = proposal
   pill('pill-site', state.site ? 'Set' : 'Not set', !!state.site); const built = !!P && (!state.flow.guided || !!state.flow.methods.build); pill('pill-proposal', built ? `${fmt(P.top-P.base, 0)} m` : 'None', built); pill('pill-view', state.observer ? (state.observerSource === 'origin' ? `${state.viewpoint}` : state.observerSource === 'rooftop' ? 'Roof' : 'Ground') : 'None', !!state.observer);
   if (eye) { let extra = ''; const tgt = proposalCentre(); if (tgt && P) { const dh = Math.hypot(tgt[0] - eye[0], tgt[1] - eye[1]); const ang = Math.atan2(P.top - eye[2], dh) * 180 / Math.PI; extra = ` · ${fmt(dh, 0)} m to your building, its top ${fmt(Math.abs(ang), 0)}° ${ang < 0 ? 'below' : 'above'} eye level${ang > state.fov / 2 ? ' (out of view at this field: scroll to widen it, or stand farther away)' : ''}`; }
     const roof = state.observerSource === 'rooftop' ? state.observer.building : null;
-    $('obs-info').textContent = `${state.observerSource === 'origin' ? 'Standing at the origin of protected view ' + state.viewpoint + ' · eye ' + fmt(state.eyeH) + ' m above ground' : roof ? 'Rooftop viewpoint · eye ' + fmt(state.eyeH) + ' m above the roof' + (terrainZAt(state.observer.x, state.observer.y) !== null ? ', roof about ' + fmt(Math.max(0, state.observer.z - terrainZAt(state.observer.x, state.observer.y)), 0) + ' m high' : '') : 'Ground viewpoint · eye ' + fmt(state.eyeH) + ' m above ' + (state.observer.ground === 'water' ? 'the water (no deck modelled)' : 'ground')}${extra}.${roof ? ' Roof height is approximate; access is unknown.' : ''}`; $('obs-info').classList.remove('muted'); }
-  else { $('obs-info').textContent = { cone: 'No viewpoint yet. Choose a protected view, then “View from here”.', roof: 'No viewpoint yet. Click a roof in the plan or pick a nearby building.', drag: 'No viewpoint yet. Press a spot on the plan and drag to aim.' }[state.flow.methods.view] || 'No viewpoint yet.'; $('obs-info').classList.add('muted'); }
+    $('obs-info').textContent = `${state.observerSource === 'origin' ? (state.mode === 'observer' ? 'Standing at' : 'Saved viewpoint at') + ' the origin of protected view ' + state.viewpoint + ' · eye ' + fmt(state.eyeH) + ' m above ground' : roof ? 'Rooftop viewpoint · eye ' + fmt(state.eyeH) + ' m above the roof' + (terrainZAt(state.observer.x, state.observer.y) !== null ? ', roof about ' + fmt(Math.max(0, state.observer.z - terrainZAt(state.observer.x, state.observer.y)), 0) + ' m high' : '') : 'Ground viewpoint · eye ' + fmt(state.eyeH) + ' m above ' + (state.observer.ground === 'water' ? 'the water (no deck modelled)' : 'ground')}${extra}.${roof ? ' Roof height is approximate; access is unknown.' : ''}`; $('obs-info').classList.remove('muted'); }
+  else { $('obs-info').textContent = { cone: selectedCone() ? 'Selected on the map. You’re still in free inspection; “View from here” moves you to this viewpoint.' : 'Free inspection. Choose a protected view, then “View from here”.', roof: 'No viewpoint yet. Click a roof in the plan or pick a nearby building.', drag: 'No viewpoint yet. Press a spot on the plan and drag to aim.' }[state.flow.methods.view] || 'No viewpoint yet.'; $('obs-info').classList.add('muted'); }
   $('mode-observer').disabled = !state.observer; $('mode-inspect').disabled = !P; $('btn-look').disabled = !(state.observer && P); $('btn-run-check').disabled = !P; for (const id of ['cam-n', 'cam-e', 'cam-s', 'cam-w', 'cam-opposite', 'cam-top']) $(id).disabled = !P;
   const selectedRoofButton = $('btn-observer-on-building'); if (selectedRoofButton) { selectedRoofButton.classList.toggle('hidden', state.selected === null); selectedRoofButton.disabled = state.selected === null || (isRemoved(state.selected, !!state.selectedExt) && !state.showExisting); }
   const eyeLabel = $('eye-h')?.closest('label'); if (eyeLabel) eyeLabel.firstChild.textContent = state.observerSource === 'rooftop' ? 'Eye above roof (m)' : 'Eye height (m)';

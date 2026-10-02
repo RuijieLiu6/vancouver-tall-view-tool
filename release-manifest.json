@@ -1,7 +1,7 @@
 {
   "format": "vancouver-static-pages/1",
-  "file_count": 59,
-  "total_bytes": 51978505,
+  "file_count": 60,
+  "total_bytes": 51989438,
   "files": {
     ".github/workflows/pages.yml": {
       "bytes": 591,
@@ -12,8 +12,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "README.md": {
-      "bytes": 8011,
-      "sha256": "de6718e23f9896b8204276be05b4f051c44a930590e2f0d08e0c5f23c4df831a"
+      "bytes": 8373,
+      "sha256": "e67b80e375000fb1b39fb602ea33b9fe5115dcc57a6bf57544b3f3145441d91c"
     },
     "data/context.json": {
       "bytes": 7679,
@@ -60,24 +60,28 @@
       "sha256": "423bb75586bbf848d7480671ea06b4218998a2ab9b2d8224b91c9c5940759730"
     },
     "explorer/entry.js": {
-      "bytes": 3900,
-      "sha256": "de24ba485f7c6e95e719f6136bd81eb59642b41dfe2362371d521348ec21befa"
+      "bytes": 3919,
+      "sha256": "d1508b471060bbc0f2f0f9df6ae6a2f2d61f0fb66a2f959b467ba262b48dc809"
     },
     "explorer/explorer.css": {
-      "bytes": 87926,
-      "sha256": "834216ad25bd5e9e7e43b9dc35598029fd9de7062f4d55653ed6965bafd5719d"
+      "bytes": 89048,
+      "sha256": "40eb606c8a83b4d4663774f59e376bb147823546d2c4ca569522c7ddbdf505b5"
     },
     "explorer/explorer.js": {
-      "bytes": 212957,
-      "sha256": "3f02dfdc2b6f5528210eac25c9b9ed5accb71d5700557fb4824585ac78d08425"
+      "bytes": 216477,
+      "sha256": "73b0ce738b6d47eaccdb856ea7b609702161831460e2a550d30521893063a418"
     },
     "explorer/flow-selftest.js": {
-      "bytes": 8361,
-      "sha256": "d9e63df0150179947f58959d5df8100cf90034a4249fba4946f840a4d24933ca"
+      "bytes": 10751,
+      "sha256": "b5d566ce98c595478523ab26e2800b62f797b56715b87a40f38b8bd54debed37"
     },
     "explorer/index.html": {
-      "bytes": 46766,
-      "sha256": "6083855e8f3d4abf10c58ab7c6515c47a325a5f40b5c3510700015494ead31ab"
+      "bytes": 47153,
+      "sha256": "6927b77188e57d0d0cfa0a40d89c7ffa4a7d6538336e4f6ba536240662e52a8f"
+    },
+    "explorer/inset-camera.js": {
+      "bytes": 3122,
+      "sha256": "68d97507184db78b84492522df83e44166f8b89db259eba0738bd7aaa5c480f1"
     },
     "explorer/intro.js": {
       "bytes": 7562,
@@ -204,8 +208,8 @@
       "sha256": "a7395ea08048891de69ae2e75529772ec6dabf29372e0a538cdeca03cf775255"
     },
     "index.html": {
-      "bytes": 356,
-      "sha256": "59dd86f3385ebbe62853b1cc0edd9049ca334b86a2ae9faa1da8d6e25508c76e"
+      "bytes": 367,
+      "sha256": "5b74563d20fc39953ee3651f0e171636aa95d763395c90862b460528672fffc7"
     },
     "media/demo.gif": {
       "bytes": 9199726,
