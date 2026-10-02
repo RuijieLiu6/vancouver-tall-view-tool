@@ -51,18 +51,7 @@ const C = {
   plane: [0.63, 0.24, 0.78, 0.22], planeEdge: [0.55, 0.15, 0.7, 1], backdrop: [0.58, 0.64, 0.72, 1], extBuildings: [0.83, 0.83, 0.86, 1], extTerrain: [0.85, 0.85, 0.81, 1], extWater: [0.78, 0.83, 0.88, 1], extParks: [0.80, 0.85, 0.77, 1], extRoads: [0.72, 0.72, 0.70, 1], extExtent: [0.55, 0.55, 0.60, 1],
 };
 
-const STUDIO_COLORS = Object.fromEntries(Object.entries(C).map(([key,value])=>[key,[...value]]));
 const rgba = (hex, alpha=1) => [parseInt(hex.slice(1,3),16)/255,parseInt(hex.slice(3,5),16)/255,parseInt(hex.slice(5,7),16)/255,alpha];
-const ILLUSTRATED_COLORS = {
-  terrain:rgba('#d4d1ad'), parks:rgba('#929e4d'), water:rgba('#279faf'), buildings:rgba('#fff5d8'), buildingSel:rgba('#e9c94b'),
-  roads:rgba('#696852'), shoreline:rgba('#193c50'), extent:rgba('#526854'),
-  proposal:rgba('#ed884b'), proposalEdge:rgba('#3b302a'), siteEdge:rgba('#bf573b'), studyBoundary:rgba('#647f32'),
-  observer:rgba('#2449a3'), ray:rgba('#2449a3'), wedge:rgba('#6589b6',.10), wedgeEdge:rgba('#2449a3',.7),
-  cone:rgba('#4754a3',.04), coneSel:rgba('#4754a3',.055), coneEdge:rgba('#4754a3',.45), coneEdgeSel:rgba('#34498f'), origin:rgba('#34498f'),
-  plane:rgba('#b784a7',.25), planeEdge:rgba('#8b527a'), backdrop:rgba('#84948a'),
-  extBuildings:rgba('#c2d5cd'), extTerrain:rgba('#dbe1bf'), extWater:rgba('#73bcca'), extParks:rgba('#b0bd71'), extRoads:rgba('#6d8075'), extExtent:rgba('#678779'),
-};
-// Soft architectural collage: quiet context, with a clay proposal as the focal point.
 const COLLAGE_COLORS = {
   terrain:rgba('#dedbce'), parks:rgba('#8c9c83'), water:rgba('#b7c9c9'), buildings:rgba('#fafbf8'), buildingSel:rgba('#b4c4bb'),
   roads:rgba('#aaa899'), shoreline:rgba('#8a9f9d'), extent:rgba('#94978d'),
@@ -82,14 +71,16 @@ const NIGHT_COLORS = {
   plane:rgba('#ff4f8b',.18), planeEdge:rgba('#ff4f8b'), backdrop:rgba('#121a2c'),
   extBuildings:rgba('#121825'), extTerrain:rgba('#0e1219'), extWater:rgba('#07121f'), extParks:rgba('#0e1b15'), extRoads:rgba('#e9a24a',.6), extExtent:rgba('#36405a'),
 };
+// Two styles since 2 Oct 2026: Day (the landscape-collage palette, key kept as 'collage' so saved links still work) and Night.
+// The retired Studio ('classic') and Illustrated garden ('illustrated') keys, and the spelled-out names, open as Day.
 const SCENE_STYLES = {
-  classic:{name:'Studio',colors:STUDIO_COLORS,bg:[.93,.94,.95],shader:0},
-  illustrated:{name:'Illustrated garden',colors:ILLUSTRATED_COLORS,bg:rgba('#0fbad0').slice(0,3),shader:1},
-  collage:{name:'Landscape collage',colors:COLLAGE_COLORS,bg:rgba('#f3f2ec').slice(0,3),shader:2},
+  collage:{name:'Day',colors:COLLAGE_COLORS,bg:rgba('#f3f2ec').slice(0,3),shader:2},
   night:{name:'Night',colors:NIGHT_COLORS,bg:rgba('#070b14').slice(0,3),shader:3},
 };
+const STYLE_ALIASES = { day: 'collage', classic: 'collage', studio: 'collage', illustrated: 'collage', garden: 'collage' };
 function setSceneStyle(style, save=true) {
-  state.sceneStyle=Object.hasOwn(SCENE_STYLES,style)?style:'classic';
+  style = STYLE_ALIASES[String(style || '').toLowerCase()] || style;
+  state.sceneStyle=Object.hasOwn(SCENE_STYLES,style)?style:'collage';
   const palette=SCENE_STYLES[state.sceneStyle]; BG=[...palette.bg]; Object.assign(C,palette.colors);
   document.body.dataset.sceneStyle=state.sceneStyle; $('scene-style').value=state.sceneStyle;
   const swatches={city:'buildings',terrain:'terrain',water:'water',proposal:'proposal',observer:'observer',wedge:'wedge',cone:'coneEdgeSel',plane:'planeEdge',site:'studyBoundary'};
@@ -124,6 +115,7 @@ void main(){
   bool excess=uStudyActive>0.5 && vWorld.z>uStudyCeiling+0.001 && vWorld.x>=uStudyArea.x && vWorld.y>=uStudyArea.y && vWorld.x<=uStudyArea.z && vWorld.y<=uStudyArea.w;
   vec3 base=excess ? (uSceneStyle>0.5?vec3(0.71,0.075,0.19):vec3(0.85,0.16,0.12)) : uColor.rgb;
   vec3 c=base*mix(1.0,0.50+0.50*light,uLightMix);
+  // retired Illustrated garden branch (style 1): unreachable since Day/Night only, kept inert
   if(uSceneStyle>0.5 && uSceneStyle<1.5 && uLightMix>0.5){
     vec3 ink=vec3(0.12,0.17,0.20); vec2 uv=abs(n.z)>0.65?vWorld.xy:(abs(n.x)>abs(n.y)?vWorld.yz:vWorld.xz);
     float shade=smoothstep(0.1,0.75,light); c=mix(base*0.72+vec3(0.01,0.035,0.055),base,shade);
@@ -230,7 +222,7 @@ function boxEdges(b) { const [x0, y0, z0, x1, y1, z1] = b; const p = [[x0, y0, z
 
 // ------------------------------------------------------------------ state
 const state = {
-  step: 1, mode: 'overview', tool: 'site', sceneStyle:'classic',
+  step: 1, mode: 'overview', tool: 'site', sceneStyle:'collage',
   site: null, pmode: 'boxes',
   parts: [{ name: 'Tower', h: 120, w: 30, d: 30, dx: 0, dy: 0, rotation: 0 }],
   imported: null,             // {name, units_status, parts:[{name,bbox,gl}], bbox, placement}
@@ -521,7 +513,7 @@ function updatePlanMarkers(cam) {
 }
 function drawInset(W, H) { const dpr = canvas.width / canvas.getBoundingClientRect().width; const fr = $('inset-frame').getBoundingClientRect(), cr = canvas.getBoundingClientRect();
   const iw = Math.round(fr.width * dpr), ih = Math.round(fr.height * dpr), ix = Math.round((fr.left - cr.left) * dpr), iy = Math.round((cr.bottom - fr.bottom) * dpr);
-  gl.enable(gl.SCISSOR_TEST); gl.scissor(ix, iy, iw, ih); gl.viewport(ix, iy, iw, ih); gl.clearColor(...(state.sceneStyle==='night'?[...BG,1]:state.sceneStyle==='illustrated'?[0.97,0.94,0.84,1]:(state.sceneStyle==='collage'?[0.96,0.95,0.92,1]:[0.97,0.97,0.98,1]))); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.SCISSOR_TEST); gl.scissor(ix, iy, iw, ih); gl.viewport(ix, iy, iw, ih); gl.clearColor(...(state.sceneStyle==='night'?[...BG,1]:[0.96,0.95,0.92,1])); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   const eye = observerEye(), tgt = proposalCentre(); const centre = tgt ? V.scale(V.add(eye, tgt), 0.5) : eye; const half = Math.max(120, (tgt ? V.len(V.sub(tgt, eye)) : 0) * 0.75); const aspect = iw / ih;
   const view = lookAt([centre[0], centre[1], 3000], [centre[0], centre[1], 0], [0, 1, 0]); const proj = ortho(-half * aspect, half * aspect, -half, half, 1, 6000); const cam = { eye: [centre[0], centre[1], 3000], vp: mul(proj, view), fogFar: 1e9, aspect };
   drawScene(cam, { lines: false, wedge: true, cones: true, markers: false }); gl.disable(gl.SCISSOR_TEST); gl.viewport(0, 0, W, H); // only the icons below mark you and the proposal
@@ -1243,7 +1235,7 @@ function serializeHash() { const p = new URLSearchParams(); const r = (v) => Num
   return '#' + p.toString(); }
 function writeHash() { if (hashTimer) return; hashTimer = setTimeout(() => { hashTimer = null; history.replaceState(null, '', serializeHash()); }, 150); }
 function applyHash(hash) { const p = new URLSearchParams((hash || location.hash).replace(/^#/, '')); const num = (k, lo, hi, dflt) => { const v = parseFloat(p.get(k)); return Number.isFinite(v) ? clamp(v, lo, hi) : dflt; };
-  setSceneStyle(p.get('style') || (window.ProjectAPI.isStatic ? 'collage' : 'classic'),false);
+  setSceneStyle(p.get('style') || 'collage',false);
   state.studyName = (p.get('name') || 'Untitled study').slice(0,80); $('study-name').value = state.studyName; state.drawing = null; state.selected = null;
   const pair = (k) => { const s = p.get(k); if (!s) return null; const a = s.split(',').map(Number); return a.length === 2 && a.every(Number.isFinite) ? a : null; };
   if (p.get('parts')) { const parts = []; for (const chunk of p.get('parts').split(';')) { const f = chunk.split(','); if (f.length >= 5 && f.slice(0, 5).every((v) => Number.isFinite(parseFloat(v)))) parts.push({ h: clamp(+f[0], 1, 400), w: clamp(+f[1], 1, 300), d: clamp(+f[2], 1, 300), dx: clamp(+f[3], -500, 500), dy: clamp(+f[4], -500, 500), name: decodeURIComponent(f[5] || 'Block') }); } if (parts.length) state.parts = parts; }
@@ -1317,10 +1309,19 @@ document.querySelectorAll('.flow-step').forEach((el) => el.addEventListener('cli
 document.querySelectorAll('.method-card').forEach((el) => el.addEventListener('click', () => chooseMethod(el.dataset.stage, el.dataset.method)));
 document.querySelectorAll('.method-keep').forEach((el) => el.addEventListener('click', () => { state.flow.choosing = null; applyFlowTool(); setHint(FLOW_HINTS[flowMethod(el.dataset.keep)]); refreshPanels(); }));
 $('btn-site-find-open')?.addEventListener('click', () => { $('site-find').classList.remove('collapsed'); $('btn-site-find-open').setAttribute('aria-expanded', 'true'); $('place-select').focus(); });
-// one click opens the README's worked example (a full study in the URL), the way KPF's tools and Spotless start from a preset scenario
-const EXAMPLE_HASH = "#style=collage&name=Example+-+120+m+tower+at+Georgia+and+Cambie&boundary=&removed=&existing=0&layers=labels%2Croads&step=1&flow=view&fm=point%2Cplatform%2Croof&site=700.000%2C-300.000&parts=120%2C30%2C30%2C0%2C0%2CTower&pm=boxes&rot=0&obs=908.820%2C28.073&osrc=rooftop&roof=s%3Aw363410790&eye=1.6&fov=60&mode=observer&wedge=1&allcones=0&bd=1&bz=126.50949961344486&cref=height&ch=100&area=footprint&cam=-1.150%2C0.850%2C6500.000%2C-303.015%2C794.155%2C20.000&icam=-0.900%2C0.350%2C400.000&look=-2.138%2C-0.126";
-document.querySelectorAll('[data-open-example]').forEach((b) => b.addEventListener('click', () => { if (state.site && !confirm('Open the worked example? It replaces your current study. To keep yours, cancel and use Study file › Save study first.')) return; try { localStorage.setItem('vancouver-view-lab-intro-seen/1', '1'); } catch (_) { /* storage blocked */ } location.assign(location.pathname + '?intro=0&example=1' + EXAMPLE_HASH); }));
-if (new URLSearchParams(location.search).get('example') === '1') $('example-banner')?.classList.remove('hidden');
+// Real Vancouver towers as worked examples (KPF/Spotless-style preset scenarios). Each replaces the modelled tower (its OSM parts, via the
+// multi-building site method) with one block of the published height; the footprint is approximate (80% of the parts' hull). Hashes come from a headless run of the app itself.
+const EXAMPLES = [
+  { key: 'shangri-la', name: 'Shangri-La Vancouver', address: '1128 W Georgia St', facts: '201 m · 62 storeys · completed 2008 · James K.M. Cheng Architects · its wedge-shaped plan was itself shaped by the view cones', hash: "#style=collage&name=Example+-+Shangri-La+Vancouver+%281128+W+Georgia+St%29&boundary=-233.830%2C311.460%3B-199.210%2C311.460%3B-197.870%2C329.950%3B-197.870%2C339.430%3B-199.210%2C364.890%3B-233.830%2C364.890&removed=s%3Aw360939772%2Cs%3Aw360939773%2Cs%3Aw360939774%2Cs%3Aw360939775&existing=0&layers=labels%2Croads&step=1&flow=view&fm=multi%2Cplatform%2Croof&site=-216.123%2C338.145&parts=201%2C29%2C43%2C0%2C0%2CShangri-La%2520Vancouver&pm=boxes&rot=0&obs=-305.253%2C101.423&osrc=rooftop&roof=s%3Aw238647499&eye=1.6&fov=60&mode=overview&wedge=1&allcones=0&bd=1&bz=unknown&cref=height&ch=120&area=footprint&cam=-0.750%2C0.360%2C820.000%2C-216.123%2C338.145%2C120.522&icam=-0.900%2C0.350%2C400.000&look=1.211%2C0.306" },
+  { key: 'vancouver-house', name: 'Vancouver House', address: '1480 Howe St', facts: '152 m to roof · 52 storeys · completed 2020 · BIG with DIALOG', hash: "#style=collage&name=Example+-+Vancouver+House+%281480+Howe+St%29&boundary=-775.480%2C-885.060%3B-724.650%2C-885.060%3B-724.650%2C-834.240%3B-775.480%2C-834.240&removed=s%3Aw1092241825&existing=0&layers=labels%2Croads&step=1&flow=view&fm=multi%2Cplatform%2Croof&site=-750.065%2C-859.650&parts=152%2C41%2C41%2C0%2C0%2CVancouver%2520House&pm=boxes&rot=0&obs=-501.343%2C-891.570&osrc=rooftop&roof=s%3Aw684219120&eye=1.6&fov=60&mode=overview&wedge=1&allcones=0&bd=1&bz=unknown&cref=height&ch=120&area=footprint&cam=-0.750%2C0.360%2C820.000%2C-750.065%2C-859.650%2C96.686&icam=-0.900%2C0.350%2C400.000&look=3.014%2C-0.194" },
+  { key: 'butterfly', name: 'The Butterfly', address: '969 Burrard St', facts: '170 m to roof (179 m to top) · 57 storeys · completed 2024 · Revery Architecture, Bing Thom’s last design', hash: "#style=collage&name=Example+-+The+Butterfly+%28969+Burrard+St%29&boundary=-443.640%2C-115.150%3B-407.080%2C-115.150%3B-407.080%2C-72.670%3B-443.640%2C-72.670&removed=s%3Aw1524215054%2Cs%3Aw1524215055%2Cs%3Aw1524215056%2Cs%3Aw1524215057%2Cs%3Aw1524215058&existing=0&layers=labels%2Croads&step=1&flow=view&fm=multi%2Cplatform%2Croof&site=-425.360%2C-93.910&parts=170%2C29%2C34%2C0%2C0%2CThe%2520Butterfly&pm=boxes&rot=0&obs=-500.647%2C148.167&osrc=rooftop&roof=s%3Aw310602033&eye=1.6&fov=60&mode=overview&wedge=1&allcones=0&bd=1&bz=unknown&cref=height&ch=120&area=footprint&cam=-0.750%2C0.360%2C820.000%2C-425.360%2C-93.910%2C119.755&icam=-0.900%2C0.350%2C400.000&look=-1.269%2C0.127" },
+];
+function openExample(key) { const ex = EXAMPLES.find((e) => e.key === key) || EXAMPLES[0];
+  if (state.site && !confirm(`Open the ${ex.name} example? It replaces your current study. To keep yours, cancel and use Study file › Save study first.`)) return;
+  try { localStorage.setItem('vancouver-view-lab-intro-seen/1', '1'); } catch (_) { /* storage blocked */ } location.assign(location.pathname + '?intro=0&example=' + ex.key + ex.hash); }
+document.querySelectorAll('[data-open-example]').forEach((b) => b.addEventListener('click', () => openExample(b.dataset.openExample)));
+{ const ex = EXAMPLES.find((e) => e.key === new URLSearchParams(location.search).get('example'));
+  if (ex && $('example-banner')) { $('example-banner-text').innerHTML = `<b>Real tower · ${ex.name}</b> · ${ex.address} · ${ex.facts}. The modelled tower is replaced by one block of its published height; the footprint is approximate. Explore any step, or use <b>Output › Start a new study</b> for your own.`; $('example-banner').classList.remove('hidden'); } }
 $('btn-example-close')?.addEventListener('click', () => $('example-banner').classList.add('hidden'));
 // keyboard route for the map: arrows look, orbit or pan; +/- zoom; Enter acts at the centre of the view (place a site, add a corner, pick a roof, stand here)
 canvas.addEventListener('keydown', (e) => { if (!assets.ready || e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key, f = e.shiftKey ? 4 : 1, r = canvas.getBoundingClientRect(); let used = true;

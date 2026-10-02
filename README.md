@@ -6,12 +6,15 @@
 
 ## 1. Purpose
 
-<!-- Ruijie: write the Purpose yourself (150 words or fewer): what the tool helps someone understand or do, and for whom. -->
-*Purpose to be written by Ruijie Liu.*
+Vancouver's open data maps 24 protected public views of the mountains and water. The City publishes the view cones in plan, but not their heights. In studio I kept hitting the same question: if I put a tower here, which of those views does it block? Checking by hand means finding each cone in the guideline and modelling its viewpoint.
+
+This tool does the mechanical part so time goes into design. You place a site in downtown Vancouver, shape a massing, choose where to look from (a protected viewpoint, a neighbour's rooftop or any spot on the ground) and export a PDF of every mapped cone your building overlaps, rendered from the City's origin points.
+
+It is for architecture students and early-stage designers. It shows overlap in plan and what the views look like, not compliance: cone heights are not in the open data, so that judgement stays with people.
 
 ## 2. How to use it
 
-The tool is a web page; it needs no installation. Open the link above in a desktop browser with WebGL2 (recent Chrome, Edge, Firefox or Safari). The first visit shows a short introduction; **Help** in the top bar opens it again. New here? **See a worked example** in the introduction loads a complete study in one click.
+The tool is a web page; it needs no installation. Open the link above in a desktop browser with WebGL2 (recent Chrome, Edge, Firefox or Safari). The first visit shows a short introduction; **Help** in the top bar opens it again. New here? **Or start from a real tower** on the introduction loads a complete study of Shangri-La Vancouver, Vancouver House or The Butterfly in one click.
 
 The tool works in four steps. In each step you choose one method; the panel then offers the other methods as buttons if you want to switch, **Proceed** moves on and **Return** goes back.
 
@@ -20,7 +23,7 @@ The tool works in four steps. In each step you choose one method; the panel then
 3. **View.** *View from a protected cone*: stand at the City's open-data origin of one of the 24 protected views. *View from a building*: stand on a modelled roof. *Drag and view*: press a spot in the plan, drag toward what you want to see and release. The small plan inset shows where you stand and which way you look.
 4. **Output.** A one-sentence summary, then the mapped view corridors that overlap the proposal in plan; optionally test a study ceiling (your own assumption, not a City limit), then choose the **PDF contents** and **Export PDF**. Every protected view whose corridor overlaps the proposal gets a page with existing and proposed views from its origin point, a key plan and a section. **Start a new study** clears everything.
 
-The strip above the map summarizes the study as you work; **?** at its end explains each number. **Style** in the top bar switches between Studio, Illustrated garden, Landscape collage and Night. **Layers** adds labels, roads and an experimental 2022 aerial photo texture. The map also works from the keyboard: arrow keys move the view, + and − zoom, and Enter acts at the centre of the view.
+The strip above the map summarizes the study as you work; **?** at its end explains each number. **Style** in the top bar switches between Day and Night. **Layers** adds labels, roads and an experimental 2022 aerial photo texture. The map also works from the keyboard: arrow keys move the view, + and − zoom, and Enter acts at the centre of the view.
 
 ## 3. Source
 
@@ -34,11 +37,11 @@ The tool computes the plan relation between your proposal and each mapped corrid
 
 ## 4. One example
 
-![Example: the 120 m tower seen from a nearby roof](media/example-rooftop-view.png)
+![Example: Shangri-La Vancouver replaced by a 201 m block, seen from a nearby roof](media/example-rooftop-view.png)
 
-**Input.** Site at Georgia and Cambie (model x 700, y −300). One block: 120 m tall, 30 × 30 m, rotation 0°. View from the roof of the modelled building `w363410790`, 389 m away, eye 1.6 m above the roof. Study ceiling: 100 m above the proposal base.
+**Input.** Start from the real tower **Shangri-La Vancouver** (1128 W Georgia St, 201 m, 62 storeys, 2008): the four modelled parts of the tower are replaced (*Replace several buildings*) and one block of the published height stands on their footprint (29 × 43 m, approximate). View from the roof of a modelled building 235 m to the east (roof about 110 m high), eye 1.6 m above the roof.
 
-**Result.** Three mapped view corridors overlap the proposal in plan: 3.2.3 Queen Elizabeth Park, 9.2 Cambie Street and A Alder Terrace. The height experiment reads **20.0 m above your study ceiling**; lowering the tower to 80 m reads **20.0 m below your study ceiling**. To reproduce it, click **See a worked example** on the intro (or **Open a worked example** in step 1), or open [`media/example-study.json`](media/example-study.json) with **Study file › Open study**.
+**Result.** One mapped view corridor overlaps the block in plan: **3.2.1 Queen Elizabeth Park**. Turn on the height experiment with a 180 m study ceiling and it reads **21.0 m above your study ceiling**, your own assumption, not a City limit. To reproduce it, choose **Shangri-La** under *Or start from a real tower* on the intro (or in step 1), or open [`media/example-study.json`](media/example-study.json) with **Study file › Open study**. The other two presets are **Vancouver House** (1480 Howe St, 152 m to roof, 52 storeys, 2020, BIG with DIALOG; no corridor overlaps it in plan) and **The Butterfly** (969 Burrard St, 170 m to roof, 57 storeys, 2024, Revery Architecture; one overlap, 3.2.1). Heights are the published roof heights; footprints are approximate.
 
 ## 5. Skill and limits
 

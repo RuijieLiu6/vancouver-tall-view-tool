@@ -63,7 +63,7 @@
     </ol>
     <footer class="intro-foot">
       <p class="intro-note">A teaching tool, not a City assessment. Your files stay on your device.</p>
-      <button class="btn intro-example" type="button" data-open-example>See a worked example</button>
+      <span class="intro-examples"><span class="intro-ex-label">Or start from a real tower:</span><button class="btn" type="button" data-open-example="shangri-la">Shangri-La</button><button class="btn" type="button" data-open-example="vancouver-house">Vancouver House</button><button class="btn" type="button" data-open-example="butterfly">The Butterfly</button></span>
       <button id="intro-start" class="btn primary intro-start" type="button">Start exploring</button>
     </footer>
   </div>
@@ -82,7 +82,7 @@
   </div>
   <div class="header-actions">
     <button id="btn-intro" class="btn intro-open" type="button" aria-haspopup="dialog">Help</button>
-    <label class="style-picker">Style<select id="scene-style" aria-label="Scene style"><option value="classic">Studio</option><option value="illustrated">Illustrated garden</option><option value="collage">Landscape collage</option><option value="night">Night</option></select></label>
+    <label class="style-picker">Style<select id="scene-style" aria-label="Scene style"><option value="collage">Day</option><option value="night">Night</option></select></label>
   </div>
 </header>
 
@@ -97,7 +97,7 @@
       <button class="flow-step" data-stage="view" type="button"><svg class="ico" aria-hidden="true"><use href="#i-eye"/></svg><span class="flow-step-text"><b>3 · View</b><span class="pill" id="pill-view">none</span></span></button>
       <button class="flow-step" data-stage="output" type="button"><svg class="ico" aria-hidden="true"><use href="#i-report"/></svg><span class="flow-step-text"><b>Output</b><span class="pill" id="pill-output">locked</span></span></button>
     </nav>
-    <div id="example-banner" class="example-banner hidden" role="note"><p><b>Worked example</b> · a 120 m tower at Georgia and Cambie, seen from a rooftop. Explore any step, or use <b>Output › Start a new study</b> for your own.</p><button id="btn-example-close" class="btn link" type="button" aria-label="Hide the worked example note">✕</button></div>
+    <div id="example-banner" class="example-banner hidden" role="note"><p id="example-banner-text"></p><button id="btn-example-close" class="btn link" type="button" aria-label="Hide the worked example note">✕</button></div>
     <p id="hint" class="hint" role="status" aria-live="polite">Loading the context model…</p>
 
     <!-- 1 · SITE -->
@@ -111,7 +111,7 @@
           <button class="method-card" type="button" data-stage="site" data-method="replace"><svg class="ico" aria-hidden="true"><use href="#i-replace"/></svg><b>Replace a building</b><span>Pick one existing building; its outline (approximate) becomes your site.</span></button>
           <button class="method-card" type="button" data-stage="site" data-method="multi"><svg class="ico" aria-hidden="true"><use href="#i-multi"/></svg><b>Replace several buildings</b><span>Pick a group of buildings; their combined area becomes your site.</span></button>
         </div>
-        <p class="example-link">New here? <button class="btn link" type="button" data-open-example>Open a worked example</button> <span class="muted">(a 120 m tower at Georgia and Cambie, seen from a rooftop)</span></p>
+        <p class="example-link">New here? Start from a real Vancouver tower: <button class="btn link" type="button" data-open-example="shangri-la">Shangri-La</button> · <button class="btn link" type="button" data-open-example="vancouver-house">Vancouver House</button> · <button class="btn link" type="button" data-open-example="butterfly">The Butterfly</button></p>
         <button class="btn link method-keep hidden" type="button" data-keep="site"></button>
       </div>
 
@@ -316,7 +316,7 @@
         <div id="pb-list" class="pb-list"></div>
         <div class="pb-add"><label for="pb-add-view">Add another protected view</label><div class="row"><select id="pb-add-view"></select><button id="pb-add" class="btn" type="button">Add</button></div></div>
         <div class="grid2 pb-meta"><label>Report title<input id="pb-title" type="text" maxlength="90"></label><label>Prepared by<input id="pb-author" type="text" maxlength="80" placeholder="Your name (optional)" autocomplete="name"></label></div>
-        <label class="field pb-style">Rendering style<select id="pb-style"><option value="collage">Landscape collage</option><option value="current">Same as the app</option></select></label>
+        <label class="field pb-style">Rendering style<select id="pb-style"><option value="collage">Day</option><option value="current">Same as the app</option></select></label>
       </section>
 
       <div class="output-export">
