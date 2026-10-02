@@ -18,7 +18,7 @@ The tool works in four steps. In each step you choose one method; the panel then
 1. **Site.** *Open spot on the plan*: find the area with a neighbourhood or a downtown address (suggestions appear as you type), then click open ground or draw a boundary. *Replace a building* or *Replace several buildings*: click buildings in the plan, then use them as the site.
 2. **Build.** *Build on the platform*: stack and size blocks (height, width, depth, rotation, offsets). *Import a model*: a Rhino `.3dm` or `.obj` file, read on your device. Existing buildings under the proposal are shown as demolished; a checkbox keeps them.
 3. **View.** *View from a protected cone*: stand at the City's open-data origin of one of the 24 protected views. *View from a building*: stand on a modelled roof. *Drag and view*: press a spot in the plan, drag toward what you want to see and release. The small plan inset shows where you stand and which way you look.
-4. **Output.** See which mapped view corridors meet the proposal in plan, optionally test a study ceiling, then choose the **PDF contents** and **Export to PDF**. Every protected view that meets the proposal gets a page with existing and proposed views from its origin point, a key plan and a section. **Start a new study** clears everything.
+4. **Output.** See which mapped view corridors overlap the proposal in plan, optionally test a study ceiling, then choose the **PDF contents** and **Export PDF**. Every protected view whose corridor overlaps the proposal gets a page with existing and proposed views from its origin point, a key plan and a section. **Start a new study** clears everything.
 
 **Style** in the top bar switches between Studio, Illustrated garden, Landscape collage and Night. **Layers** adds labels, roads and an experimental 2022 aerial photo texture.
 
@@ -38,7 +38,7 @@ The tool computes the plan relation between your proposal and each mapped corrid
 
 **Input.** Site at Georgia and Cambie (model x 700, y −300). One block: 120 m tall, 30 × 30 m, rotation 0°. View from the roof of the modelled building `w363410790`, 389 m away, eye 1.6 m above the roof. Study ceiling: 100 m above the proposal base.
 
-**Result.** Three mapped view corridors meet the proposal in plan: 3.2.3 Queen Elizabeth Park, 9.2 Cambie Street and A Alder Terrace. The height experiment reads **20.0 m above your ceiling**; lowering the tower to 80 m reads **20.0 m clearance**. Open [`media/example-study.json`](media/example-study.json) with **Study file › Open study** to reproduce it.
+**Result.** Three mapped view corridors overlap the proposal in plan: 3.2.3 Queen Elizabeth Park, 9.2 Cambie Street and A Alder Terrace. The height experiment reads **20.0 m above your ceiling**; lowering the tower to 80 m reads **20.0 m clearance**. Open [`media/example-study.json`](media/example-study.json) with **Study file › Open study** to reproduce it.
 
 ## 5. Skill and limits
 

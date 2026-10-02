@@ -113,9 +113,8 @@
       </div>
 
       <div class="method-body hidden" data-stage="site" data-method="point">
-        <p class="method-howto">First find the area, then place your site. Each part offers two alternatives, A or B: use either one.</p>
-        <section class="site-step" aria-labelledby="site-step-1">
-          <h3 id="site-step-1"><span class="site-step-n">1</span>Find the area</h3>
+        <section class="site-step" id="site-find" aria-labelledby="site-step-1">
+          <h3 id="site-step-1"><span class="site-step-n">1</span>Find the area<span class="site-step-done">Area located</span><button id="btn-site-find-open" class="btn link site-step-open" type="button" aria-controls="site-find" aria-expanded="false">Change area</button></h3>
           <p class="site-step-note">Skip this if the area is already in view.</p>
           <div class="site-alt" data-alt-step="find" data-alt="neighbourhood">
             <h4><span class="site-alt-k">A</span><label for="place-select">Choose a neighbourhood</label></h4>
@@ -133,7 +132,8 @@
                 <ul id="address-suggest" class="address-suggest hidden" role="listbox" aria-label="Address suggestions"></ul>
               <p id="address-status" class="address-status" role="status" aria-live="polite">Enter an address and choose Search.</p>
                 <ul id="address-results" class="address-results" aria-label="Downtown address matches"></ul>
-                <p class="address-source">Suggestions use City of Vancouver <a href="https://opendata.vancouver.ca/explore/dataset/property-addresses/" target="_blank" rel="noopener noreferrer">property addresses</a> (Open Government Licence – Vancouver) and the <a href="https://www2.gov.bc.ca/gov/content/data/geographic-data-services/location-services/geocoder" target="_blank" rel="noopener noreferrer">BC Address Geocoder</a> · © Province of British Columbia · <a href="https://www2.gov.bc.ca/gov/content/data/policy-standards/data-policies/open-data/open-government-licence-bc" target="_blank" rel="noopener noreferrer">Open Government Licence – BC</a>. Its address point may mark a parcel or entrance; it does not verify a roof, access, height, or a current building. Locating an address leaves your study site and proposal in place.</p>
+                <p class="address-source">Address points are approximate (a parcel or entrance); they do not verify a building or roof. Finding an address leaves your site in place.</p>
+                <details class="address-credits"><summary>Address sources and licences</summary><p class="address-source">Suggestions use City of Vancouver <a href="https://opendata.vancouver.ca/explore/dataset/property-addresses/" target="_blank" rel="noopener noreferrer">property addresses</a> (Open Government Licence – Vancouver) and the <a href="https://www2.gov.bc.ca/gov/content/data/geographic-data-services/location-services/geocoder" target="_blank" rel="noopener noreferrer">BC Address Geocoder</a> · © Province of British Columbia · <a href="https://www2.gov.bc.ca/gov/content/data/policy-standards/data-policies/open-data/open-government-licence-bc" target="_blank" rel="noopener noreferrer">Open Government Licence – BC</a>.</p></details>
             </div>
           </div>
         </section>
@@ -242,7 +242,7 @@
       <div class="method-body hidden" data-stage="view" data-method="roof">
         <p class="method-howto"><b>Click a roof</b> in the plan, or pick a nearby building below. Your eye sits above the modelled roof and faces the proposal.</p>
         <button id="btn-find-building" class="btn" type="button">Pick a roof on the map</button>
-        <div class="rooftop-intro"><b>Nearby roofs</b><div id="rooftop-nearby" class="rooftop-nearby"></div><p class="small muted">Roof heights are approximate. These are study viewpoints; roof access is unknown.</p></div>
+        <div class="rooftop-intro"><b>Rooftops near your site</b><div id="rooftop-nearby" class="rooftop-nearby"></div><p class="small muted">Roof heights are approximate. These are study viewpoints; roof access is unknown.</p></div>
         <button id="btn-observer-on-building" class="btn primary hidden" type="button">View from this roof</button>
       </div>
 
@@ -258,7 +258,7 @@
         <div class="grid3">
           <label>Eye height (m)<input id="eye-h" type="number" min="0.5" max="100" step="0.1" value="1.6"></label>
           <label>Field of view (°)<input id="fov" type="number" min="20" max="110" step="1" value="60"></label>
-          <label class="checks"><span><input id="chk-wedge" type="checkbox" checked> Camera wedge</span><span><input id="chk-backdrop" type="checkbox" checked> Mountains</span></label>
+          <label class="checks"><span><input id="chk-wedge" type="checkbox" checked> Viewing angle</span><span><input id="chk-backdrop" type="checkbox" checked> Mountains</span></label>
         </div>
         <details class="why"><summary>Where this comes from</summary><p class="small muted">Table 1 of the <i>Public Views Guidelines</i> (pp.4–6) lists 24 views. Plan cones: City open-data <code>view-cones</code> polygons, mapped with a transformation checked against 8 OpenStreetMap footprints (max 0.1 m). Origins are the polygon apexes; the by-laws are authoritative. Cone heights are not published in the dataset and are never invented. The wedge is exploratory camera geometry, not the City cone. Mountains: NASA SRTM via Open Topo Data, approximate, observer view only.</p></details>
       </div>
@@ -267,13 +267,13 @@
     <!-- OUTPUT -->
     <section class="flow-stage hidden" data-stage="output" aria-labelledby="stage-output-title">
       <header class="stage-head"><h2 id="stage-output-title">Output</h2><p class="stage-active">Results update live as you return and edit earlier steps.</p></header>
-      <div class="study-intro"><h3>Views at your proposal</h3><span class="live-indicator">Updates as you edit</span></div>
+      <div class="study-intro"><h3>Mapped view corridors at your site</h3><span class="live-indicator">Updates as you edit</span></div>
       <p id="view-study-summary" class="data">Place a proposal to find overlapping mapped view corridors.</p>
       <button id="btn-study-site" class="btn primary" type="button">Choose a site</button>
       <div id="view-matches" class="view-matches"></div>
-      <p class="small muted">Corridor overlap is measured in plan. City height limits are unavailable here, so this does not establish a policy conflict.</p>
+      <p class="caveat small">Plan overlap only. City view-cone height limits are unavailable, so this cannot decide whether a building meets the policy.</p>
       <details class="height-study">
-        <summary>Height experiment <span class="small muted">optional</span></summary>
+        <summary>Your height experiment <span class="small muted">optional</span></summary>
         <label class="checks"><span><input id="enable-height-study" type="checkbox"> Compare with a study ceiling</span></label>
         <p class="small muted">Set your own design assumption, then adjust the proposal to explore clearance. This ceiling is not a City height limit.</p>
         <input id="chk-bz-unknown" type="checkbox" checked hidden aria-hidden="true" tabindex="-1">
@@ -307,7 +307,7 @@
 
       <section class="pdf-builder" aria-labelledby="pdf-builder-title">
         <div class="pb-head"><h3 id="pdf-builder-title">PDF contents</h3><span id="pb-state" class="pb-state">Default</span><button id="pb-reset" class="btn link" type="button">Reset to default</button></div>
-        <p class="small muted">Tick what to include and pick a layout for each page. Views whose corridor meets your proposal are included by default.</p>
+        <p class="small muted">Tick what to include and pick a layout for each page. Views whose corridor overlaps your building in plan are included by default.</p>
         <div id="pb-list" class="pb-list"></div>
         <div class="pb-add"><label for="pb-add-view">Add another protected view</label><div class="row"><select id="pb-add-view"></select><button id="pb-add" class="btn" type="button">Add</button></div></div>
         <div class="grid2 pb-meta"><label>Report title<input id="pb-title" type="text" maxlength="90"></label><label>Prepared by<input id="pb-author" type="text" maxlength="80" placeholder="Your name (optional)" autocomplete="name"></label></div>
@@ -332,6 +332,7 @@
     <div class="flow-nav" id="flow-nav">
       <button id="btn-flow-back" class="btn hidden" type="button">‹ Back</button>
       <button id="btn-flow-next" class="btn primary hidden" type="button">Proceed ›</button>
+      <button id="btn-nav-pdf" class="btn primary hidden" type="button" title="Export the PDF with the contents chosen below">Export PDF</button>
     </div>
     <p id="flow-need" class="flow-need small" role="status"></p>
     <p id="step-status" class="small muted step-status"></p>
@@ -343,6 +344,8 @@
 
     <details id="technical" class="details">
       <summary>Technical details</summary>
+      <p class="small muted">Model readout</p>
+      <p id="tech-readout" class="data small"></p>
       <p class="small muted">Data status</p>
       <div class="status-chips" id="status-chips">
         <span class="chip" title="Building heights come from OpenStreetMap tags, floor counts or type estimates; the 2022 extraction date is user-reported.">Heights: OSM, unverified</span>
@@ -368,6 +371,7 @@
     <div id="plan-markers" class="plan-markers" aria-hidden="true">
       <svg id="pm-link" class="pm-link"><line id="pm-link-line"/></svg>
       <div id="pm-proposal" class="pm-proposal nm nm-prop hidden"><i class="ring"></i><i class="ring r2"></i><span class="nm-dot big"><svg class="ico"><use href="#i-blocks"/></svg></span><span class="pm-label">Proposal</span></div>
+      <div id="pm-site" class="pm-proposal pm-site nm nm-prop hidden"><i class="ring"></i><i class="ring r2"></i><span class="nm-dot big"><svg class="ico"><use href="#i-pin"/></svg></span><span class="pm-label">Your site</span></div>
       <div id="pm-observer" class="pm-observer hidden"><svg class="pm-fan" viewBox="-70 -70 140 140"><path id="pm-fan-path"/></svg><i class="ring nm-eye-ring"></i><i class="ring r2 nm-eye-ring"></i><span class="pm-eye"><svg class="ico"><use href="#i-eye"/></svg></span><span class="pm-label" id="pm-observer-label">You</span></div>
     </div>
     <div class="vp-toolbar">
@@ -396,6 +400,14 @@
       <details class="layer-menu"><summary>Layers</summary><label><input id="layer-labels" type="checkbox" checked> Place labels</label><label><input id="layer-roads" type="checkbox" checked> Roads</label><label><input id="layer-sources" type="checkbox"> Distinguish data sources</label><label><input id="layer-extent" type="checkbox"> Coverage outlines</label><label><input id="layer-aerial" type="checkbox"> Aerial photo texture <em>(experimental)</em></label><p>Context heights remain approximate. Source tint is a display aid.</p></details>
     </div>
     <div id="live-feedback" class="live-feedback hidden" role="status"></div>
+    <dl id="metrics" class="metrics hidden" aria-label="Study at a glance" aria-live="polite">
+      <div><dt>Height</dt><dd id="m-height">–</dd></div>
+      <div><dt>Site</dt><dd id="m-site">–</dd></div>
+      <div><dt>Plan overlaps</dt><dd id="m-views">–</dd></div>
+      <div><dt>Demolished</dt><dd id="m-demolished">–</dd></div>
+      <div><dt>Viewpoint</dt><dd id="m-view">–</dd></div>
+      <div><dt>Height test</dt><dd id="m-ceiling">–</dd></div>
+    </dl>
     <div id="scene-status" class="scene-status">Study scene</div>
     <p id="aerial-note" class="aerial-note hidden" role="status"></p>
     <div id="view-caption" class="view-caption"></div>
@@ -405,7 +417,7 @@
     <div id="draw-prompt" class="draw-prompt hidden" role="status">Click corners · Enter to finish · Esc to cancel</div>
     <div id="legend" class="legend">
       <span><i class="sw sw-city"></i>Existing</span><span><i class="sw sw-terrain"></i>Terrain</span><span><i class="sw sw-water"></i>Water</span>
-      <span><i class="sw sw-proposal"></i>Proposal</span><span><i class="sw sw-observer"></i>Observer · ray</span><span><i class="sw sw-wedge"></i>Camera wedge</span>
+      <span><i class="sw sw-proposal"></i>Proposal</span><span><i class="sw sw-observer"></i>Observer · ray</span><span><i class="sw sw-wedge"></i>Viewing angle</span>
       <span><i class="sw sw-cone"></i>View cone</span><span><i class="sw sw-plane"></i>Study ceiling</span><span><i class="sw sw-site"></i>Study boundary</span>
     </div>
     <div id="inset-frame" class="inset-frame hidden"><span id="inset-legend" class="inset-legend"><i class="lg-eye"></i>you <i class="lg-prop"></i>proposal</span>

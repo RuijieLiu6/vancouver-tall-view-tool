@@ -907,3 +907,44 @@ body[data-scene-style="night"] #btn-download-pdf:not(:disabled):hover, body[data
 .brand-mark { display: grid; place-items: center; }
 .brand-mark::after { content: none; }
 .brand-mark .ico { width: 18px; height: 18px; stroke-width: 1.5; }
+
+/* Live metrics strip */
+.metrics { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); display: flex; margin: 0; padding: 7px 4px; background: rgba(255, 255, 255, .92); border: 1px solid var(--line); border-radius: 2px; box-shadow: 0 2px 10px rgba(0, 0, 0, .08); pointer-events: none; z-index: 3; }
+.metrics > div { padding: 0 14px; border-left: 1px solid var(--line); min-width: 74px; }
+.metrics > div:first-child { border-left: 0; }
+.metrics dt { font-size: 9.5px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.metrics dd { margin: 2px 0 0; font-size: 17px; font-weight: 300; letter-spacing: -.01em; color: var(--ink); white-space: nowrap; }
+.metrics dd.alert { color: var(--accent-ink); font-weight: 500; }
+body[data-scene-style="night"] .metrics { background: rgba(10, 10, 10, .88); border-color: #262626; }
+body[data-scene-style="night"] .metrics dd.alert { color: #ff9a52; }
+@media (max-width: 1180px) { .metrics > div { padding: 0 9px; min-width: 0; } .metrics dd { font-size: 14px; } }
+@media (max-width: 860px) { .metrics { display: none; } }
+
+/* ---- Readability pass (Astra audit, 2 Oct): one type scale, short rail states, plain caveats ---- */
+.part-row label, .address-source, .view-caption { font-size: 13px; line-height: 1.45; }
+.part-row input { font-size: 14px; }
+.legend { font-size: 12px; flex-wrap: wrap; }
+.flow-step .pill { font-size: 12px; letter-spacing: 0; }
+.data, .method-howto, .stage-active { font-size: 14px; line-height: 1.5; }
+.small { font-size: 13px; line-height: 1.45; }
+.metrics dt { white-space: nowrap; }
+.caveat { margin: 10px 0 14px; padding: 8px 10px; border-left: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 7%, transparent); color: var(--ink); }
+.rooftop-nearby .btn.roof-chosen { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); color: var(--accent-ink); font-weight: 600; }
+#tech-readout { margin: 2px 0 10px; color: var(--muted); }
+.flow-nav #btn-nav-pdf { margin-left: auto; }
+.flow-nav #btn-nav-pdf.busy { opacity: .7; cursor: progress; }
+body[data-scene-style="night"] .caveat { color: #e9e4dc; background: rgba(255, 140, 60, .08); }
+.flow-nav ~ .step-status { display: none; } /* the rail pills already show this state */
+.address-credits { margin: 4px 0 0; font-size: 12px; }
+.address-credits summary { cursor: pointer; color: var(--muted); }
+.address-credits .address-source { margin-top: 4px; }
+body[data-scene-style="night"] .panel-toggle { background: #141414; border-color: #3a3a3a; color: #f2efe9; }
+.pm-label.flip { left: auto; right: 22px; } /* when the eye and proposal sit close together, the left marker's tag goes left */
+/* Site step 1 folds to one line once the site is placed */
+.site-step-done, .site-step-open { display: none; }
+.site-step.collapsed > :not(h3) { display: none; }
+.site-step.collapsed h3 { margin: 0; }
+.site-step.collapsed .site-step-done { display: inline; font-weight: 400; color: var(--muted); }
+.site-step.collapsed .site-step-done::before { content: '✓ '; color: var(--accent); }
+.site-step.collapsed .site-step-open { display: inline-block; margin-left: auto; padding: 0; font-size: 13px; }
+.metrics dt { font-size: 11px; letter-spacing: .05em; }

@@ -1,5 +1,5 @@
 /* Site study report: a structured, illustrated A4-landscape PDF of the current study, and a preview dialog where the user
- * chooses what to include. Every protected view whose mapped corridor meets the proposal gets its own page rendered from the
+ * chooses what to include. Every protected view whose mapped corridor overlaps the proposal in plan gets its own page rendered from the
  * open-data origin point, whether or not the user ever looked from there: existing and proposed views with the cone's
  * vertical boundaries marked, a key plan and a section along the cone. Teaching tool: the report states what is measured
  * in plan and never claims compliance; the cones' horizontal lower boundaries are not in the open data.
@@ -82,7 +82,7 @@ function imageCount(pages) { return pages.reduce((n, p) => n + (IMAGES[p.type]?.
 function chip(D, p, x, y, text, kind, opts) { const o = opts || {}; const size = o.size || 7.5, w = Pdf.textWidth(text, size, true) + 12, h = size + 7;
   const fills = { overlap: [PAL.clay, PAL.white], touch: [PAL.amber, PAL.white], none: [PAL.paper2, PAL.muted], context: [PAL.paper2, PAL.muted], sage: [PAL.sage, PAL.white], soft: [PAL.sageLight, PAL.sage] };
   const [bg, fg] = fills[kind] || fills.soft; const x0 = o.align === 'right' ? x - w : x; D.roundRect(p, x0, y - size - 3, w, h, h / 2, { fill: bg }); D.text(p, x0 + 6, y, text, size, true, fg); return w; }
-function relationText(r) { return r === 'overlap' ? 'Meets the corridor (plan)' : r === 'touch' ? 'Touches the corridor edge (plan)' : 'Outside the corridor (plan)'; }
+function relationText(r) { return r === 'overlap' ? 'Overlaps the corridor in plan' : r === 'touch' ? 'Touches the corridor edge in plan' : 'Outside the corridor in plan'; }
 function relationShort(r) { return r === 'overlap' ? 'Overlap' : r === 'touch' ? 'Touches' : 'Context'; }
 function northArrow(D, p, x, y, s) { s = s || 14; D.circle(p, x, y, s * 0.95, { fill: PAL.white, stroke: PAL.line, width: 0.6, alpha: 0.92 }); D.poly(p, [[x, y - s * 0.7], [x + s * 0.32, y + s * 0.45], [x, y + s * 0.2], [x - s * 0.32, y + s * 0.45]], { fill: PAL.ink }); D.text(p, x, y - s * 1.15, 'N', 7, true, PAL.ink, { align: 'center' }); }
 function scaleBar(D, p, x, y, ptsPerMetre, maxPts) { const raw = maxPts / ptsPerMetre, order = 10 ** Math.floor(Math.log10(raw)); const nice = [5, 2, 1].map((k) => k * order).find((v) => v <= raw) || order; const w = nice * ptsPerMetre;
@@ -123,14 +123,14 @@ function drawCover(D, p, opts, ctx) {
   D.rect(p, 0, 0, PW, PH, PAL.paper); const heroX = L, heroW = PW - L;
   if (ctx.hero) { D.image(p, ctx.hero.url, heroX, 0, heroW, PH); tag(D, p, PW - 14, PH - 14, 'Proposal in its modelled context', { align: 'right', size: 7 }); }
   else { D.rect(p, heroX, 0, heroW, PH, PAL.paper2); const cx = heroX + heroW / 2; D.text(p, cx, PH / 2 - 10, P ? fmt(P.top - P.base, 0) + ' m' : '-', 64, true, PAL.sage, { align: 'center' }); D.text(p, cx, PH / 2 + 22, 'proposed height above ground', 11, false, PAL.muted, { align: 'center' });
-    D.text(p, cx, PH / 2 + 74, `${ctx.met} protected view${ctx.met === 1 ? '' : 's'} met in plan`, 14, true, ctx.met ? PAL.clay : PAL.muted, { align: 'center' }); }
+    D.text(p, cx, PH / 2 + 74, `${ctx.met} view corridor${ctx.met === 1 ? '' : 's'} overlap${ctx.met === 1 ? 's' : ''} in plan · heights not assessed`, 14, true, ctx.met ? PAL.clay : PAL.muted, { align: 'center' }); }
   D.rect(p, L - 4, 0, 4, PH, PAL.clay);
   D.text(p, M, 52, 'ARCH 540  ·  VANCOUVER VIEW-PROTECTION LAB', 7, true, PAL.clay, { spacing: 1 });
   let y = D.paragraph(p, M, 92, opts.title, 25, L - M - 24, { bold: true, color: PAL.ink, leading: 1.12 }) + 2;
   y = D.paragraph(p, M, y + 4, 'Site, massing and protected-view study', 11, L - M - 24, { color: PAL.muted }) + 10;
   D.text(p, M, y, opts.author ? 'Prepared by ' + opts.author : 'Prepared with the Site Explorer', 8.5, false, PAL.ink); D.text(p, M, y + 13, ctx.dateLong, 8.5, false, PAL.muted); y += 40;
   const area = st.boundary.length >= 3 ? X.formatArea(SiteGeometry.metrics(st.boundary).area) : st.site ? 'Point site' : '-';
-  const stats = [[P ? fmt(P.top - P.base, 0) + ' m' : '-', 'proposal height'], [area, 'study area'], [String(ctx.met), ctx.met === 1 ? 'protected view met' : 'protected views met']];
+  const stats = [[P ? fmt(P.top - P.base, 0) + ' m' : '-', 'proposal height'], [area, 'study area'], [String(ctx.met), ctx.met === 1 ? 'corridor overlap in plan' : 'corridor overlaps in plan']];
   stats.forEach(([v, l], i) => { const x = M + i * 88; D.text(p, x, y, v, v.length > 9 ? 12 : 16, true, i === 2 && ctx.met ? PAL.clay : PAL.sage); D.paragraph(p, x, y + 12, l, 7, 80, { color: PAL.muted }); }); y += 44;
   D.line(p, M, y, L - 24, y, PAL.line, 0.6); y += 18; D.text(p, M, y, 'CONTENTS', 7, true, PAL.sage, { spacing: 1 }); y += 14;
   for (const [name, page] of ctx.contents) { if (y > PH - 120) break; D.text(p, M, y, name, 8.5, false, PAL.ink); D.text(p, L - 24, y, String(page), 8.5, true, PAL.muted, { align: 'right' }); D.line(p, M + Pdf.textWidth(name, 8.5) + 4, y - 2.5, L - 30 - Pdf.textWidth(String(page), 8.5, true), y - 2.5, PAL.line, 0.5, { dash: [1, 2] }); y += 14; }
@@ -155,7 +155,7 @@ function drawSummary(D, p, opts, ctx, tpl) {
   // right column
   const rx = fx + fw + 22, rw = PW - M - rx; let y = fy + 8;
   const area = st.boundary.length >= 3 ? X.formatArea(SiteGeometry.metrics(st.boundary).area) : 'Point site';
-  [[fmt(P.top - P.base, 0) + ' m', 'height above ground'], [area, 'study area'], [String(ctx.met), 'corridors met in plan']].forEach(([v, l], i) => { const x = rx + i * (rw / 3); D.text(p, x, y + 10, v, v.length > 9 ? 11 : 15, true, i === 2 && ctx.met ? PAL.clay : PAL.sage); D.text(p, x, y + 22, l, 6.8, false, PAL.muted); });
+  [[fmt(P.top - P.base, 0) + ' m', 'height above ground'], [area, 'study area'], [String(ctx.met), 'corridor overlaps in plan']].forEach(([v, l], i) => { const x = rx + i * (rw / 3); D.text(p, x, y + 10, v, v.length > 9 ? 11 : 15, true, i === 2 && ctx.met ? PAL.clay : PAL.sage); D.text(p, x, y + 22, l, 6.8, false, PAL.muted); });
   y += 42; D.line(p, rx, y, rx + rw, y, PAL.line, 0.6); y += 16;
   D.text(p, rx, y, 'Selected protected views', 9.5, true, PAL.ink); y += 14;
   const k = rw / 334, cols = [rx, rx + 34 * k, rx + 160 * k, rx + 232 * k, rw + rx]; ['View', 'Origin to subject', 'In plan', 'Top seen at'].forEach((h, i) => D.text(p, cols[i], y, h, 6.8, true, PAL.muted)); y += 5; D.line(p, rx, y, rx + rw, y, PAL.line, 0.5); y += 11;
@@ -382,12 +382,12 @@ function renderBuilder() {
   const def = isDefault(); $('pb-state').textContent = def ? 'Default' : 'Customised'; $('pb-state').classList.toggle('custom', !def); $('pb-reset').disabled = def;
   const plan = pagePlan(o); $('pdf-summary').textContent = `${plan.length} page${plan.length === 1 ? '' : 's'} · ${imageCount(plan)} rendered views`;
 }
-async function exportPdf() { if (exporting) return; exporting = true; const btn = $('btn-download-pdf'), status = $('pdf-status'); btn.disabled = true; btn.classList.add('busy');
+async function exportPdf() { if (exporting) return; exporting = true; const btns = [$('btn-download-pdf'), $('btn-nav-pdf')].filter(Boolean), status = $('pdf-status'); for (const b of btns) { b.disabled = true; b.classList.add('busy'); }
   try { const o = current(); const r = await build(o, (m) => { status.textContent = m; }); const a = document.createElement('a'); a.href = URL.createObjectURL(r.blob);
     a.download = (o.title.replace(/[^a-z0-9_-]+/gi, '-').replace(/^-|-$/g, '') || 'site-study') + '-report.pdf'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     status.textContent = `PDF exported: ${r.pages} pages, ${(r.blob.size / 1048576).toFixed(1)} MB.`; return r; }
   catch (e) { status.textContent = 'Could not export the PDF: ' + (e?.message || e); return null; }
-  finally { exporting = false; btn.disabled = false; btn.classList.remove('busy'); } }
+  finally { exporting = false; for (const b of btns) { b.disabled = false; b.classList.remove('busy'); } } }
 if ($('pb-list')) {
   $('btn-download-pdf').addEventListener('click', exportPdf);
   $('pb-reset').addEventListener('click', () => { custom = null; renderBuilder(); $('pdf-status').textContent = 'Back to the default report.'; });
