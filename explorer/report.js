@@ -61,10 +61,10 @@ const TEMPLATES = {
   cover: [['hero', 'Title and hero image'], ['simple', 'Title only']], summary: [['plan', 'Key plan and table'], ['table', 'Table only']],
   site: [['both', 'Plan and 3D overview'], ['plan', 'Plan only, large'], ['aerial', '3D overview, large']],
   cone: [['full', 'Both views, section, plan'], ['compare', 'Both views, large'], ['large', 'Proposed view, large']],
-  observer: [['wide', 'Wide view'], ['plan', 'View with key plan']], inspect: [['four', 'Four sides'], ['two', 'North and south, large']],
+  observer: [['plan', 'View with key plan'], ['wide', 'Wide view']], inspect: [['four', 'Four sides'], ['two', 'North and south, large']],
   height: [['chart', 'Chart and table']], clauses: [['all', 'All clauses'], ['key', 'Definition and clause 3.1.1']], sources: [['full', 'Sources and limitations']],
 };
-const NAMES = { cover: 'Cover', summary: 'Summary and key plan', site: 'Site and proposal', observer: 'Your viewpoint', inspect: 'Elevations', height: 'Height experiment', clauses: 'Guideline text', sources: 'Sources and limitations' };
+const NAMES = { cover: 'Cover', summary: 'Summary and key plan', site: 'Site and proposal', observer: 'Your viewpoint', inspect: 'Context views', height: 'Height experiment', clauses: 'Guideline text', sources: 'Sources and limitations' };
 const IMAGES = { cover: { hero: 1 }, summary: { plan: 1 }, site: { both: 2, plan: 1, aerial: 1 }, cone: { full: 3, compare: 3, large: 2 }, observer: { wide: 1, plan: 1 }, inspect: { four: 4, two: 2 } };
 function available(key) { const st = S(), P = X.proposalBox();
   switch (key) { case 'site': return st.site ? null : 'No site yet'; case 'cone': return !P ? 'No proposal yet' : !X.assets.cones?.available ? 'View-cone data unavailable' : null;
@@ -83,7 +83,7 @@ function chip(D, p, x, y, text, kind, opts) { const o = opts || {}; const size =
   const fills = { overlap: [PAL.clay, PAL.white], touch: [PAL.amber, PAL.white], none: [PAL.paper2, PAL.muted], context: [PAL.paper2, PAL.muted], sage: [PAL.sage, PAL.white], soft: [PAL.sageLight, PAL.sage] };
   const [bg, fg] = fills[kind] || fills.soft; const x0 = o.align === 'right' ? x - w : x; D.roundRect(p, x0, y - size - 3, w, h, h / 2, { fill: bg }); D.text(p, x0 + 6, y, text, size, true, fg); return w; }
 function relationText(r) { return r === 'overlap' ? 'Overlaps the corridor in plan' : r === 'touch' ? 'Touches the corridor edge in plan' : 'Outside the corridor in plan'; }
-function relationShort(r) { return r === 'overlap' ? 'Overlap' : r === 'touch' ? 'Touches' : 'Context'; }
+function relationShort(r) { return r === 'overlap' ? 'Plan overlap' : r === 'touch' ? 'Touches' : 'Context'; }
 function northArrow(D, p, x, y, s) { s = s || 14; D.circle(p, x, y, s * 0.95, { fill: PAL.white, stroke: PAL.line, width: 0.6, alpha: 0.92 }); D.poly(p, [[x, y - s * 0.7], [x + s * 0.32, y + s * 0.45], [x, y + s * 0.2], [x - s * 0.32, y + s * 0.45]], { fill: PAL.ink }); D.text(p, x, y - s * 1.15, 'N', 7, true, PAL.ink, { align: 'center' }); }
 function scaleBar(D, p, x, y, ptsPerMetre, maxPts) { const raw = maxPts / ptsPerMetre, order = 10 ** Math.floor(Math.log10(raw)); const nice = [5, 2, 1].map((k) => k * order).find((v) => v <= raw) || order; const w = nice * ptsPerMetre;
   D.roundRect(p, x - 6, y - 13, w + 12 + 34, 20, 4, { fill: PAL.white, alpha: 0.9 }); D.rect(p, x, y - 3, w / 2, 3, PAL.ink); D.rect(p, x + w / 2, y - 3, w / 2, 3, PAL.white, PAL.ink);
@@ -158,14 +158,14 @@ function drawSummary(D, p, opts, ctx, tpl) {
   [[fmt(P.top - P.base, 0) + ' m', 'height above ground'], [area, 'study area'], [String(ctx.met), 'corridor overlaps in plan']].forEach(([v, l], i) => { const x = rx + i * (rw / 3); D.text(p, x, y + 10, v, v.length > 9 ? 11 : 15, true, i === 2 && ctx.met ? PAL.clay : PAL.sage); D.text(p, x, y + 22, l, 6.8, false, PAL.muted); });
   y += 42; D.line(p, rx, y, rx + rw, y, PAL.line, 0.6); y += 16;
   D.text(p, rx, y, 'Selected protected views', 9.5, true, PAL.ink); y += 14;
-  const k = rw / 334, cols = [rx, rx + 34 * k, rx + 160 * k, rx + 232 * k, rw + rx]; ['View', 'Origin to subject', 'In plan', 'Top seen at'].forEach((h, i) => D.text(p, cols[i], y, h, 6.8, true, PAL.muted)); y += 5; D.line(p, rx, y, rx + rw, y, PAL.line, 0.5); y += 11;
+  const k = rw / 334, cols = [rx, rx + 34 * k, rx + 160 * k, rx + 232 * k, rw + rx]; ['View', 'Origin to subject', 'In plan', 'Angle to top'].forEach((h, i) => D.text(p, cols[i], y, h, 6.8, true, PAL.muted)); y += 5; D.line(p, rx, y, rx + rw, y, PAL.line, 0.5); y += 11;
   if (!sel.length) { y = D.paragraph(p, rx, y, 'No protected view is selected. Open the report options to add views.', 8, rw, { color: PAL.muted }); }
   for (const c of sel) { if (y > PH - 120) { D.text(p, rx, y, `+ ${sel.length - sel.indexOf(c)} more on the following pages`, 7.5, false, PAL.muted, { italic: true }); y += 12; break; }
     D.text(p, cols[0], y, c.id, 8, true, PAL.sage); const l = Pdf.wrap(`${c.cone.name} → ${c.row?.subject || 'subject'}`, 7.3, 122 * k); l.slice(0, 2).forEach((ln, k) => D.text(p, cols[1], y + k * 9, ln, 7.3, false, PAL.ink));
     chip(D, p, cols[2], y + 1, relationShort(c.relation), c.relation === 'none' ? 'context' : c.relation, { size: 6.5 }); D.text(p, cols[3], y, c.topAngle == null ? '-' : fmt(c.topAngle, 1) + '° up', 7.5, true, PAL.ink); D.text(p, cols[3], y + 9, (c.near / 1000).toFixed(2) + ' km away', 6.5, false, PAL.muted);
     y += Math.max(22, l.slice(0, 2).length * 9 + 8); D.line(p, rx, y - 9, rx + rw, y - 9, PAL.paper2, 0.5); }
   y = Math.max(y + 4, PH - 132); D.roundRect(p, rx, y, rw, 84, 6, { fill: PAL.paper });
-  D.paragraph(p, rx + 10, y + 15, `“In plan” compares the proposal footprint with the City's mapped view-cone polygons. “Top seen at” is the angle from a 1.6 m eye at each origin point up to the top of the proposal. The City's horizontal lower boundary for each cone is not in the open data, so these pages cannot show whether the building rises into a cone; clause 3.1.1 asks that no part of a building encroach into it.`, 6.9, rw - 20, { color: PAL.muted, leading: 1.32 });
+  D.paragraph(p, rx + 10, y + 15, `“In plan” compares the proposal footprint with the City's mapped view-cone polygons. “Angle to top” is the geometric angle from a 1.6 m eye at each origin point to the top of the proposal; it does not show whether the proposal is visible past other buildings. The City's horizontal lower boundary for each cone is not in the open data, so these pages cannot show whether the building rises into a cone; clause 3.1.1 asks that no part of a building encroach into it.`, 6.9, rw - 20, { color: PAL.muted, leading: 1.32 });
 }
 function drawSite(D, p, opts, tpl) {
   header(D, p, 'Site and proposal', 'The proposal on its site', 'Site'); const st = S(), P = X.proposalBox(), fp = footprintPoints(); if (!P) tpl = 'plan';
@@ -197,7 +197,7 @@ function drawSite(D, p, opts, tpl) {
 function sectionDiagram(D, p, st, x, y, w, h) {
   const G = st.G, P = X.proposalBox(), Lm = G.length, N = 150; const prof = [], roofs = [];
   for (let i = 0; i <= N; i++) { const t = Lm * i / N, qx = G.O[0] + G.u[0] * t, qy = G.O[1] + G.u[1] * t; const gz = X.terrainZAt(qx, qy) ?? X.groundZAt(qx, qy)?.z ?? null; prof.push([t, gz]); const r = X.highestRoofAtXY(qx, qy); roofs.push(r && gz != null && r.z > gz + 1 ? [t, gz, r.z] : null); }
-  const zs = prof.map((q) => q[1]).filter((v) => v != null); const ceilZ = !S().check.unknown ? S().check.bz : null;
+  const zs = prof.map((q) => q[1]).filter((v) => v != null); const ceilZ = null; // the user's study ceiling stays on the height page: drawn here it could pass for the City's unpublished cone boundary
   const zMin = Math.min(...zs, G.eyeZ) - 8, zMax = Math.max(P.top, G.eyeZ, ...roofs.filter(Boolean).map((r) => r[2]), ceilZ ?? -Infinity) * 1.08 + 10;
   const ix = x + 30, iw = w - 40, iy = y + 14, ih = h - 34; const X_ = (t) => ix + t / Lm * iw, Y_ = (z) => iy + ih - (z - zMin) / (zMax - zMin) * ih;
   D.roundRect(p, x, y, w, h, 5, { fill: PAL.white, stroke: PAL.line, width: 0.6 }); D.rect(p, ix, iy, iw, ih, PAL.sky);
@@ -205,9 +205,9 @@ function sectionDiagram(D, p, st, x, y, w, h) {
   const ground = prof.filter((q) => q[1] != null).map((q) => [X_(q[0]), Y_(q[1])]); if (ground.length > 1) D.poly(p, [...ground, [ground[ground.length - 1][0], iy + ih], [ground[0][0], iy + ih]], { fill: PAL.sageLight, stroke: PAL.sage, width: 0.8 });
   for (const bk of st.blocks || []) { const a = Math.max(0, bk.lo), b = Math.min(Lm, Math.max(bk.hi, a + Lm / 300)); if (b > 0 && a < Lm) D.rect(p, X_(a), Y_(bk.top), Math.max(1.6, X_(b) - X_(a)), Y_(bk.base) - Y_(bk.top), PAL.clay); } // each block, projected onto the axis
   if (ceilZ != null) { D.line(p, ix, Y_(ceilZ), ix + iw, Y_(ceilZ), PAL.clayDark, 0.8, { dash: [4, 3] }); D.text(p, ix + iw - 2, Y_(ceilZ) - 3, 'your study ceiling (assumption)', 6, false, PAL.clayDark, { align: 'right' }); }
-  const ex = X_(0), ey = Y_(G.eyeZ); const steep = (st.blocks || []).filter((bk) => bk.lo > 0).sort((a, b) => (b.top - G.eyeZ) / b.lo - (a.top - G.eyeZ) / a.lo)[0]; if (steep) { const sx = X_(steep.lo), sy = Y_(steep.top), k = (sy - ey) / (sx - ex); const endX = ix + iw; D.line(p, ex, ey, endX, Math.max(iy, ey + k * (endX - ex)), PAL.sage, 0.9, { dash: [3, 2.5] }); }
+  const ex = X_(0), ey = Y_(G.eyeZ); const steep = (st.blocks || []).filter((bk) => bk.lo > 0).sort((a, b) => (b.top - G.eyeZ) / b.lo - (a.top - G.eyeZ) / a.lo)[0]; if (steep) { const sx = X_(steep.lo), sy = Y_(steep.top), k = (sy - ey) / (sx - ex); D.line(p, ex, ey, sx, Math.max(iy, sy), PAL.sage, 0.9, { dash: [3, 2.5] }); }
   D.circle(p, ex, ey, 3.2, { fill: PAL.sage, stroke: PAL.white, width: 0.8 });
-  D.text(p, x + 8, y + 11, 'Section along the cone axis', 7.5, true, PAL.ink); D.text(p, x + w - 8, y + 11, `vertical scale ×${fmt((ih / (zMax - zMin)) / (iw / Lm), 0)}`, 6.3, false, PAL.muted, { align: 'right' });
+  D.text(p, x + 8, y + 11, 'Section along the cone axis', 7.5, true, PAL.ink); D.text(p, x + w - 8, y + 11, `vertical exaggeration ×${fmt((ih / (zMax - zMin)) / (iw / Lm), 0)}`, 6.3, false, PAL.muted, { align: 'right' });
   for (let k = 0; k <= 4; k++) { const t = Lm * k / 4; D.text(p, X_(t), iy + ih + 9, (t / 1000).toFixed(1) + ' km', 5.8, false, PAL.muted, { align: k === 0 ? 'left' : k === 4 ? 'right' : 'center' }); }
   D.text(p, ix - 3, Y_(zMax - 10) + 2, fmt(zMax - 10, 0) + ' m', 5.6, false, PAL.muted, { align: 'right' }); D.text(p, ix - 3, Y_(zMin + 8) + 2, Math.round(zMin + 8) + 0 + ' m', 5.6, false, PAL.muted, { align: 'right' });
   D.text(p, ex + 5, ey - 4, 'eye 1.6 m', 5.8, true, PAL.sage);
@@ -238,7 +238,7 @@ function coneFacts(D, p, st, fx, y, fw, maxY) { const row = st.row;
   for (const [k, v] of facts) { D.text(p, fx, y, k.toUpperCase(), 5.8, true, PAL.faint, { spacing: 0.4 }); y = D.paragraph(p, fx, y + 8.5, v, 7.3, fw, { color: k === 'Lower boundary' ? PAL.clayDark : PAL.ink, bold: k === 'In plan' }) + 4; if (y > maxY) break; } }
 function drawConePage(D, p, st, opts, caps, tpl) {
   const row = st.row; header(D, p, `Protected view ${st.id}`, `${st.cone.name}`, st.relation === 'none' ? 'Context view' : 'Protected view');
-  D.text(p, M, 74, `${row?.origin_point || 'Origin point'}  →  ${row?.subject || 'view subject'}`, 9, false, PAL.muted); chip(D, p, PW - M, 75, relationText(st.relation), st.relation === 'none' ? 'context' : st.relation, { align: 'right', size: 7.5 });
+  D.text(p, M, 74, `${row?.origin_point || 'Origin point'}  →  ${row?.subject || 'view subject'}`, 9, false, PAL.muted); chip(D, p, PW - M, 75, relationShort(st.relation), st.relation === 'none' ? 'context' : st.relation, { align: 'right', size: 7.5 });
   const top = 86, gap = 12, both = !!caps.existing, iw = both ? (PW - 2 * M - gap) / 2 : PW - 2 * M, ih = iw / caps.aspect;
   if (both) { coneFrame(D, p, st, caps, 'Existing', caps.existing, M, top, iw, ih); coneFrame(D, p, st, caps, 'Proposed', caps.proposed, M + iw + gap, top, iw, ih); }
   else coneFrame(D, p, st, caps, 'Proposed', caps.proposed, M, top, iw, ih);
@@ -249,10 +249,18 @@ function drawConePage(D, p, st, opts, caps, tpl) {
     coneFacts(D, p, st, fx, by + 8, colW, by + bh + 40); D.roundRect(p, fx + colW + 16, by, colW, Math.min(bh, 120), 6, { fill: PAL.paper });
     D.paragraph(p, fx + colW + 26, by + 15, 'The City defines each protected view by an origin point, two vertical boundaries (the dashed lines) and a horizontal lower boundary. That height is not in the open data, so this page shows the view and the plan relation only. Clause 3.1.1 asks that no part of a building encroach into the cone.', 7, colW - 20, { color: PAL.muted, leading: 1.32 }); }
 }
+// distance from a point to the nearest edge of a footprint polygon (its nearest facade), not just to a corner
+function nearestEdge(poly, e) { let best = Infinity; for (let i = 0; i < poly.length; i++) { const a = poly[i], b = poly[(i + 1) % poly.length], vx = b[0] - a[0], vy = b[1] - a[1], L = vx * vx + vy * vy, t = L ? Math.max(0, Math.min(1, ((e[0] - a[0]) * vx + (e[1] - a[1]) * vy) / L)) : 0; best = Math.min(best, Math.hypot(a[0] + t * vx - e[0], a[1] + t * vy - e[1])); } return best; }
 function drawObserver(D, p, opts, tpl) {
   const st = S(), eye = X.observerEye(), P = X.proposalBox(); header(D, p, 'Your viewpoint', st.observerSource === 'origin' ? (st.viewpoint ? `From the origin of view ${st.viewpoint}` : 'From a protected view origin') : st.observerSource === 'rooftop' ? 'From a modelled rooftop' : 'From a point you chose', 'Viewpoint');
-  const withPlan = tpl === 'plan', iw = withPlan ? 520 : PW - 2 * M, ih = withPlan ? 360 : 300, w = 1700;
-  const c = cap({ mode: 'observer', width: w, height: Math.round(w * ih / iw), observer: st.observer, observerSource: st.observerSource, eyeH: st.eyeH, yaw: st.cams.observer.yaw, pitch: st.cams.observer.pitch, fov: st.fov, backdrop: true, keepViewpoint: true }, opts);
+  const withPlan = tpl === 'plan', iw = withPlan ? 520 : PW - 2 * M, ih = withPlan ? 360 : PH - 74 - 96, w = 1700;
+  // nearest distance and the angles to the proposal's top and base (same measure as the protected-view pages)
+  let d = null, ang = null, angBase = null; if (P) for (const part of X.proposalParts()) { const nr = nearestEdge(X.partFootprint(part), eye), a = deg(Math.atan2(part.box[5] - eye[2], Math.max(1, nr))); if (ang === null || a > ang) { ang = a; d = nr; angBase = deg(Math.atan2(P.base - eye[2], Math.max(1, nr))); } }
+  // when the proposal is in the user's line of sight but cut off at the top or bottom, tilt and widen (up to 90°) so the page shows all of it
+  let fov = st.fov, pitch = deg(st.cams.observer.pitch), fitted = false;
+  if (P) { const hf = 2 * deg(Math.atan(Math.tan(fov * Math.PI / 360) * iw / ih)), bearing = deg(Math.atan2(P.cy - eye[1], P.cx - eye[0])), dy = Math.abs(((bearing - deg(st.cams.observer.yaw)) % 360 + 540) % 360 - 180);
+    if (dy < hf / 2 && (ang > pitch + fov / 2 - 2 || angBase < pitch - fov / 2 + 2)) { fitted = true; fov = Math.min(90, Math.max(fov, ang - angBase + 8)); pitch = ang - angBase + 6 <= fov ? (ang + angBase) / 2 : ang + 4 - fov / 2; } }
+  const c = cap({ mode: 'observer', width: w, height: Math.round(w * ih / iw), observer: st.observer, observerSource: st.observerSource, eyeH: st.eyeH, yaw: st.cams.observer.yaw, pitch: pitch * Math.PI / 180, fov, backdrop: true, keepViewpoint: true }, opts);
   const to = frameImage(D, p, c, M, 74, iw, ih);
   if (P) D.clip(p, M, 74, iw, ih, () => { const q = to([P.cx, P.cy, P.top]); if (q) tag(D, p, q[0], q[1] - 6, 'proposal', { align: 'center', bold: true, color: PAL.clayDark, size: 6.5 }); });
   if (withPlan) { // vector key plan: where you stand, which way you look, and the proposal
@@ -260,16 +268,16 @@ function drawObserver(D, p, opts, tpl) {
     const pts = [[eye[0], eye[1]], ...(P ? footprintPoints() : [])]; const bb = boundsOf(pts, 40), sc = Math.min((kw - 30) / (bb[2] - bb[0]), (kh - 50) / (bb[3] - bb[1])), cx = (bb[0] + bb[2]) / 2, cy = (bb[1] + bb[3]) / 2;
     const T = (q) => [kx + kw / 2 + (q[0] - cx) * sc, 74 + kh / 2 + 6 - (q[1] - cy) * sc];
     for (const part of X.proposalParts()) D.poly(p, X.partFootprint(part).map(T), { fill: PAL.clay, stroke: PAL.clayDark, width: 0.8 });
-    const e = T(eye), yaw = st.cams.observer.yaw, half = Math.atan(Math.tan(st.fov * Math.PI / 360) * (iw / ih)), R = Math.min(kw, kh) * 0.42;
+    const e = T(eye); if (P) { const pc = T([P.cx, P.cy]); D.line(p, e[0], e[1], pc[0], pc[1], PAL.clayDark, 0.7, { dash: [3, 2.5] }); tag(D, p, pc[0], pc[1] + 18, `your building · ${fmt(d, 0)} m`, { align: 'center', bold: true, color: PAL.clayDark, size: 6.8 }); }
+    const yaw = st.cams.observer.yaw, half = Math.atan(Math.tan(st.fov * Math.PI / 360) * (iw / ih)), R = Math.min(kw, kh) * 0.42;
     D.poly(p, [e, [e[0] + Math.cos(yaw - half) * R, e[1] - Math.sin(yaw - half) * R], [e[0] + Math.cos(yaw + half) * R, e[1] - Math.sin(yaw + half) * R]], { fill: PAL.sage, alpha: 0.18, stroke: PAL.sage, width: 0.8 });
     D.circle(p, e[0], e[1], 7, { fill: PAL.white, stroke: PAL.sage, width: 1.6 }); D.circle(p, e[0], e[1], 2.4, { fill: PAL.sage }); tag(D, p, e[0] + 10, e[1] + 3, 'you', { bold: true, color: PAL.sage, size: 7 });
     northArrow(D, p, kx + kw - 18, 74 + 22, 10); D.text(p, kx + 10, 74 + 16, 'Where you stand', 8, true, PAL.ink); }
-  let y = 74 + ih + 18; const kind = st.observerSource === 'origin' ? `the open-data origin of protected view ${st.viewpoint || ''}` : st.observerSource === 'rooftop' ? `the modelled roof of ${st.observer.building?.source || ''} building ${st.observer.building?.id || ''} (height unverified, roof access unknown)` : 'an exploratory ground point';
-  let d = null, ang = null; if (P) for (const part of X.proposalParts()) { const nr = Math.min(...X.partFootprint(part).map((q) => Math.hypot(q[0] - eye[0], q[1] - eye[1]))), a = deg(Math.atan2(part.box[5] - eye[2], Math.max(1, nr))); if (ang === null || a > ang) { ang = a; d = nr; } } // same measure as the protected-view pages
-  D.paragraph(p, M, y, `Seen from ${kind}, eye ${fmt(st.eyeH, 1)} m ${st.observerSource === 'rooftop' ? 'above the roof' : 'above the ground'} (model z ${fmt(eye[2], 1)} m), vertical field ${fmt(st.fov, 0)}°.${P ? ` The nearest part of the proposal is ${fmt(d, 0)} m away; its top is ${fmt(ang, 1)}° above eye level.` : ''} Visibility here is an exploratory rendering, not a verified sightline.`, 8, PW - 2 * M, { color: PAL.ink });
+  let y = 74 + ih + 18; const kind = st.observerSource === 'origin' ? `the open-data origin of protected view ${st.viewpoint || ''}` : st.observerSource === 'rooftop' ? `a modelled rooftop (building ${st.observer.building?.id || ''}; roof height and access unverified)` : 'a ground point you chose';
+  D.paragraph(p, M, y, `Seen from ${kind}, eye ${fmt(st.eyeH, 1)} m ${st.observerSource === 'rooftop' ? 'above the roof' : 'above the ground'}.${P ? ` Its nearest facade is ${fmt(d, 0)} m away; its top is ${fmt(ang, 0)}° above eye level.` : ''}${fitted ? ` Eye position unchanged; for this page the camera is tilted and widened to a ${fmt(fov, 0)}° vertical field (you looked with ${fmt(st.fov, 0)}°), so more of the building shows.` : ` Vertical field ${fmt(fov, 0)}°.`} Exploratory rendering, not a verified sightline.`, 8.5, PW - 2 * M, { color: PAL.ink });
 }
 function drawInspect(D, p, opts, tpl) {
-  const two = tpl === 'two'; header(D, p, 'Elevations', two ? 'The proposal from north and south' : 'The proposal from four sides', 'Elevations'); const P = X.proposalBox(), h = P.top - P.base, gap = 10, iw = (PW - 2 * M - gap) / 2, ih = two ? PH - 74 - 70 : (PH - 74 - 44 - gap - 22) / 2;
+  const two = tpl === 'two'; header(D, p, 'Context views', two ? 'The proposal from north and south' : 'The proposal from four sides', 'Context'); const P = X.proposalBox(), h = P.top - P.base, gap = 10, iw = (PW - 2 * M - gap) / 2, ih = two ? PH - 74 - 70 : (PH - 74 - 44 - gap - 22) / 2;
   const views = two ? [['From the north', Math.PI / 2], ['From the south', -Math.PI / 2]] : [['From the north', Math.PI / 2], ['From the east', 0], ['From the south', -Math.PI / 2], ['From the west', Math.PI]];
   views.forEach(([label, az], i) => { const x = M + (i % 2) * (iw + gap), y = 74 + Math.floor(i / 2) * (ih + gap + 11);
     const c = cap({ mode: 'inspect', width: 1100, height: Math.round(1100 * ih / iw), inspect: { az, el: two ? 0.16 : 0.22, dist: Math.max(160, h * (two ? 2.2 : 2.5), Math.max(P.box[3] - P.box[0], P.box[4] - P.box[1]) * 3) } }, opts);
@@ -278,22 +286,32 @@ function drawInspect(D, p, opts, tpl) {
 }
 function drawHeight(D, p) {
   const st = S(), P = X.proposalBox(), r = st.check.result; header(D, p, 'Height experiment', 'Your study ceiling and the proposal', 'Height');
-  const x = M, y = 80, w = 460, h = PH - y - 60; const ceil = st.check.bz, parts = X.proposalParts(); const zMin = P.base - 5, zMax = Math.max(P.top, ceil) * 1.06 + 5;
-  const Y_ = (z) => y + h - (z - zMin) / (zMax - zMin) * h; D.roundRect(p, x, y, w, h, 6, { fill: PAL.white, stroke: PAL.line, width: 0.6 });
-  const shown = parts.slice(0, 12), bw = Math.min(70, (w - 80) / shown.length - 14); if (parts.length > shown.length) D.text(p, x + w - 10, y + 16, `first ${shown.length} of ${parts.length} parts`, 6.5, false, PAL.muted, { align: 'right' });
-  shown.forEach((q, i) => { const bx = x + 50 + i * (bw + 14), over = q.box[5] > ceil, below = Math.min(q.box[5], ceil);
-    if (below > q.box[2]) D.rect(p, bx, Y_(below), bw, Y_(q.box[2]) - Y_(below), PAL.clay); if (over) { const from = Math.max(q.box[2], ceil); D.rect(p, bx, Y_(q.box[5]), bw, Y_(from) - Y_(q.box[5]), PAL.red); }
-    D.paragraph(p, bx, y + h + 10, q.name || 'Block ' + (i + 1), 6.5, bw + 10, { color: PAL.ink }); D.text(p, bx + bw / 2, Y_(q.box[5]) - 4, fmt(q.box[5] - P.base, 1) + ' m', 6.5, true, over ? PAL.red : PAL.clayDark, { align: 'center' }); });
-  D.line(p, x + 30, Y_(ceil), x + w - 10, Y_(ceil), PAL.ink, 1, { dash: [6, 3] }); D.text(p, x + w - 12, Y_(ceil) - 4, `study ceiling ${fmt(ceil - P.base, 1)} m above base`, 7, true, PAL.ink, { align: 'right' });
-  D.line(p, x + 30, Y_(P.base), x + w - 10, Y_(P.base), PAL.sage, 0.8); D.text(p, x + 34, Y_(P.base) + 9, 'proposal base (terrain at site)', 6.3, false, PAL.sage);
-  const rx = x + w + 24, rw = PW - M - rx; let yy = y + 8; D.text(p, rx, yy, r ? X.resultLabel(r) : 'Result not available', 13, true, r?.overall_result === 'INTERSECTS' ? PAL.red : PAL.sage); yy += 16;
-  yy = D.paragraph(p, rx, yy, r ? X.explainCheck(r) : st.check.error ? st.check.error : 'Turn the study ceiling on in Output to compute this comparison.', 8, rw, { color: PAL.ink }) + 8;
-  if (r) D.table(p, rx, yy + 6, ['Block', 'Clearance', 'Above'], r.parts.slice(0, 14).map((q) => [q.part, fmt(q.result.signed_margin_m, 2) + ' m', fmt(q.result.penetration_m, 2) + ' m']), 7.5, [rw * 0.5, rw * 0.25, rw * 0.25]);
-  D.paragraph(p, rx, PH - 92, 'The ceiling is your own design assumption, entered in the tool. It is not a City view-cone height: those horizontal lower boundaries are not published in the open data.', 7, rw, { color: PAL.muted });
+  // a true-scale south elevation of the blocks (their east-west extents), not a bar chart; darker clay marks what rises above the ceiling (no pass/fail red)
+  const x = M, y = 80, w = 360, h = PH - y - 60; const ceil = st.check.bz, parts = X.proposalParts(); D.roundRect(p, x, y, w, h, 6, { fill: PAL.white, stroke: PAL.line, width: 0.6 });
+  const zMin = P.base, zMax = Math.max(P.top, ceil), xMin = Math.min(...parts.map((q) => q.box[0])), xMax = Math.max(...parts.map((q) => q.box[3]));
+  const sc = Math.min((h - 70) / Math.max(1, zMax - zMin), (w - 130) / Math.max(1, xMax - xMin)), gx = x + 64 + ((w - 130) - (xMax - xMin) * sc) / 2, gy = y + h - 34;
+  const X_ = (v) => gx + (v - xMin) * sc, Y_ = (z) => gy - (z - zMin) * sc;
+  const step = [5, 10, 20, 25, 50, 100].find((v) => (zMax - zMin) / v <= 8) || 200; // height ruler
+  for (let v = 0; v <= zMax - zMin + 0.01; v += step) { D.line(p, x + 40, Y_(zMin + v), x + 46, Y_(zMin + v), PAL.muted, 0.5); D.text(p, x + 36, Y_(zMin + v) + 2.5, `${v} m`, 6.3, false, PAL.muted, { align: 'right' }); }
+  D.line(p, x + 46, Y_(zMin), x + 46, Y_(zMin + Math.floor((zMax - zMin) / step) * step), PAL.muted, 0.5);
+  D.line(p, x + 50, Y_(zMin), x + w - 14, Y_(zMin), PAL.sage, 1.2); D.text(p, x + w - 14, Y_(zMin) + 11, 'ground at the site', 6.5, false, PAL.sage, { align: 'right' });
+  const shown = parts.slice(0, 12); if (parts.length > shown.length) D.text(p, x + w - 10, y + 16, `first ${shown.length} of ${parts.length} blocks`, 6.5, false, PAL.muted, { align: 'right' });
+  shown.forEach((q) => { const over = q.box[5] > ceil, below = Math.min(q.box[5], ceil), x0 = X_(q.box[0]), bw = Math.max(1, (q.box[3] - q.box[0]) * sc);
+    if (below > q.box[2]) D.rect(p, x0, Y_(below), bw, Y_(q.box[2]) - Y_(below), PAL.clay, PAL.clayDark); if (over) { const from = Math.max(q.box[2], ceil); D.rect(p, x0, Y_(q.box[5]), bw, Y_(from) - Y_(q.box[5]), PAL.clayDark, PAL.clayDark); } });
+  const top = shown.reduce((m, q) => q.box[5] > m.box[5] ? q : m, shown[0]); D.text(p, X_(top.box[3]) + 6, Y_(top.box[5]) + 3, `${fmt(top.box[5] - P.base, 0)} m`, 8, true, PAL.clayDark);
+  D.line(p, x + 50, Y_(ceil), x + w - 14, Y_(ceil), PAL.ink, 1, { dash: [6, 3] }); D.text(p, x + w - 14, Y_(ceil) - 5, `your ceiling · ${fmt(ceil - P.base, 0)} m`, 7.5, true, PAL.ink, { align: 'right' });
+  D.text(p, x + 12, y + 18, 'Elevation from the south, true scale', 8, true, PAL.ink); D.text(p, x + 12, y + 29, 'Bounding boxes; the darker part is above your study ceiling.', 6.5, false, PAL.muted);
+  // three plain numbers first, then one sentence, then the per-block table
+  const rx = x + w + 30, rw = PW - M - rx; let yy = y + 6; const diff = P.top - ceil;
+  [[`${fmt(P.top - P.base, 0)} m`, 'Proposal height'], [`${fmt(ceil - P.base, 0)} m`, 'Your study ceiling'], [`${diff > 0 ? '+' : ''}${fmt(diff, 0)} m`, diff > 0 ? 'Above your ceiling' : 'Below your ceiling']].forEach(([v, l], i) => { const cx = rx + i * rw / 3; D.text(p, cx, yy + 22, v, 22, true, i === 2 ? PAL.clayDark : PAL.ink); D.text(p, cx, yy + 36, l, 7.5, false, PAL.muted); });
+  yy += 60; D.line(p, rx, yy, rx + rw, yy, PAL.line, 0.5); yy += 16;
+  yy = D.paragraph(p, rx, yy, r ? `The proposal is ${fmt(Math.abs(diff), 0)} m ${diff > 0 ? 'taller than' : diff < 0 ? 'lower than' : 'level with'} your ${fmt(ceil - P.base, 0)} m study ceiling. This compares your design assumption only; City height limits are not assessed.` : st.check.error ? st.check.error : 'Turn the study ceiling on in Output to compute this comparison.', 9, rw, { color: PAL.ink }) + 10;
+  if (r) D.table(p, rx, yy + 6, ['Block', 'Margin to study ceiling', 'Above study ceiling'], r.parts.slice(0, 14).map((q) => [q.part, fmt(q.result.signed_margin_m, 1) + ' m', fmt(q.result.penetration_m, 1) + ' m']), 8.5, [rw * 0.4, rw * 0.32, rw * 0.28]);
+  D.paragraph(p, rx, PH - 92, 'The ceiling is your own design assumption, entered in the tool. It is not a City view-cone height: those horizontal lower boundaries are not published in the open data.', 8, rw, { color: PAL.muted });
 }
 function drawClauses(D, firstPage, tpl) {
-  const g = X.assets.guideline; let p = firstPage; header(D, p, 'Guideline text', 'Public Views Guidelines: what the tool does with each clause', 'Guidelines');
-  const cards = [{ ref: g.definition.ref, page: g.definition.page, quote: g.definition.quote, a: g.definition.teaching_note, b: null }, ...g.clauses.filter((c, i) => tpl !== 'key' || i === 0).map((c) => ({ ref: 'Clause ' + c.ref, page: c.page, quote: c.quote + (c.quote_continued ? ' ' + c.quote_continued : ''), a: c.what_the_tool_computes, b: c.human_or_city_interpretation }))];
+  const g = X.assets.guideline; let p = firstPage; header(D, p, 'Guideline text', 'Selected guideline excerpts and what this tool cannot assess', 'Guidelines');
+  const cards = [{ ref: g.definition.ref, page: g.definition.page, quote: g.definition.quote, a: g.definition.teaching_note, b: null }, ...g.clauses.filter((c, i) => tpl !== 'key' || i === 0).map((c) => ({ ref: 'Clause ' + c.ref, page: c.page, quote: c.quote + (c.quote_continued ? ' ' + c.quote_continued : ''), a: (c.what_the_tool_computes || '').replace(/\(INTERSECTS \/ BOUNDARY_CONTACT \/ BELOW_BOUNDARY with a signed margin\)/, '(above, touching or below the user-entered study ceiling, with a margin in metres)'), b: c.human_or_city_interpretation }))];
   const cols = 3, gap = 12, cw = (PW - 2 * M - gap * (cols - 1)) / cols; let col = 0, y = 74; const colY = [74, 74, 74];
   const measure = (c) => { let hh = 20 + Pdf.wrap('“' + c.quote + '”', 7.4, cw - 26).length * 7.4 * 1.32 + 8; for (const t of [c.a, c.b]) if (t) hh += 12 + Pdf.wrap(t, 6.9, cw - 26).length * 6.9 * 1.3 + 4; return hh + 6; };
   for (const c of cards) { const hh = measure(c); col = colY.indexOf(Math.min(...colY)); if (colY[col] + hh > PH - 40) { p = D.page(); header(D, p, 'Guideline text', 'Public Views Guidelines (continued)', 'Guidelines'); colY.fill(74); col = 0; }
