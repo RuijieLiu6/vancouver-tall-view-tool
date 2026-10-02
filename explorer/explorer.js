@@ -641,16 +641,19 @@ function refreshNearbyRooftops() {
     }
   }
   nearby.sort((a, b) => a.distance - b.distance || b.top - a.top);
-  const fragment = document.createDocumentFragment(); let count = 0;
+  const fragment = document.createDocumentFragment(); let count = 0, shownChosen = false;
   for (const q of nearby) { const roof = preferredRoofPoint(q.i, q.ext); if (!roof) continue;
     const button = document.createElement('button'); button.type = 'button'; button.className = 'btn';
     const dx = roof.x - centre.x, dy = roof.y - centre.y, compass = ['E','NE','N','NW','W','SW','S','SE'][Math.round(((Math.atan2(dy, dx) + 2 * Math.PI) % (2 * Math.PI)) / (Math.PI / 4)) % 8];
     const ground = terrainZAt(roof.x, roof.y), height = ground === null ? null : Math.max(0, roof.z - ground);
-    const chosen = state.observerSource === 'rooftop' && state.observer?.building?.index === q.i && (state.observer.building.source === 'extension') === !!q.ext; button.setAttribute('aria-pressed', String(chosen)); button.classList.toggle('roof-chosen', chosen);
+    const chosen = state.observerSource === 'rooftop' && state.observer?.building?.index === q.i && (state.observer.building.source === 'extension') === !!q.ext; button.setAttribute('aria-pressed', String(chosen)); button.classList.toggle('roof-chosen', chosen); if (chosen) shownChosen = true;
     button.textContent = `${chosen ? 'Selected · ' : ''}${Math.round(Math.hypot(dx, dy))} m ${compass} · roof${height === null ? '' : ' about ' + Math.round(height) + ' m high'}`;
     button.title = `${q.ext ? 'Extension' : 'Supplied'} building ${q.id}; model height unverified`; button.addEventListener('click', () => { if (placeRoofObserver(q.i, q.ext, roof.x, roof.y)) { setMode('observer'); revealMap(); } });
     fragment.appendChild(button); if (++count >= 6) break;
   }
+  // a roof chosen farther away than the nearest six still heads the list, so the current choice is always visible
+  if (!shownChosen && state.observerSource === 'rooftop' && state.observer && centre !== state.observer) { const o = state.observer, dx = o.x - centre.x, dy = o.y - centre.y, compass = ['E','NE','N','NW','W','SW','S','SE'][Math.round(((Math.atan2(dy, dx) + 2 * Math.PI) % (2 * Math.PI)) / (Math.PI / 4)) % 8], g = terrainZAt(o.x, o.y);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn roof-chosen'; b.setAttribute('aria-pressed', 'true'); b.textContent = `Selected · ${Math.round(Math.hypot(dx, dy))} m ${compass} · roof${g === null ? '' : ' about ' + Math.round(Math.max(0, o.z - g)) + ' m high'}`; b.addEventListener('click', () => setMode('observer')); fragment.insertBefore(b, fragment.firstChild); count++; }
   if (!count) { const help = document.createElement('p'); help.className = 'small muted'; help.textContent = 'No modelled roofs within 600 m of this site point.'; fragment.appendChild(help); }
   list.replaceChildren(fragment);
 }
@@ -724,7 +727,7 @@ function updateCleared() {
 }
 function refreshStudyUI() {
   const pts=state.drawing || state.boundary; const valid = pts.length >= 3 && !SiteGeometry.validate(pts), m = valid ? SiteGeometry.metrics(pts) : null;
-  $('site-metrics').innerHTML = m ? `<b>${formatArea(m.area)}</b><b class="metric-sub">${fmt(m.area / 10000, 3)} ha</b><span>${fmt(m.perimeter, 1)} m perimeter · horizontal plan area</span><span>${state.drawing ? "Draft boundary" : "User-defined study boundary"} · not a parcel; may enclose water</span>` : state.site ? '<b>Site point set</b><span>Draw or size a boundary to measure your study area.</span>' : ({ replace: '<b>Pick a building</b><span>Select a building, then choose “Replace this building”.</span>', multi: '<b>Pick buildings</b><span>Select buildings, then choose “Use as site”.</span>' }[state.flow.methods.site] || '<b>Place your site</b><span>Find the area if you need to, then pick a spot or draw a boundary.</span>');
+  $('site-metrics').innerHTML = m ? `<b>${formatArea(m.area)}</b><b class="metric-sub">${fmt(m.area / 10000, 3)} ha</b><span>${fmt(m.perimeter, 1)} m perimeter · horizontal plan area</span><span>${state.drawing ? "Draft boundary" : "User-defined study boundary"} · not a parcel; may enclose water</span>` : state.site ? '<span>Point site: no area is measured. Draw a boundary (B) if you want one.</span>' : ({ replace: '<b>Pick a building</b><span>Select a building, then choose “Replace this building”.</span>', multi: '<b>Pick buildings</b><span>Select buildings, then choose “Use as site”.</span>' }[state.flow.methods.site] || '<b>Place your site</b><span>Find the area if you need to, then pick a spot or draw a boundary.</span>');
   if (m && !state.drawing && proposalBox()) { const outside = proposalParts().some(p => { const fp=partFootprint(p); return ProposalGeometry.planOverlap(state.boundary,fp).area < Math.abs(SiteGeometry.metrics(fp).area)-0.01; }); if (outside) $('site-metrics').innerHTML += '<span class="site-warning">Proposal extends outside the study boundary.</span>'; }
   $('btn-fit-site').disabled = !state.site; $('btn-focus').disabled = !state.site;
   $('btn-replace-building').classList.toggle('hidden', state.selected === null);
@@ -993,7 +996,7 @@ function flowGo(stage, opts = {}) {
     if (stage === 'build' && from !== 'build' && proposalBox() && state.mode !== 'observer') { if (state.mode === 'plan') setMode('overview'); focusSite(); }
     if (stage !== 'view' && stage !== 'output' && state.mode === 'observer') setMode('overview'); }
   applyFlowTool(); if (stage === 'output') { renderCheck(); window.__report?.renderBuilder(); }
-  setHint(stage === 'view' && !flowChoosing(stage) && state.observerSource === 'rooftop' && flowMethod(stage) === 'roof' ? 'You’re viewing from a roof. Drag to look around, or choose another roof.' : FLOW_HINTS[flowChoosing(stage) ? stage : flowMethod(stage) || stage]);
+  setHint(stage === 'view' && !flowChoosing(stage) && state.observerSource === 'rooftop' && flowMethod(stage) === 'roof' ? 'You’re viewing from a roof. Drag to look around, or choose another roof.' : stage === 'view' && !flowChoosing(stage) && state.observerSource === 'exploratory' && state.observer && flowMethod(stage) === 'drag' ? 'You’re standing here. Drag to look around, or pick another spot on the plan.' : FLOW_HINTS[flowChoosing(stage) ? stage : flowMethod(stage) || stage]);
   if (!opts.quiet) $('panel').scrollTop = 0;
   refreshPanels(); requestRender(); writeHash(); return true;
 }
@@ -1096,6 +1099,10 @@ function refreshFlowUI() {
   const showNext = stage !== 'output' && !choosing; next.classList.toggle('hidden', !showNext);
   if (showNext) { next.textContent = `Proceed to ${FLOW_NAMES[FLOW[idx + 1]]} ›`; next.disabled = !stageComplete(stage); }
   $('flow-need').textContent = showNext ? stageNeed(stage) : '';
+  panelToggleLabel();
+  // drag and view: once you stand somewhere, the how-to turns into what you can do next
+  const dh = document.querySelector('.method-body[data-stage="view"][data-method="drag"] .method-howto'); if (dh) { dh.dataset.base ??= dh.innerHTML; const placed = state.observerSource === 'exploratory' && !!state.observer;
+    const html = placed ? '<b>You’re standing here.</b> Drag the view to look around, or use <b>Pick a spot on the plan</b> to stand somewhere else.' : dh.dataset.base; if (dh.innerHTML !== html) dh.innerHTML = html; }
   const navPdf = $('btn-nav-pdf'); if (navPdf) navPdf.classList.toggle('hidden', stage !== 'output' || !!choosing); // the report is Output's main action, so it stays in view
   // once a site is placed, step 1 (find the area) folds away so the next action is in view; the user can reopen it
   const find = $('site-find'), placed = !!state.site && !state.drawing; if (find) { if (placed && !find.dataset.placed) find.classList.add('collapsed'); if (!placed) find.classList.remove('collapsed'); find.dataset.placed = placed ? '1' : ''; $('btn-site-find-open').setAttribute('aria-expanded', String(!find.classList.contains('collapsed'))); }
@@ -1294,6 +1301,10 @@ $('btn-new-study-save').addEventListener('click', () => $('btn-save-study').clic
 $('btn-new-study-go').addEventListener('click', startNewStudy);
 $('btn-download-state').addEventListener('click', () => { const blob = new Blob([JSON.stringify(technicalState(), null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'site_explorer_report.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });
 $('btn-download-image').addEventListener('click', () => { render(); const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = `site_explorer_${state.mode}.png`; a.click(); });
+// on phones the step panel folds away; its toggle names the current step so it reads as the way back
+function panelToggleLabel() { const t = $('btn-panel-toggle'), open = !$('panel').classList.contains('collapsed'), i = FLOW.indexOf(state.flow.stage);
+  t.textContent = open ? 'Hide steps' : `Steps · ${state.flow.stage === 'output' ? 'Output' : (i + 1) + ' ' + FLOW_NAMES[state.flow.stage]}`; t.classList.toggle('attn', !open); }
+new MutationObserver(panelToggleLabel).observe($('panel'), { attributes: true, attributeFilter: ['class'] });
 $('btn-panel-toggle').addEventListener('click', () => { const p = $('panel'); p.classList.toggle('collapsed'); $('btn-panel-toggle').setAttribute('aria-expanded', String(!p.classList.contains('collapsed'))); setTimeout(() => { resize(); requestRender(); }, 50); });
 window.addEventListener('resize', () => { resize(); requestRender(); });
 const floatBtn = document.createElement('button'); floatBtn.className = 'btn hidden'; floatBtn.id = 'btn-overview-float'; floatBtn.textContent = '‹ City overview'; floatBtn.style.cssText = 'position:absolute;right:10px;top:10px;'; $('viewport').appendChild(floatBtn); floatBtn.addEventListener('click', () => setMode('overview'));

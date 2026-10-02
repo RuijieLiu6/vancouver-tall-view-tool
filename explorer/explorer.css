@@ -948,3 +948,16 @@ body[data-scene-style="night"] .panel-toggle { background: #141414; border-color
 .site-step.collapsed .site-step-done::before { content: '✓ '; color: var(--accent); }
 .site-step.collapsed .site-step-open { display: inline-block; margin-left: auto; padding: 0; font-size: 13px; }
 .metrics dt { font-size: 11px; letter-spacing: .05em; }
+/* Phones: the map keeps one short caption; the legend gives way (Layers still lists everything) */
+@media (max-width: 860px) {
+  body[data-scene-style] .panel-toggle.attn, .panel-toggle.attn { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+}
+@media (max-width: 600px) {
+  .legend { display: none; }
+  .view-caption { bottom: 10px; max-width: calc(100% - 20px); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .viewport:has(#inset-frame:not(.hidden)) .view-caption { max-width: calc(100% - 190px); }
+}
+@media (max-width: 860px) {
+  .panel-toggle { white-space: nowrap; font-size: 12.5px; padding: 6px 9px; }
+  .vp-toolbar { left: 138px; }
+}
