@@ -22,6 +22,10 @@
       $('btn-flow-next').disabled && X.state.tool === 'site' && X.state.mode === 'plan');
     let land = null; for (const [x, y] of [[700, -300], [200, -150], [0, 0], [-100, 300], [400, -600]]) { const h = X.pickRay([x, y, 5000], [0, 0, -1]); if (h.type === 'terrain') { land = h; break; } }
     X.applyPick(land);
+    record('plan selection opens confirmation before committing the site', $('site-placement-dialog').open && !X.state.site && $('btn-flow-next').disabled);
+    $('btn-cancel-site-placement').click();
+    record('cancelling point placement leaves the site unset', !$('site-placement-dialog').open && !X.state.site && $('btn-flow-next').disabled);
+    X.applyPick(land); $('btn-confirm-site').click();
     record('placing a site enables Proceed to Build; the proposal is not drawn yet', !!X.state.site && !$('btn-flow-next').disabled &&
       /Build/.test($('btn-flow-next').textContent) && X.state.flow.guided && !X.state.flow.methods.build);
 

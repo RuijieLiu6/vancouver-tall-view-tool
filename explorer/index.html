@@ -82,7 +82,7 @@
   </div>
   <div class="header-actions">
     <button id="btn-intro" class="btn intro-open" type="button" aria-haspopup="dialog">Help</button>
-    <label class="style-picker">Style<select id="scene-style" aria-label="Scene style"><option value="collage">Day</option><option value="night">Night</option></select></label>
+    <label class="style-picker">Style<select id="scene-style" aria-label="Scene style"><option value="collage">Plain</option><option value="night">Night</option><option value="context">Context</option></select></label>
   </div>
 </header>
 
@@ -143,7 +143,7 @@
           <h3 id="site-step-2"><span class="site-step-n">2</span>Place your site</h3>
           <div class="site-alt" data-alt-step="place" data-alt="spot">
             <h4><span class="site-alt-k">A</span>Pick a spot on the plan</h4>
-            <p>Click open ground in the plan.</p>
+            <p>Click open ground in the plan, then confirm where you want to place your building.</p>
             <button id="btn-open-ground" class="btn primary" type="button">Show the plan</button>
             <div class="inline-proceed hidden" data-proceed-for="spot" role="status"><span class="ip-check" aria-hidden="true">✓</span><span class="ip-text">Site placed</span><button class="btn primary" type="button" data-proceed>Proceed to Build ›</button></div>
           </div>
@@ -200,6 +200,8 @@
       </div>
       <div class="method-body hidden" data-stage="build" data-method="platform">
         <div id="boxes-ui">
+          <label class="field units-picker">Tower dimensions<select id="proposal-units" aria-describedby="proposal-unit-note"><option value="m">Metres (m)</option><option value="ft">Feet (ft)</option><option value="mm">Millimetres (mm)</option></select></label>
+          <p id="proposal-unit-note" class="small muted">Switch units at any time. Dimensions convert automatically; the building stays the same size.</p>
           <div id="parts-list"></div>
           <div class="row wrap"><button id="btn-add-part" class="btn" type="button">+ Block</button><span class="small muted">Blocks stack; the lowest sits on the terrain at the site. Offsets are from the site point. Positive rotation turns clockwise in plan, around each block’s centre.</span></div>
         </div>
@@ -229,6 +231,7 @@
         <div class="method-grid">
           <button class="method-card" type="button" data-stage="view" data-method="cone"><svg class="ico" aria-hidden="true"><use href="#i-cone"/></svg><b>Protected view cone</b><span>Stand at one of the City’s 24 public viewpoints.</span></button>
           <button class="method-card" type="button" data-stage="view" data-method="roof"><svg class="ico" aria-hidden="true"><use href="#i-roof"/></svg><b>From a building</b><span>Stand on an existing rooftop facing your proposal.</span></button>
+          <button class="method-card" type="button" data-stage="view" data-method="street"><svg class="ico" aria-hidden="true"><use href="#i-eye"/></svg><b>From the street</b><span>Click a mapped street to face your building at eye level.</span></button>
           <button class="method-card" type="button" data-stage="view" data-method="drag"><svg class="ico" aria-hidden="true"><use href="#i-drag"/></svg><b>Drag and view</b><span>Press any spot on the plan and drag to aim.</span></button>
         </div>
         <button class="btn link method-keep hidden" type="button" data-keep="view"></button>
@@ -248,6 +251,13 @@
         <button id="btn-observer-on-building" class="btn primary hidden" type="button">View from this roof</button>
       </div>
 
+      <div class="method-body hidden" data-stage="view" data-method="street">
+        <p class="method-howto"><b>Click a street on the plan.</b> Your viewpoint snaps to the nearest mapped road within 40 m and faces your proposal.</p>
+        <button id="btn-street-pick" class="btn primary" type="button">Pick a street on the plan</button>
+        <div class="street-viewpoints"><h3>Street positions near your building</h3><div id="street-nearby" class="row wrap" role="group" aria-label="Nearby street viewpoints"></div></div>
+        <p id="street-status" class="small" role="status">Choose a street location.</p>
+        <p class="small muted">A modelled eye-level view, not a photographic panorama. Mapped roads and terrain are approximate; road access, bridge deck levels and pedestrian safety are not verified.</p>
+      </div>
       <div class="method-body hidden" data-stage="view" data-method="drag">
         <div class="drag-demo" aria-hidden="true"><svg viewBox="0 0 120 54"><circle class="dd-spot" cx="22" cy="40" r="5"/><path class="dd-wedge" d="M22 40 L104 8 L110 30 Z"/><path class="dd-path" d="M22 40 L98 16"/><circle class="dd-cursor" cx="98" cy="16" r="3.5"/></svg></div>
         <p class="method-howto"><b>Press</b> a spot on the plan, <b>drag</b> toward what you want to see, and <b>release</b> to stand there at eye level. A plain click faces your proposal.</p>
@@ -277,6 +287,37 @@
       <div id="view-matches" class="view-matches"></div>
       <p id="view-near" class="view-near small hidden"></p>
       <p class="caveat small">Plan overlap only: changing the height does not change this list. City view-cone height limits are unavailable, so this cannot decide whether a building meets the policy.</p>
+      <section class="cone-ceiling-study" aria-labelledby="cone-ceiling-title">
+        <h3 id="cone-ceiling-title">How tall could I build here?</h3>
+        <p id="cone-ceiling-status" class="small" role="status">Choose a site to inspect its view-cone ceiling.</p>
+        <dl class="ceiling-values">
+          <div><dt>View-cone ceiling elevation</dt><dd id="cone-ceiling-elevation">Unavailable</dd></div>
+          <div><dt>Maximum height above site ground</dt><dd id="cone-ceiling-height">Unavailable</dd></div>
+          <div><dt>Remaining proposal clearance</dt><dd id="cone-ceiling-clearance">Unavailable</dd></div>
+        </dl>
+        <p id="cone-ceiling-scope" class="small muted"></p>
+        <label class="checks"><span><input id="cone-ceiling-show" type="checkbox" checked> Show entered ceiling surfaces in 3D</span></label>
+        <details><summary>Enter vertical geometry for a study</summary>
+          <p class="small muted">City map polygons have no height geometry. These inputs define a sloping lower plane for a design study, not a verified City limit. Camera tilt and rooftop observers do not change this plane.</p>
+          <label class="field">Mapped view corridor<select id="cone-ceiling-view"><option value="">Loading views…</option></select></label>
+          <div class="grid2">
+            <label class="field">Origin X (model m)<input id="cone-origin-x" type="number" step="0.01"></label>
+            <label class="field">Origin Y (model m)<input id="cone-origin-y" type="number" step="0.01"></label>
+            <label class="field">Observer elevation (datum m)<input id="cone-observer-elevation" type="number" step="0.01"></label>
+            <label class="field">Plane bearing (degrees)<input id="cone-bearing" type="number" min="0" max="360" step="0.1"></label>
+            <label class="field">Lower-plane slope (degrees)<input id="cone-pitch" type="number" min="-88.9" max="88.9" step="0.01"></label>
+          </div>
+          <p class="small muted">Bearing: clockwise from model north (+Y). Origin defaults to the polygon apex; check it against your source. Slope is the protected plane’s rise in the bearing direction, not the camera field of view.</p>
+          <label class="field">Geometry source / study assumption<input id="cone-source" type="text" maxlength="200" placeholder="Describe where these values came from"></label>
+          <div class="actions"><button id="cone-plane-save" type="button" class="btn">Apply study geometry</button><button id="cone-plane-remove" type="button" class="btn">Remove this plane</button></div>
+          <p id="cone-plane-error" class="small" role="status"></p>
+          <h4>Align ground to the elevation datum</h4>
+          <label class="field">Vertical datum / reference<input id="cone-datum-name" type="text" maxlength="80" placeholder="Name the survey datum; do not assume sea level"></label>
+          <label class="field">Datum elevation minus model Z (m)<input id="cone-datum-offset" type="number" step="0.01" placeholder="Unknown"></label>
+          <p class="small muted">Datum elevation = model Z + this offset. The terrain datum is unverified. Without an explicit offset, elevation can be calculated but height, clearance and the 3D surface remain unavailable.</p>
+          <button id="cone-datum-save" type="button" class="btn">Apply datum alignment</button>
+        </details>
+      </section>
       <details class="height-study">
         <summary>Your height experiment <span class="small muted">optional</span></summary>
         <label class="checks"><span><input id="enable-height-study" type="checkbox"> Compare with a study ceiling</span></label>
@@ -316,7 +357,7 @@
         <div id="pb-list" class="pb-list"></div>
         <div class="pb-add"><label for="pb-add-view">Add another protected view</label><div class="row"><select id="pb-add-view"></select><button id="pb-add" class="btn" type="button">Add</button></div></div>
         <div class="grid2 pb-meta"><label>Report title<input id="pb-title" type="text" maxlength="90"></label><label>Prepared by<input id="pb-author" type="text" maxlength="80" placeholder="Your name (optional)" autocomplete="name"></label></div>
-        <label class="field pb-style">Rendering style<select id="pb-style"><option value="collage">Day</option><option value="current">Same as the app</option></select></label>
+        <label class="field pb-style">Rendering style<select id="pb-style"><option value="collage">Plain</option><option value="current">Same as the app</option></select></label>
       </section>
 
       <div class="output-export">
@@ -372,7 +413,7 @@
 
   <section id="viewport" class="viewport">
     <canvas id="gl" tabindex="0" aria-label="3D view of the Vancouver study model" aria-describedby="gl-keys"></canvas>
-    <p id="gl-keys" class="visually-hidden">Keyboard: arrow keys look around or move the map, plus and minus zoom, and Enter acts at the centre of the view, like a click there. While drawing a boundary, Space adds a corner at the centre and Enter finishes.</p>
+    <p id="gl-keys" class="visually-hidden">Keyboard: in Observer view, Up and Down walk forward and back, Left and Right sidestep, and Shift moves faster. Drag to look, or use I up, J left, K down and L right. In other views arrows orbit or move the map. Plus and minus zoom, and Enter acts at the centre of the view, like a click there. While drawing a boundary, Space adds a corner at the centre and Enter finishes.</p>
     <div id="labels" class="labels" aria-hidden="true"></div>
     <div id="plan-markers" class="plan-markers" aria-hidden="true">
       <svg id="pm-link" class="pm-link"><line id="pm-link-line"/></svg>
@@ -381,7 +422,22 @@
       <div id="pm-site" class="pm-proposal pm-site nm nm-prop hidden"><i class="ring"></i><i class="ring r2"></i><span class="nm-dot big"><svg class="ico"><use href="#i-pin"/></svg></span><span class="pm-label">Your site</span></div>
       <div id="pm-observer" class="pm-observer hidden"><svg class="pm-fan" viewBox="-70 -70 140 140"><path id="pm-fan-path"/></svg><i class="ring nm-eye-ring"></i><i class="ring r2 nm-eye-ring"></i><span class="pm-eye"><svg class="ico"><use href="#i-eye"/></svg></span><span class="pm-label" id="pm-observer-label">You</span></div>
     </div>
-    <button id="btn-face" class="btn face-btn hidden" type="button" title="Turn to face your building again">Face my building</button>
+    <div id="observer-controls" class="observer-controls hidden" aria-label="Observer controls">
+    <nav id="viewpoint-navigation" class="viewpoint-navigation hidden" aria-label="Viewpoint navigation">
+      <button id="btn-viewpoint-prev" class="btn" type="button" aria-label="Previous viewpoint" aria-describedby="viewpoint-position">← Previous</button>
+      <span id="viewpoint-position" role="status" aria-live="polite" aria-atomic="true"></span>
+      <button id="btn-viewpoint-next" class="btn" type="button" aria-label="Next viewpoint" aria-describedby="viewpoint-position">Next →</button>
+    </nav>
+      <div class="observer-actions">
+        <button id="btn-face" class="btn face-btn hidden" type="button" title="Turn to face your building again">Face my building</button>
+        <details class="observer-keyboard"><summary>Move &amp; look</summary><div>
+          <p><b>Move</b> <kbd>↑</kbd> <kbd>↓</kbd> forward / back<br><kbd>←</kbd> <kbd>→</kbd> sidestep · hold <kbd>Shift</kbd> for faster steps.</p>
+          <p><b>Look</b> Drag the view, or use <kbd>I</kbd> up, <kbd>J</kbd> left, <kbd>K</kbd> down, <kbd>L</kbd> right.</p>
+          <p>Movement follows modelled ground and stops at buildings, water and roof edges.</p>
+        </div></details>
+        <span class="observer-shortcuts">Arrows move · drag to look</span>
+      </div>
+    </div>
     <div class="vp-toolbar">
       <div class="seg tiny" id="modes">
         <button id="mode-overview" class="seg-btn active" type="button" title="Orbit the city">City</button>
@@ -405,7 +461,7 @@
     <div class="view-utilities">
       <button id="btn-focus" class="btn" type="button" title="Fit the current study site">Focus site</button>
       <button id="btn-zoom-in" class="btn" type="button" aria-label="Zoom in">+</button><button id="btn-zoom-out" class="btn" type="button" aria-label="Zoom out">−</button>
-      <details class="layer-menu"><summary>Layers</summary><label><input id="layer-labels" type="checkbox" checked> Place labels</label><label><input id="layer-roads" type="checkbox" checked> Roads</label><label><input id="layer-sources" type="checkbox"> Distinguish data sources</label><label><input id="layer-extent" type="checkbox"> Coverage outlines</label><label><input id="layer-aerial" type="checkbox"> Aerial photo texture <em>(experimental)</em></label><p>Context heights remain approximate. Source tint is a display aid.</p></details>
+      <details class="layer-menu"><summary>Layers</summary><label><input id="layer-labels" type="checkbox" checked> Place labels</label><label><input id="layer-roads" type="checkbox" checked> Roads / street surfaces</label><label><input id="layer-sources" type="checkbox"> Distinguish data sources</label><label><input id="layer-extent" type="checkbox"> Coverage outlines</label><label><input id="layer-aerial" type="checkbox"> Aerial photo texture <em>(experimental)</em></label><p>Context adds continuous road surfaces and nearby lane markings. Lane widths, sidewalks and bridge levels are illustrative; pedestrian-only routes are not traffic lanes. Heights remain approximate.</p></details>
     </div>
     <div id="live-feedback" class="live-feedback hidden" role="status"></div>
     <dl id="metrics" class="metrics hidden" aria-label="Study at a glance">
@@ -414,6 +470,7 @@
       <div><dt>Plan overlaps</dt><dd id="m-views">–</dd></div>
       <div title="Existing buildings hidden because your building’s footprint covers them"><dt>Demolished</dt><dd id="m-demolished">–</dd></div>
       <div><dt>Viewpoint</dt><dd id="m-view">–</dd></div>
+      <div><dt>View height cap</dt><dd id="m-cone-height" title="Entered study planes; see Output for sources and missing data">Unavailable</dd></div>
       <div><dt id="m-ceiling-dt">Your ceiling</dt><dd id="m-ceiling">–</dd></div>
       <div class="m-help"><button id="btn-metrics-help" class="btn link" type="button" aria-expanded="false" aria-controls="metrics-help" title="What these numbers mean">?</button></div>
     </dl>
@@ -423,6 +480,7 @@
       <p><b>Plan overlaps</b> How many of the City’s 24 mapped protected-view corridors your footprint overlaps in plan. Heights are not assessed.</p>
       <p><b>Demolished</b> Existing buildings hidden because your footprint covers them. You can keep them in Build.</p>
       <p><b>Viewpoint</b> Where you look from: a rooftop, the ground, or a protected view’s origin.</p>
+      <p><b>View height cap</b> Most restrictive entered study plane across the footprint. Unavailable when vertical geometry or datum alignment is missing. Details in Output.</p>
       <p><b>Study ceiling</b> Your own test height, set in Output › Your height experiment. Not a City limit.</p>
     </div>
     <div id="scene-status" class="scene-status">Study scene</div>
@@ -447,7 +505,12 @@
   </section>
 </main>
 
-<footer class="statusbar"><span class="statusbar-note">Teaching tool, not a protected-view assessment.</span><span id="status-coverage">Coverage: —</span></footer>
+<dialog id="site-placement-dialog" aria-labelledby="site-confirm-title" aria-describedby="site-confirm-description">
+  <h2 id="site-confirm-title">Place your building here?</h2>
+  <p id="site-confirm-description">Confirm this location as your study site.</p>
+  <div class="row wrap"><button id="btn-confirm-site" class="btn primary" type="button">Place building here</button><button id="btn-cancel-site-placement" class="btn" type="button">Cancel</button></div>
+</dialog>
+<footer class="statusbar"><span class="statusbar-note">Teaching tool, not a protected-view assessment.</span><span id="context-style-note" class="hidden">Context: mapped roads · illustrative lanes, sidewalks and bridge levels.</span><span id="status-coverage">Coverage: —</span></footer>
 
 <script>
   var entry = document.createElement('script');

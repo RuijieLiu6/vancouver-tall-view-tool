@@ -1,6 +1,6 @@
 # Vista — Vancouver View Protection Tool
 
-**[Open the tool in your browser](https://ruijieliu6.github.io/vancouver-tall-view-tool/)** · [Report an issue or a review](https://github.com/RuijieLiu6/vancouver-tall-view-tool/issues/new) · ARCH 540, Assignment 1 · release v09.16 (October 2, 2026)
+**[Open the tool in your browser](https://ruijieliu6.github.io/vancouver-tall-view-tool/)** · [Report an issue or a review](https://github.com/RuijieLiu6/vancouver-tall-view-tool/issues/new) · ARCH 540, Assignment 1 · release v14 (October 27, 2026)
 
 [Watch the recorded demo (2:04)](https://drive.google.com/file/d/1DWnL5P9Co1HlqFtK4MfyUDTMS3ZeET8c/view) · [Replay the opening animation](https://ruijieliu6.github.io/vancouver-tall-view-tool/?intro=1)
 
@@ -18,12 +18,12 @@ The tool is a web page; it needs no installation. Open the link above in a deskt
 
 The tool works in four steps. In each step you choose one method; the panel then offers the other methods as buttons if you want to switch, **Proceed** moves on and **Return** goes back.
 
-1. **Site.** *Open spot on the plan*: optionally find an area with a neighbourhood or a downtown address (suggestions appear as you type; **Place site here** puts the site at the address), then click open ground or draw a boundary. *Replace a building* or *Replace several buildings*: click buildings in the plan, then use them as the site.
-2. **Build.** *Build on the platform*: stack and size blocks (height, width, depth, rotation, offsets). *Import a model*: a Rhino `.3dm` or `.obj` file, read on your device. Existing buildings under the proposal are shown as demolished; a checkbox keeps them.
-3. **View.** *View from a protected cone*: select a viewpoint, then click **View from here** to stand at an approximate origin derived from the mapped polygon. *View from a building*: stand on a modelled roof. *Drag and view*: press a spot in the plan, drag toward what you want to see and release. Before entering a viewpoint, **Free inspection** lets you orbit the model. The corner map stays visible, previews the selected origin, and shows your position and viewing direction after you enter.
+1. **Site.** *Open spot on the plan*: optionally find an area with a neighbourhood or a downtown address (live suggestions support incomplete addresses and typos; **Place site here** puts the site at the address), then click open ground or draw a boundary. *Replace a building* or *Replace several buildings*: click buildings in the plan, then use them as the site.
+2. **Build.** *Build on the platform*: stack and size blocks (height, width, depth, rotation, offsets), with tower dimensions in metres, feet or millimetres (m/ft/mm). *Import a model*: a Rhino `.3dm` or `.obj` file, read on your device. Existing buildings under the proposal are shown as demolished; a checkbox keeps them.
+3. **View.** *View from a protected cone*: select a viewpoint, then click **View from here** to stand at an approximate origin derived from the mapped polygon. *View from a building*: stand on a modelled roof. *From the street*: click a mapped street for an approximate eye-level view facing your proposal. **Previous** and **Next** cycle nearby streets, roofs or protected viewpoints. *Drag and view*: press a spot in the plan, drag toward what you want to see and release. Before entering a viewpoint, **Free inspection** lets you orbit the model. The corner map stays visible, previews the selected origin, and shows your position and viewing direction after you enter. In Observer view, arrow keys walk forward/back or sidestep; hold Shift for faster steps. Drag or use I/J/K/L to look around. Movement follows approximate ground or the selected roof and checks modelled obstacles.
 4. **Output.** A one-sentence summary, then the mapped view corridors that overlap the proposal in plan; optionally test a study ceiling (your own assumption, not a City limit), then choose the **PDF contents** and **Export PDF**. Every protected view whose corridor overlaps the proposal gets a page with existing and proposed views from its polygon-derived origin, a key plan and a section. **Start a new study** clears everything.
 
-The strip above the map summarizes the study as you work; **?** at its end explains each number. **Style** in the top bar switches between Day and Night. **Layers** adds labels, roads and an experimental 2022 aerial photo texture. The map also works from the keyboard: arrow keys move the view, + and − zoom, and Enter acts at the centre of the view.
+The strip above the map summarizes the study as you work; **?** at its end explains each number. **Style** in the top bar switches between Plain, Night and Context. Context adds continuous ground road surfaces, nearby sidewalks and lane markings, plus illustrative bridge decks; these road surfaces appear only in Context. Widths, sidewalks and bridge levels are approximate. **Layers** controls labels, road surfaces and an experimental 2022 aerial photo texture. The map also works from the keyboard: arrow keys move the view, + and − zoom, and Enter acts at the centre of the view.
 
 ## 3. Source
 
@@ -46,7 +46,7 @@ The tool computes the plan relation between your proposal and each mapped corrid
 ## 5. Skill and limits
 
 - Building heights come from OpenStreetMap and the supplied model and are unverified; the model's vertical datum is unknown. Terrain is approximate (60 m SRTM).
-- View-cone heights are not in the open data, so the tool cannot show whether a building rises into a cone. Plan overlap and the study ceiling are not a City assessment.
+- View-cone heights are not in the open data, so the tool cannot show whether a building rises into a cone. Plan overlap and the study ceiling are not a City assessment. User-entered flat or sloping study ceilings are assumptions, not verified policy limits.
 - Study boundaries and replaced-building outlines are approximate model outlines, not legal parcels.
 - Viewpoint origins are estimated from polygon geometry, not verified survey coordinates; the applicable by-law is authoritative. Rendered views are exploratory, not verified sightlines. Imported models are checked by their part bounding boxes.
 - The address box sends what you type to the City of Vancouver open-data portal (once, to load downtown addresses) and to the BC Address Geocoder for suggestions. The aerial texture loads City orthophoto tiles. Studies and PDF reports are made on your device and are not uploaded.
@@ -58,5 +58,7 @@ The tool computes the plan relation between your proposal and each mapped corrid
 - Address geocoding: © Province of British Columbia, [BC Address Geocoder](https://digital.gov.bc.ca/bcgov-common-components/bc-address-geocoder/), [Open Government Licence – British Columbia](https://www2.gov.bc.ca/gov/content/data/open-data/open-government-licence-bc).
 - Streets, water, parks and simplified buildings outside the supplied model: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), [ODbL](https://opendatacommons.org/licenses/odbl/). Terrain and mountains: NASA SRTM via [Open Topo Data](https://www.opentopodata.org/).
 - The central Vancouver context is a derived browser export of a supplied studio Rhino model; the original `.3dm` file is not included. Interface type: [Inter](https://rsms.me/inter/) (SIL Open Font Licence).
+
+The browser scene data in this release is public and downloadable. Original editable Rhino models are not included in the public release.
 
 This bundle is generated with `tools/build_pages.py` from a private working project; `release-manifest.json` lists every file with its size and SHA-256 hash.

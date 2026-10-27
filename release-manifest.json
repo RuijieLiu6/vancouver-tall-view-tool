@@ -1,7 +1,7 @@
 {
   "format": "vancouver-static-pages/1",
-  "file_count": 60,
-  "total_bytes": 51990003,
+  "file_count": 73,
+  "total_bytes": 56779195,
   "files": {
     ".github/workflows/pages.yml": {
       "bytes": 591,
@@ -12,8 +12,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "README.md": {
-      "bytes": 8938,
-      "sha256": "03a7c541ee727ad957a3a4c62f3f5f79a76e11152fbc1627bd31e95b12da97a0"
+      "bytes": 9876,
+      "sha256": "7098790b2f8baee0519f9b1cb665ba25c8a22b82e2b988dcbf3cf392be0b56da"
     },
     "data/context.json": {
       "bytes": 7679,
@@ -40,8 +40,8 @@
       "sha256": "935953f809619aed16321659323fb92619ceca36503d9c0419881eefe9d13cd0"
     },
     "explorer/address-search.js": {
-      "bytes": 20994,
-      "sha256": "6308d61d47ecfaabe360efccceff79b55ba0dff8ae35d5d4b2d7156db60ba51b"
+      "bytes": 30308,
+      "sha256": "3cfc5aa8b04311e7bdc977fb93ca5ded0ca410277b9a2799c151527861e49c14"
     },
     "explorer/aerial-context.js": {
       "bytes": 14439,
@@ -59,25 +59,37 @@
       "bytes": 8609,
       "sha256": "423bb75586bbf848d7480671ea06b4218998a2ab9b2d8224b91c9c5940759730"
     },
+    "explorer/building-assembly.js": {
+      "bytes": 6788,
+      "sha256": "359057dc43bd105e21893125364de36a18f4341f3ef207548233d57756522843"
+    },
+    "explorer/city-selftest.js": {
+      "bytes": 6428,
+      "sha256": "4b5f1a4be46263d6ebb77baeb32c21bcd614915f603010a81cf03c772383b4dd"
+    },
+    "explorer/cone-ceiling.js": {
+      "bytes": 8478,
+      "sha256": "1efadefe0b0da2435ab8c1155685c3c8a90dd53d23cc961edb1ccacd310699f9"
+    },
     "explorer/entry.js": {
-      "bytes": 3919,
-      "sha256": "d1508b471060bbc0f2f0f9df6ae6a2f2d61f0fb66a2f959b467ba262b48dc809"
+      "bytes": 4273,
+      "sha256": "35f92e705a456a64f36e1381e9f5a51e34d6fc81e50f986a20e92f02287b2a33"
     },
     "explorer/explorer.css": {
-      "bytes": 89048,
-      "sha256": "40eb606c8a83b4d4663774f59e376bb147823546d2c4ca569522c7ddbdf505b5"
+      "bytes": 94168,
+      "sha256": "0c291a5a8b41703a2a6b764024d583e69970ee7205196e1ac0a3e43fe9982f80"
     },
     "explorer/explorer.js": {
-      "bytes": 216477,
-      "sha256": "73b0ce738b6d47eaccdb856ea7b609702161831460e2a550d30521893063a418"
+      "bytes": 271714,
+      "sha256": "c6a4e3f6a6c72abc3642ca63af6db44388b32769d548f5f4412f89602167d962"
     },
     "explorer/flow-selftest.js": {
-      "bytes": 10751,
-      "sha256": "b5d566ce98c595478523ab26e2800b62f797b56715b87a40f38b8bd54debed37"
+      "bytes": 11152,
+      "sha256": "89147278889a3d3bea68b24dac2f993025a265586c3193095e01dde05b97c878"
     },
     "explorer/index.html": {
-      "bytes": 47153,
-      "sha256": "6927b77188e57d0d0cfa0a40d89c7ffa4a7d6538336e4f6ba536240662e52a8f"
+      "bytes": 54636,
+      "sha256": "5a772204abcf63c9d6a383b3881ed1491141c84a1835cac191bd4ba917d6e7a7"
     },
     "explorer/inset-camera.js": {
       "bytes": 3122,
@@ -86,6 +98,10 @@
     "explorer/intro.js": {
       "bytes": 7562,
       "sha256": "52fcb55c4b6303650e8e39c33cb56bcb4abec8a266c72178b3122521dd636238"
+    },
+    "explorer/observer-navigation.js": {
+      "bytes": 1298,
+      "sha256": "783a055ff26fbc87343284b92042c8e790e91b64d51d0849875af1a6a660b4b6"
     },
     "explorer/pdf.js": {
       "bytes": 11601,
@@ -115,13 +131,37 @@
       "bytes": 6185,
       "sha256": "36d2627acf7e0e5ae7b4288e8d25a97196da2da471d52471a05501733922ee2d"
     },
+    "explorer/street-geometry.js": {
+      "bytes": 3904,
+      "sha256": "3ece1ec81e902ef9fe281433e9320ae3f9c9cbdff4f129ef8c9f5091e3359f00"
+    },
+    "explorer/streetscape.js": {
+      "bytes": 16665,
+      "sha256": "824c6aed6ef1f83fb75713f8a0e400a0058650d84cd5e5ffb61e5f619999509b"
+    },
     "explorer/study-selftest.js": {
       "bytes": 14408,
       "sha256": "0e13cccd0f581e009234e0f4b9997a894316405312aeef5060a90805f789368a"
     },
+    "explorer/surface-query.js": {
+      "bytes": 4077,
+      "sha256": "7fcef7f96dee66a065708252cfccd044e9d8ea4940021fc8a6ad34bdd280e3bb"
+    },
     "explorer/surface-selftest.js": {
       "bytes": 3225,
       "sha256": "39293665c664623c8cccf054f90bb51acbc26c92c05f2d06e729d238c2eb8f0d"
+    },
+    "explorer/traffic-network.js": {
+      "bytes": 13232,
+      "sha256": "09a765b6ef6c4e08c7077fd5159e7fd0432b5afa98ffc1467050d44ac0e24d77"
+    },
+    "explorer/traffic-raster.js": {
+      "bytes": 4893,
+      "sha256": "d6edfe4e75ccf477214df91c2d5a0446c6dc89ea9e12bf99f618f4895dc4d848"
+    },
+    "explorer/units.js": {
+      "bytes": 2885,
+      "sha256": "0a1775c09578a5385f369b8cbcc2d7269780f8352a90e8c2889b37e3c8d1100a"
     },
     "explorer/vendor/rhino3dm/LICENSE": {
       "bytes": 1083,
@@ -138,6 +178,10 @@
     "explorer/vendor/rhino3dm/rhino3dm.wasm": {
       "bytes": 2670316,
       "sha256": "18cb4b663cda1167d510e49c7780808a14f8ea3b609bcf751f5b6062e7692df2"
+    },
+    "explorer/viewpoint-selftest.js": {
+      "bytes": 7476,
+      "sha256": "ef9fee4ef51994a600ef8c6fba9f435390bc7776db28c8fe6b87e8afbfef6d15"
     },
     "explorer/workflow-selftest.js": {
       "bytes": 16484,
@@ -162,6 +206,14 @@
     "generated/manifest.json": {
       "bytes": 6007,
       "sha256": "fda95b42523259a361e6d1e248169a79d1e0f4aa93b463b3fa1fea25c11a0420"
+    },
+    "generated/street_network.json": {
+      "bytes": 4124074,
+      "sha256": "8a6c9ba55c338dd9acf02c8b768660d6ed2e2af6ce612ab21eed6a4b326bad93"
+    },
+    "generated/streetscape_roads.json": {
+      "bytes": 510147,
+      "sha256": "105a53db967ab444524d26d56a6f2d0416ddc20a298bfad4a3b9541f41cb53f4"
     },
     "generated/unified_backdrop.bin": {
       "bytes": 435492,

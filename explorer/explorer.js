@@ -71,18 +71,30 @@ const NIGHT_COLORS = {
   plane:rgba('#ff4f8b',.18), planeEdge:rgba('#ff4f8b'), backdrop:rgba('#121a2c'),
   extBuildings:rgba('#121825'), extTerrain:rgba('#0e1219'), extWater:rgba('#07121f'), extParks:rgba('#0e1b15'), extRoads:rgba('#e9a24a',.6), extExtent:rgba('#36405a'),
 };
-// Two styles since 2 Oct 2026: Day (the landscape-collage palette, key kept as 'collage' so saved links still work) and Night.
-// The retired Studio ('classic') and Illustrated garden ('illustrated') keys, and the spelled-out names, open as Day.
-const SCENE_STYLES = {
-  collage:{name:'Day',colors:COLLAGE_COLORS,bg:rgba('#f3f2ec').slice(0,3),shader:2},
-  night:{name:'Night',colors:NIGHT_COLORS,bg:rgba('#070b14').slice(0,3),shader:3},
+// Context keeps the mapped geometry and adds simulated materials and daylight. Facade detail is illustrative, not survey data.
+const CONTEXT_COLORS = {
+  terrain:rgba('#b5b3a4'), parks:rgba('#65805a'), water:rgba('#3d7783'), buildings:rgba('#c5c9c3'), buildingSel:rgba('#72a8ad'),
+  roads:rgba('#737975'), shoreline:rgba('#6f9696',.65), extent:rgba('#7b8984'),
+  proposal:rgba('#c27651'), proposalEdge:rgba('#783c29'), siteEdge:rgba('#ae573a'), studyBoundary:rgba('#246c57'),
+  observer:rgba('#1e6d9c'), ray:rgba('#1e6d9c'), wedge:rgba('#5b9fae',.10), wedgeEdge:rgba('#256b84',.75),
+  cone:rgba('#77749c',.035), coneSel:rgba('#77749c',.06), coneEdge:rgba('#77749c',.4), coneEdgeSel:rgba('#625b86'), origin:rgba('#625b86'),
+  plane:rgba('#ae748a',.18), planeEdge:rgba('#8c4f6c'), backdrop:rgba('#6e8587'),
+  extBuildings:rgba('#b2c3c1'), extTerrain:rgba('#b6b9a5'), extWater:rgba('#4b8090'), extParks:rgba('#70916b'), extRoads:rgba('#84918b'), extExtent:rgba('#788f84'),
 };
-const STYLE_ALIASES = { day: 'collage', classic: 'collage', studio: 'collage', illustrated: 'collage', garden: 'collage' };
+// Plain keeps the 'collage' key so saved studies continue to open with their original palette.
+// Retired style keys and legacy Day / White Model aliases open as Plain.
+const SCENE_STYLES = {
+  collage:{name:'Plain',colors:COLLAGE_COLORS,bg:rgba('#f3f2ec').slice(0,3),shader:2},
+  night:{name:'Night',colors:NIGHT_COLORS,bg:rgba('#070b14').slice(0,3),shader:3},
+  context:{name:'Context',colors:CONTEXT_COLORS,bg:rgba('#dbe8eb').slice(0,3),shader:4},
+};
+const STYLE_ALIASES = { plain: 'collage', day: 'collage', white: 'collage', 'white-model': 'collage', classic: 'collage', studio: 'collage', illustrated: 'collage', garden: 'collage', realistic: 'context' };
 function setSceneStyle(style, save=true) {
   style = STYLE_ALIASES[String(style || '').toLowerCase()] || style;
   state.sceneStyle=Object.hasOwn(SCENE_STYLES,style)?style:'collage';
   const palette=SCENE_STYLES[state.sceneStyle]; BG=[...palette.bg]; Object.assign(C,palette.colors);
   document.body.dataset.sceneStyle=state.sceneStyle; $('scene-style').value=state.sceneStyle;
+  $('context-style-note')?.classList.toggle('hidden',state.sceneStyle!=='context');
   const swatches={city:'buildings',terrain:'terrain',water:'water',proposal:'proposal',observer:'observer',wedge:'wedge',cone:'coneEdgeSel',plane:'planeEdge',site:'studyBoundary'};
   for(const [key,color] of Object.entries(swatches)) { const c=C[color], css=`rgb(${c.slice(0,3).map(v=>Math.round(v*255)).join(' ')})`; document.body.style.setProperty('--scene-'+color,css); const sw=document.querySelector('.sw-'+key); if(sw) sw.style.backgroundColor=css; }
   requestRender(); if(save) {writeHash(); refreshPanels();}
@@ -95,13 +107,16 @@ const errorStrip = $('error-strip');
 function showError(msg) { errorStrip.textContent = msg; errorStrip.classList.remove('hidden'); }
 if (!gl) { showError('WebGL2 is not available in this browser, so the context model cannot be drawn. Try a current Chrome, Firefox, Safari or Edge with hardware acceleration enabled.'); $('loading').classList.add('hidden'); }
 const VS = `#version 300 es
-precision highp float; layout(location=0) in vec3 aPos; uniform mat4 uVP; uniform vec3 uOffset; out vec3 vWorld;
-void main(){ vWorld = aPos + uOffset; gl_Position = uVP * vec4(aPos + uOffset, 1.0); }`;
+precision highp float; layout(location=0) in vec3 aPos; layout(location=1) in vec4 aContext;
+uniform mat4 uVP; uniform vec3 uOffset; out vec3 vWorld; flat out vec4 vContext;
+void main(){ vWorld = aPos + uOffset; vContext=aContext; gl_Position = uVP * vec4(aPos + uOffset, 1.0); }`;
 const FS_MESH = `#version 300 es
 precision highp float;
-in vec3 vWorld; uniform vec4 uColor; uniform vec3 uCamPos; uniform vec3 uFog;
+in vec3 vWorld; flat in vec4 vContext; uniform vec4 uColor; uniform vec3 uCamPos; uniform vec3 uFog;
 uniform float uFogFar; uniform float uLightMix; uniform float uStudyActive; uniform float uStudyCeiling; uniform vec4 uStudyArea;
 uniform float uSceneStyle; uniform float uSurface; uniform sampler2D uAerialTex; uniform float uAerialOn; uniform vec4 uAerialMap; out vec4 outColor;
+uniform sampler2D uTrafficTex; uniform sampler2D uTrafficDetailTex; uniform vec4 uTrafficMap; uniform vec4 uTrafficDetailMap; uniform float uTrafficOn;
+uniform sampler2D uShadowTex; uniform mat4 uShadowVP; uniform float uShadowOn; uniform float uShadowTexel;
 float hash21(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float hatch(float q){ float aa=max(fwidth(q),0.001); float line=1.0-smoothstep(0.045,0.045+aa,abs(fract(q+0.5)-0.5)); return line*(1.0-smoothstep(0.22,0.7,aa)); }
 float stipple(vec2 q){ vec2 cell=floor(q); vec2 centre=vec2(hash21(cell),hash21(cell+vec2(83.0,19.0)))*0.5+0.25;
@@ -110,12 +125,30 @@ float paperNoise(vec2 p){
   vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
   return mix(mix(hash21(i),hash21(i+vec2(1,0)),f.x),mix(hash21(i+vec2(0,1)),hash21(i+vec2(1,1)),f.x),f.y);
 }
+float daylightShadow(vec3 n){
+  if(uShadowOn<0.5) return 1.0;
+  vec4 q=uShadowVP*vec4(vWorld+n*0.18,1.0); vec3 p=q.xyz/q.w*0.5+0.5;
+  if(any(lessThan(p,vec3(0.001))) || any(greaterThan(p,vec3(0.999)))) return 1.0;
+  float lit=0.0;
+  for(int x=-1;x<=1;x+=2) for(int y=-1;y<=1;y+=2){
+    float depth=texture(uShadowTex,p.xy+vec2(float(x),float(y))*uShadowTexel*0.65).r;
+    lit+=step(p.z-0.000035,depth);
+  }
+  float edge=max(abs(p.x-0.5),abs(p.y-0.5))*2.0;
+  return mix(lit*0.25,1.0,smoothstep(0.85,0.99,edge));
+}
+float facadePane(vec2 grid,vec2 margin){
+  vec2 aa=max(fwidth(grid),vec2(0.002)), f=fract(grid);
+  vec2 edge=smoothstep(margin-aa,margin+aa,f)*(1.0-smoothstep(1.0-margin-aa,1.0-margin+aa,f));
+  float coverage=(1.0-2.0*margin.x)*(1.0-2.0*margin.y);
+  return mix(edge.x*edge.y,coverage,smoothstep(0.25,0.8,max(aa.x,aa.y)));
+}
 void main(){
   vec3 n=normalize(cross(dFdx(vWorld),dFdy(vWorld))); vec3 L=normalize(vec3(-0.45,-0.35,0.82)); float light=max(dot(n,L),0.0);
   bool excess=uStudyActive>0.5 && vWorld.z>uStudyCeiling+0.001 && vWorld.x>=uStudyArea.x && vWorld.y>=uStudyArea.y && vWorld.x<=uStudyArea.z && vWorld.y<=uStudyArea.w;
   vec3 base=excess ? (uSceneStyle>0.5?vec3(0.71,0.075,0.19):vec3(0.85,0.16,0.12)) : uColor.rgb;
   vec3 c=base*mix(1.0,0.50+0.50*light,uLightMix);
-  // retired Illustrated garden branch (style 1): unreachable since Day/Night only, kept inert
+  // Retired Illustrated garden branch (style 1), kept inert for historical shader compatibility.
   if(uSceneStyle>0.5 && uSceneStyle<1.5 && uLightMix>0.5){
     vec3 ink=vec3(0.12,0.17,0.20); vec2 uv=abs(n.z)>0.65?vWorld.xy:(abs(n.x)>abs(n.y)?vWorld.yz:vWorld.xz);
     float shade=smoothstep(0.1,0.75,light); c=mix(base*0.72+vec3(0.01,0.035,0.055),base,shade);
@@ -161,7 +194,7 @@ void main(){
     }
     c*=0.994+0.012*hash21(floor(gl_FragCoord.xy));
   }
-  if(uSceneStyle>2.5 && uLightMix>0.5){
+  if(uSceneStyle>2.5 && uSceneStyle<3.5 && uLightMix>0.5){
     // Night: dark masses with lit windows on a 3.2 m bay by 3.6 m floor grid; far away the panes blend into an even glow.
     float shade=smoothstep(0.0,0.9,light), vertical=1.0-smoothstep(0.35,0.6,abs(n.z));
     if(uSurface==1.0 || uSurface==5.0){
@@ -183,6 +216,75 @@ void main(){
     else { c=vec3(0.05,0.06,0.08)*(0.85+0.25*shade); }
     if(excess) c=vec3(1.0,0.18,0.32);
   }
+  if(uSceneStyle>3.5 && uLightMix>0.5){
+    // Material families and facade rhythms are deterministic illustrations, not observed facade or floor data.
+    vec3 V=normalize(uCamPos-vWorld), sun=vec3(1.0,0.94,0.83), sky=vec3(0.70,0.82,0.92);
+    float sunVisibility=daylightShadow(n), daylight=0.57+0.43*light*sunVisibility;
+    float roof=smoothstep(0.48,0.83,abs(n.z));
+    if(uSurface==5.0){
+      // The proposal remains an unarticulated study mass: no assumed storeys, glazing or facade finish.
+      vec3 mass=mix(base,vec3(0.82,0.78,0.70),0.72);
+      c=mass*(0.67+0.33*light*sunVisibility);
+      c=mix(c,mass*(0.89+0.11*sunVisibility),roof);
+    } else if(uSurface==1.0){
+      float seed=vContext.z, h=max(vContext.y,3.0);
+      float localZ=max(0.0,vWorld.z-vContext.x);
+      float tower=smoothstep(24.0,65.0,h), family=fract(seed*7.13);
+      vec3 stone=mix(vec3(0.74,0.73,0.68),vec3(0.88,0.85,0.77),fract(seed*11.7));
+      vec3 brick=mix(vec3(0.42,0.29,0.23),vec3(0.62,0.43,0.32),fract(seed*19.3));
+      vec3 wall=mix(stone,brick,(1.0-tower)*step(0.68,family));
+      wall=mix(wall,vec3(0.59,0.66,0.65),tower*0.35);
+      wall=mix(wall,wall*uColor.rgb/vec3(0.773,0.788,0.765),0.45);
+      vec2 tangent=normalize(vec2(-n.y,n.x)+vec2(0.0001));
+      float u=dot(vWorld.xy,tangent)+seed*17.0, floorH=mix(3.2,3.8,step(0.56,family));
+      vec2 grid=vec2(u/mix(3.0,1.55,tower),(localZ-0.25)/floorH);
+      vec2 margin=mix(vec2(0.20,0.23),vec2(0.055,0.075),tower);
+      float panes=facadePane(grid,margin);
+      float paneVariation=hash21(floor(grid)+seed*93.0);
+      vec3 reflection=reflect(-V,n);
+      float fresnel=pow(1.0-max(dot(n,V),0.0),3.0);
+      vec3 glass=mix(vec3(0.19,0.29,0.31),vec3(0.42,0.58,0.62),clamp(reflection.z*0.7+0.36,0.0,1.0));
+      glass=mix(glass,vec3(0.59,0.70,0.73),fresnel*0.54);
+      float detail=1.0-smoothstep(0.25,0.8,max(fwidth(grid.x),fwidth(grid.y)));
+      glass*=mix(0.97,0.94+0.06*paneVariation,detail);
+      float reflectionBand=paperNoise(vec2(u/65.0,localZ/28.0)+seed*16.0);
+      glass*=0.88+0.22*reflectionBand;
+      vec3 facade=mix(wall*daylight,glass*(0.77+0.23*sunVisibility),panes);
+      float slab=1.0-smoothstep(0.035,0.035+max(fwidth(grid.y),0.015),abs(fract(grid.y+0.5)-0.5));
+      facade*=1.0-slab*tower*0.18;
+      // A darker plinth and bright top edge give retained mapped masses useful architectural scale.
+      facade*=mix(0.69,1.0,smoothstep(0.0,4.5,localZ));
+      float top=max(0.0,h-localZ), coping=(1.0-smoothstep(0.08,0.42,top))*(1.0-roof);
+      facade=mix(facade,wall*1.07,coping*0.75);
+      vec3 roofMat=mix(vec3(0.39,0.42,0.40),vec3(0.70,0.70,0.64),step(0.48,fract(seed*23.1)));
+      roofMat*=0.94+0.10*paperNoise(vWorld.xy/1.8);
+      float seams=max(hatch(vWorld.x/9.0),hatch(vWorld.y/9.0));
+      roofMat*=1.0-seams*0.065;
+      c=mix(facade,roofMat*daylight,roof);
+      float sparkle=pow(max(dot(reflect(-L,n),V),0.0),70.0)*0.28*panes*(1.0-roof)*sunVisibility;
+      c+=sun*sparkle;
+    } else if(uSurface==4.0){
+      // Small static wave normals break up the sky reflection without pretending to model tides.
+      vec2 q=vWorld.xy; float a=sin(q.x*0.17+q.y*0.11), b=sin(q.x*0.053-q.y*0.14);
+      vec3 wn=normalize(vec3(a*0.075,b*0.065,1.0));
+      float fresnel=pow(1.0-max(dot(wn,V),0.0),3.0);
+      c=mix(base*0.74,vec3(0.57,0.72,0.77),0.23+fresnel*0.61);
+      c*=0.93+0.1*paperNoise(q/90.0);
+      c+=sun*pow(max(dot(reflect(-L,wn),V),0.0),130.0)*0.62;
+    } else if(uSurface==3.0){
+      float canopy=paperNoise(vWorld.xy/17.0)*0.6+paperNoise(vWorld.xy/5.4)*0.4;
+      c=mix(base*0.69,base*1.14,smoothstep(0.18,0.86,canopy))*daylight;
+      c*=0.97+0.05*paperNoise(vWorld.xy/1.7);
+    } else if(uSurface==2.0){
+      float groundTone=paperNoise(vWorld.xy/85.0)*0.65+paperNoise(vWorld.xy/21.0)*0.35;
+      c=mix(base*0.88,base*1.06,groundTone)*daylight;
+      c*=0.98+0.035*paperNoise(vWorld.xy/2.1);
+    } else if(uSurface==6.0){
+      float upland=smoothstep(200.0,1500.0,vWorld.z);
+      c=mix(vec3(0.28,0.39,0.36),vec3(0.51,0.58,0.56),upland)*(0.77+0.23*light);
+    } else { c=base*daylight; }
+    if(excess) c=vec3(0.85,0.10,0.22);
+  }
   if(uAerialOn>0.5 && uSurface!=5.0 && uSurface!=0.0 && uSurface!=7.0 && uLightMix>0.5){
     // Experimental: City 2022 orthophoto draped from above on ground, water, parks and roofs; walls take a darker smear of the same pixels.
     vec2 auv=vec2(uAerialMap.x*vWorld.x+uAerialMap.y, uAerialMap.z*vWorld.y+uAerialMap.w);
@@ -190,12 +292,34 @@ void main(){
       vec3 photo=texture(uAerialTex,auv).rgb; float shade=smoothstep(0.0,0.9,light), up=smoothstep(0.55,0.8,abs(n.z));
       vec3 wall=mix(photo*0.62,vec3(0.55,0.56,0.58),0.45)*(0.6+0.4*shade);
       vec3 pc=uSurface==1.0 ? mix(wall,photo*(0.88+0.12*shade),up) : photo*(0.92+0.08*shade);
-      if(uSceneStyle>2.5) pc*=0.32; // at night the photo is only a dim base under the lights
-      c=uSceneStyle>2.5 && uSurface==1.0 ? max(c,pc) : pc; if(excess) c=vec3(1.0,0.18,0.32);
+      bool night=uSceneStyle>2.5 && uSceneStyle<3.5;
+      if(night) pc*=0.32;
+      if(uSceneStyle>3.5){
+        // The orthophoto supplies horizontal context only; it is never stretched down Context facades.
+        float blend=uSurface==1.0?up*0.8:(uSurface==4.0?0.35:0.84);
+        c=mix(c,pc*(0.65+0.35*daylightShadow(n)),blend);
+      } else c=night && uSurface==1.0 ? max(c,pc) : pc;
+      if(excess) c=vec3(1.0,0.18,0.32);
     }
   }
-  float f=clamp(distance(vWorld,uCamPos)/uFogFar,0.0,1.0); f=f*f*(uSceneStyle>2.5?0.75:(uSceneStyle>1.5?0.38:(uSceneStyle>0.5?0.22:0.55)));
-  vec3 fog=uSceneStyle>2.5?vec3(0.09,0.12,0.22):(uSceneStyle>1.5?vec3(0.96,0.96,0.93):(uSceneStyle>0.5?vec3(0.91,0.92,0.77):uFog));
+  if(uTrafficOn>0.5 && uSceneStyle>3.5 && (uSurface==2.0 || uSurface==3.0) && uLightMix>0.5){
+    // The mapped road material shares the terrain/park surface: no floating or buried pavement mesh.
+    vec2 guv=vec2(uTrafficMap.x*vWorld.x+uTrafficMap.y,uTrafficMap.z*vWorld.y+uTrafficMap.w);
+    vec3 road=vec3(0.0);
+    if(all(greaterThanEqual(guv,vec2(0.0)))&&all(lessThanEqual(guv,vec2(1.0))))road=texture(uTrafficTex,guv).rgb;
+    vec2 duv=vec2(uTrafficDetailMap.x*vWorld.x+uTrafficDetailMap.y,uTrafficDetailMap.z*vWorld.y+uTrafficDetailMap.w);
+    if(all(greaterThanEqual(duv,vec2(0.0)))&&all(lessThanEqual(duv,vec2(1.0)))){
+      float edge=min(min(duv.x,1.0-duv.x),min(duv.y,1.0-duv.y));
+      road=mix(road,texture(uTrafficDetailTex,duv).rgb,smoothstep(0.0,0.08,edge));
+    }
+    float shade=0.57+0.43*light*daylightShadow(n);
+    c=mix(c,vec3(0.68,0.67,0.62)*shade,clamp(road.b,0.0,1.0));
+    c=mix(c,vec3(0.23,0.25,0.26)*shade,clamp(road.r+road.g,0.0,1.0));
+    c=mix(c,vec3(0.88,0.87,0.76)*shade,clamp(road.g,0.0,1.0));
+  }
+  bool context=uSceneStyle>3.5, night=uSceneStyle>2.5 && uSceneStyle<3.5;
+  float f=clamp(distance(vWorld,uCamPos)/uFogFar,0.0,1.0); f=f*f*(context?0.5:(night?0.75:(uSceneStyle>1.5?0.38:(uSceneStyle>0.5?0.22:0.55))));
+  vec3 fog=context?vec3(0.80,0.87,0.89):(night?vec3(0.09,0.12,0.22):(uSceneStyle>1.5?vec3(0.96,0.96,0.93):(uSceneStyle>0.5?vec3(0.91,0.92,0.77):uFog)));
   outColor=vec4(mix(c,fog,f),uColor.a);
 }`;
 const FS_LINE = `#version 300 es
@@ -203,11 +327,93 @@ precision highp float; in vec3 vWorld; uniform vec4 uColor; uniform vec3 uCamPos
 void main(){ float f = clamp(distance(vWorld, uCamPos) / uFogFar, 0.0, 1.0); f = f * f * 0.5; outColor = vec4(mix(uColor.rgb, uFog, f), uColor.a); }`;
 function compile(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error('shader: ' + gl.getShaderInfoLog(s)); return s; }
 function program(fs) { const p = gl.createProgram(); gl.attachShader(p, compile(gl.VERTEX_SHADER, VS)); gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
-  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('link: ' + gl.getProgramInfoLog(p)); const u = {}; for (const n of ['uVP', 'uOffset', 'uColor', 'uCamPos', 'uFog', 'uFogFar', 'uLightMix', 'uStudyActive', 'uStudyCeiling', 'uStudyArea', 'uSceneStyle', 'uSurface', 'uAerialTex', 'uAerialOn', 'uAerialMap']) u[n] = gl.getUniformLocation(p, n); return { p, u }; }
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('link: ' + gl.getProgramInfoLog(p)); const u = {}; for (const n of ['uVP', 'uOffset', 'uColor', 'uCamPos', 'uFog', 'uFogFar', 'uLightMix', 'uStudyActive', 'uStudyCeiling', 'uStudyArea', 'uSceneStyle', 'uSurface', 'uAerialTex', 'uAerialOn', 'uAerialMap', 'uTrafficTex', 'uTrafficDetailTex', 'uTrafficMap', 'uTrafficDetailMap', 'uTrafficOn', 'uShadowTex', 'uShadowVP', 'uShadowOn', 'uShadowTexel']) u[n] = gl.getUniformLocation(p, n); return { p, u }; }
 let PM = null, PL = null; if (gl) { try { PM = program(FS_MESH); PL = program(FS_LINE); } catch (e) { showError(String(e)); } }
 function makeMesh(pos, idx) { const vao = gl.createVertexArray(); gl.bindVertexArray(vao); const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0); if (idx) { const ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW); }
   gl.bindVertexArray(null); return { vao, count: idx ? idx.length : pos.length / 3, indexed: !!idx }; }
+function prepareBuildingMaterials(key, catalogue) {
+  const mesh=assets.meshes[key], raw=assets.raw[key]; if(!mesh || !raw?.idx || !catalogue) return;
+  const data=new Float32Array(raw.pos.length/3*4), cols=catalogue.columns;
+  for(let row=0;row<cols.index_offset.length;row++){
+    const b=cols.bbox[row], height=Math.max(2,b[5]-b[2]);
+    const id=String(cols.osm_id?.[row] ?? row); let hash=2166136261;
+    for(let j=0;j<id.length;j++) hash=Math.imul(hash^id.charCodeAt(j),16777619);
+    const seed=(hash>>>0)/4294967296;
+    for(let j=cols.index_offset[row],end=j+cols.index_count[row];j<end;j++){
+      const at=raw.idx[j]*4; data[at]=b[2]; data[at+1]=height; data[at+2]=seed; data[at+3]=1;
+    }
+  }
+  mesh.contextBuffer=gl.createBuffer(); gl.bindVertexArray(mesh.vao); gl.bindBuffer(gl.ARRAY_BUFFER,mesh.contextBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1,4,gl.FLOAT,false,0,0); gl.bindVertexArray(null);
+}
+// A sun-depth pass provides actual cast shadows from the retained mesh, including hypothetical removals and the proposal.
+// The material pass still works if this optional framebuffer is unavailable on a device.
+const contextShadow={program:null,framebuffer:null,tex:null,vp:null,key:null,size:0,failed:false};
+function initContextShadow(){
+  if(contextShadow.framebuffer || contextShadow.failed) return;
+  try {
+    const size=Math.min(2048,gl.getParameter(gl.MAX_TEXTURE_SIZE)); contextShadow.size=size;
+    contextShadow.program=program(`#version 300 es\nprecision highp float; out vec4 outColor; void main(){outColor=vec4(1.0);}`);
+    const tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT24,size,size,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    const framebuffer=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D,tex,0); gl.drawBuffers([gl.NONE]); gl.readBuffer(gl.NONE);
+    if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE) throw new Error('depth framebuffer unavailable');
+    contextShadow.framebuffer=framebuffer; contextShadow.tex=tex;
+  } catch(e){ contextShadow.failed=true; }
+  finally { gl.bindFramebuffer(gl.FRAMEBUFFER,null); }
+}
+function prepareContextShadow(cam){
+  if(state.sceneStyle!=='context' || cam.half) return;
+  initContextShadow(); if(!contextShadow.framebuffer) return;
+  const distance=V.len(V.sub(cam.eye,cam.target)), span=Math.round(clamp(distance*0.8,650,6000)/50)*50;
+  const centre=[Math.round(cam.target[0]/25)*25,Math.round(cam.target[1]/25)*25,0];
+  const P=proposalShown()?proposalBox():null;
+  const key=JSON.stringify([centre,span,state.removed,state.cleared,state.showExisting,P?.box,state.parts,state.imported?.name]);
+  if(contextShadow.key===key && contextShadow.imported===state.imported) return;
+  const sun=V.norm([-0.45,-0.35,0.82]), lightEye=V.add(centre,V.scale(sun,11000));
+  const vp=mul(ortho(-span,span,-span,span,1,23000),lookAt(lightEye,centre,[0,0,1]));
+  contextShadow.vp=vp;
+  const viewport=gl.getParameter(gl.VIEWPORT), scissor=gl.isEnabled(gl.SCISSOR_TEST), ps=contextShadow.program;
+  gl.bindFramebuffer(gl.FRAMEBUFFER,contextShadow.framebuffer); gl.disable(gl.SCISSOR_TEST); gl.viewport(0,0,contextShadow.size,contextShadow.size);
+  gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.clear(gl.DEPTH_BUFFER_BIT); gl.disable(gl.BLEND);
+  gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1.5,2); gl.useProgram(ps.p);
+  gl.uniformMatrix4fv(ps.u.uVP,false,new Float32Array(vp)); gl.uniform3fv(ps.u.uOffset,[0,0,0]);
+  for(const name of ['terrain','ext_terrain','buildings','ext_buildings']) drawStatic(ps,name,C.buildings);
+  if(P){
+    if(state.pmode==='import' && state.imported){
+      gl.uniform3fv(ps.u.uOffset,importOffset());
+      for(const part of state.imported.parts){gl.bindVertexArray(part.gl.vao);gl.drawElements(gl.TRIANGLES,part.gl.count,gl.UNSIGNED_INT,0);}
+      gl.bindVertexArray(null);
+    } else for(const part of P.parts) dynDraw(ps,gl.TRIANGLES,part.pos,part.idx,C.proposal);
+  }
+  gl.disable(gl.POLYGON_OFFSET_FILL); gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(...viewport);
+  if(scissor) gl.enable(gl.SCISSOR_TEST); contextShadow.key=key; contextShadow.imported=state.imported;
+}
+let contextSky=null;
+function drawContextSky(cam){
+  if(state.sceneStyle!=='context' || cam.half) return;
+  if(!contextSky){
+    const vs=`#version 300 es\nprecision highp float; out vec2 uv; void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));uv=p;gl_Position=vec4(p*2.0-1.0,1.0,1.0);}`;
+    const fs=`#version 300 es\nprecision highp float; in vec2 uv; uniform mat4 invVP; uniform vec3 eye; out vec4 outColor;
+      float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+      float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+      void main(){vec4 p=invVP*vec4(uv*2.0-1.0,1.0,1.0);vec3 ray=normalize(p.xyz/p.w-eye);
+        float up=max(ray.z,0.0);vec3 c=mix(vec3(0.80,0.87,0.89),vec3(0.39,0.62,0.78),pow(up,0.48));
+        vec2 q=ray.xy/max(ray.z+0.18,0.06)*1.4;float cloud=noise(q)*0.56+noise(q*2.13)*0.28+noise(q*4.27)*0.16;
+        float veil=smoothstep(0.58,0.79,cloud)*smoothstep(0.02,0.24,ray.z)*0.42;c=mix(c,vec3(0.94,0.95,0.94),veil);
+        float sun=max(dot(ray,normalize(vec3(-0.45,-0.35,0.82))),0.0);c+=vec3(1.0,0.83,0.57)*(pow(sun,28.0)*0.12+pow(sun,1400.0)*0.5);
+        outColor=vec4(c,1.0);}`;
+    const p=gl.createProgram(); gl.attachShader(p,compile(gl.VERTEX_SHADER,vs));gl.attachShader(p,compile(gl.FRAGMENT_SHADER,fs));gl.linkProgram(p);
+    if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error('Context sky: '+gl.getProgramInfoLog(p));
+    contextSky={p,invVP:gl.getUniformLocation(p,'invVP'),eye:gl.getUniformLocation(p,'eye')};
+  }
+  gl.disable(gl.DEPTH_TEST);gl.depthMask(false);gl.disable(gl.BLEND);gl.useProgram(contextSky.p);
+  gl.uniformMatrix4fv(contextSky.invVP,false,new Float32Array(invert(cam.vp)));gl.uniform3fv(contextSky.eye,cam.eye);gl.bindVertexArray(null);gl.drawArrays(gl.TRIANGLES,0,3);
+}
 let dyn = null;
 function dynDraw(prog, mode, pos, idx, color, offset) {
   if(prog.u.uSurface) gl.uniform1f(prog.u.uSurface,color===C.proposal?5:0);
@@ -223,7 +429,7 @@ function boxEdges(b) { const [x0, y0, z0, x1, y1, z1] = b; const p = [[x0, y0, z
 // ------------------------------------------------------------------ state
 const state = {
   step: 1, mode: 'overview', tool: 'site', sceneStyle:'collage',
-  site: null, pmode: 'boxes',
+  site: null, pmode: 'boxes', displayUnits: 'm',
   parts: [{ name: 'Tower', h: 120, w: 30, d: 30, dx: 0, dy: 0, rotation: 0 }],
   imported: null,             // {name, units_status, parts:[{name,bbox,gl}], bbox, placement}
   observer: null, observerSource: 'exploratory', eyeH: 1.6, fov: 60, wedge: true,
@@ -260,7 +466,7 @@ async function loadAssets() {
   for (const k of order) { const spec = active.files[k];
     const bytes = await fetchProgress('/generated/' + spec.file, (got) => step(`Loading ${spec.file}  ${((doneBytes + got) / 1048576).toFixed(1)} / ${(totalBytes / 1048576).toFixed(1)} MB`, 0.08 + 0.85 * (doneBytes + got) / totalBytes));
     doneBytes += spec.byte_length; if (bytes.length !== spec.byte_length) throw new Error(`${spec.file}: expected ${spec.byte_length} bytes, received ${bytes.length}`);
-    const { pos, idx } = sliceMesh(bytes, spec); assets.raw[k] = { pos, idx }; assets.meshes[k] = makeMesh(pos, idx); }
+    const { pos, idx } = sliceMesh(bytes, spec); assets.raw[k] = { pos, idx }; if (k !== 'buildings') assets.meshes[k] = makeMesh(pos, idx); }
   const bb = assets.index.columns.bbox; const flat = new Float64Array(bb.length * 6); for (let i = 0; i < bb.length; i++) for (let k = 0; k < 6; k++) flat[i * 6 + k] = bb[i][k]; assets.bboxes = flat;
   step('Loading guideline text and view cones…', 0.95);
   try { assets.guideline = await (await window.ProjectAPI.fetch('/api/guideline')).json(); } catch (e) { assets.guideline = null; }
@@ -268,13 +474,33 @@ async function loadAssets() {
   try { assets.geo = await (await window.ProjectAPI.fetch('/api/geo')).json(); } catch (e) { assets.geo = null; }
   try { const bm = await window.ProjectAPI.fetch('/generated/backdrop_manifest.json'); if (bm.ok) { const man = await bm.json(); const spec = assets.unified?.files.backdrop || man.files.backdrop; const bytes = await fetchProgress('/generated/' + spec.file); const { pos, idx } = sliceMesh(bytes, spec); assets.raw.backdrop = { pos, idx }; assets.meshes.backdrop = makeMesh(pos, idx); assets.backdrop = man; $('chip-backdrop').classList.remove('hidden'); } } catch (e) { assets.backdrop = null; }
   try { const em = await window.ProjectAPI.fetch('/generated/extension_manifest.json'); if (em.ok) { const man = await em.json(); step('Loading context extension (OSM + SRTM)…', 0.97);
-      for (const k of (assets.unified ? ['buildings'] : ['terrain', 'water', 'parks', 'buildings'])) { const spec = assets.unified ? assets.unified.files.ext_buildings : man.files[k]; if (!spec || !spec.positions.count) continue; const bytes = await fetchProgress('/generated/' + spec.file, (got) => step(`Loading ${spec.file}  ${(got / 1048576).toFixed(1)} MB`, 0.97)); if (bytes.length !== spec.byte_length) throw new Error(spec.file + ': incomplete asset'); const { pos, idx } = sliceMesh(bytes, spec); assets.raw['ext_' + k] = { pos, idx }; assets.meshes['ext_' + k] = makeMesh(pos, idx); }
+      for (const k of (assets.unified ? ['buildings'] : ['terrain', 'water', 'parks', 'buildings'])) { const spec = assets.unified ? assets.unified.files.ext_buildings : man.files[k]; if (!spec || !spec.positions.count) continue; const bytes = await fetchProgress('/generated/' + spec.file, (got) => step(`Loading ${spec.file}  ${(got / 1048576).toFixed(1)} MB`, 0.97)); if (bytes.length !== spec.byte_length) throw new Error(spec.file + ': incomplete asset'); const { pos, idx } = sliceMesh(bytes, spec); assets.raw['ext_' + k] = { pos, idx }; if (k !== 'buildings') assets.meshes['ext_' + k] = makeMesh(pos, idx); }
       const rs = assets.unified ? null : man.files.roads; if (rs && rs.positions.count) { const bytes = await fetchProgress('/generated/' + rs.file); assets.meshes.ext_roads = makeMesh(new Float32Array(bytes.buffer, bytes.byteOffset, rs.positions.count * 3), null); }
       assets.extIndex = await (await window.ProjectAPI.fetch('/generated/' + (assets.unified ? assets.unified.ext_buildings_index : man.buildings_index))).json(); assets.extLabels = await (await window.ProjectAPI.fetch('/generated/' + man.labels)).json();
       const eb = assets.extIndex.columns.bbox; const ef = new Float64Array(eb.length * 6); for (let i = 0; i < eb.length; i++) for (let k = 0; k < 6; k++) ef[i * 6 + k] = eb[i][k]; assets.extBboxes = ef;
       const te = man.target_extent_model_m; assets.extExtentLines = new Float32Array([te[0], te[1], 1, te[2], te[1], 1, te[2], te[1], 1, te[2], te[3], 1, te[2], te[3], 1, te[0], te[3], 1, te[0], te[3], 1, te[0], te[1], 1]);
       assets.extension = man; $('chip-extension').classList.remove('hidden'); } else if (assets.unified) throw new Error('Building provenance manifest missing'); } catch (e) { if (assets.unified) throw e; assets.extension = null; showError('Context extension could not be loaded: ' + (e && e.message || e)); }
-  assets.ready = true; loading.classList.add('hidden');
+  prepareBuildingDisplay();
+  prepareBuildingMaterials('buildings',assets.index); prepareBuildingMaterials('ext_buildings',assets.extIndex);
+  try {const response=await window.ProjectAPI.fetch('/generated/streetscape_roads.json');assets.streetHints=response.ok?await response.json():null;}catch(_){assets.streetHints=null;}
+  try{
+    const response=await window.ProjectAPI.fetch('/generated/street_network.json'),network=response.ok?await response.json():null;
+    if(network?.schema==='vista-street-network/1'&&Array.isArray(network.positions)&&network.positions.length===network.segment_flags?.length*6&&network.positions.every(Number.isFinite)){
+      const positions=[],rows=[];
+      for(const way of network.ways||[]){
+        const tags=way.tags||{},lanes=parseFloat(tags.lanes),fallback=/primary|secondary|tertiary/.test(way.highway)?2:way.highway==='service'||way.highway==='pedestrian'?1:2;
+        const width=clamp((Number.isFinite(lanes)?lanes:fallback)*3.1+1,4,20),walkable=way.highway==='pedestrian'||way.highway==='service';
+        const general=tags['sidewalk:both']||tags.sidewalk,left=tags['sidewalk:left']||general,right=tags['sidewalk:right']||general;
+        const side=(value,direction)=>value?!['no','none'].includes(value)&&value!==(direction==='left'?'right':'left'):!walkable;
+        for(let i=way.start;i<way.start+way.count;i++){
+          if(network.segment_flags[i]!==0||/^(motorway|trunk)(_link)?$/.test(way.highway))continue;const p=network.positions.slice(i*6,i*6+6);positions.push(...p);
+          rows.push([p[0],p[1],p[3],p[4],width,side(left,'left'),side(right,'right'),false,false,way.name,String(way.id)]);
+        }
+      }
+      if(positions.length){assets.streetRoads=new Float32Array(positions);assets.streetNetwork=network;assets.streetHints={...assets.streetHints,segments:rows};}
+    }
+  }catch(_){assets.streetNetwork=null;}
+  assets.ready = true; prepareStreetQueries(); loading.classList.add('hidden');
   if (assets.unified) {
     for (const label of [...assets.labels, ...(assets.extLabels || [])]) { const g = groundZAt(label.x, label.y); if (g) label.z = g.z; }
     $('chip-terrain').textContent = 'Terrain: rebuilt · approximate';
@@ -291,7 +517,8 @@ async function loadAssets() {
   $('status-coverage').textContent = `Coverage: full supplied model — ${c.buildings.toLocaleString()} buildings (${c.building_triangles.toLocaleString()} triangles), ${c.terrain_meshes} terrain meshes, water, parks, ${c.road_segments.toLocaleString()} road segments, ${c.labels} place labels; extent x ${Math.round(e[0]).toLocaleString()}…${Math.round(e[3]).toLocaleString()} m, y ${Math.round(e[1]).toLocaleString()}…${Math.round(e[4]).toLocaleString()} m (model metres, no transform). Source ${m.source.filename}, sha256 ${m.source.sha256.slice(0, 12)}…, ${m.source.model_units}. View cones: ${assets.cones && assets.cones.available ? assets.cones.cones.length + ' City open-data polygons (' + assets.cones.cones.filter((k) => k.origin_inside_model_extent).length + ' origins inside the model)' : 'not loaded'}.`;
   assets.extentLines = new Float32Array([e[0], e[1], 1, e[3], e[1], 1, e[3], e[1], 1, e[3], e[4], 1, e[3], e[4], 1, e[0], e[4], 1, e[0], e[4], 1, e[0], e[1], 1]);
   if (assets.extension) { const x = assets.extension.counts; $('status-coverage').textContent += ` Extension outside the supplied model: ${x.buildings.toLocaleString()} OSM buildings (current data, © OpenStreetMap contributors, ODbL) on SRTM terrain, ${x.water_polygons} water and ${x.park_polygons} park polygons, ${x.road_segments.toLocaleString()} road segments; covers all 24 view origins; source tint available in Layers; heights and elevations unverified.`; }
-  if (assets.unified) { $('status-coverage').textContent = `Rebuilt context: one continuous SRTM terrain across the study area, mapped OSM coastline and inland water (© OpenStreetMap contributors, ODbL). ${(assets.index.count + (assets.extIndex?.count || 0)).toLocaleString()} existing building shapes retained; elevated parts retained and placement adjusted to the new ground. Original Rhino file preserved. Terrain resolution approximately 60 m; elevations and building heights unverified. View cones: ${assets.cones?.cones?.length || 0} plan polygons, height limits unknown.`; }
+  if (assets.unified) { $('status-coverage').textContent = `Rebuilt context: one continuous SRTM terrain across the study area, mapped OSM coastline and inland water (© OpenStreetMap contributors, ODbL). ${(assets.index.count + (assets.extIndex?.count || 0)).toLocaleString()} source building shapes; supported elevated parts retained and placement adjusted to the new ground. Original Rhino file preserved. Terrain resolution approximately 60 m; elevations and building heights unverified. View cones: ${assets.cones?.cones?.length || 0} plan polygons, height limits unknown.`; }
+  if (assets.modelCleanup?.count) $('status-coverage').textContent += ` Display cleanup: ${assets.modelCleanup.count} small unsupported source fragments hidden; original model files preserved.`;
   if (!(assets.cones && assets.cones.available)) $('chip-cones').textContent = 'View cones: dataset not loaded';
   if (!assets.backdrop) $('chk-backdrop').disabled = true;
 }
@@ -411,7 +638,9 @@ function computeCamera(mode, aspect) { let eye, target, fovy, near, far;
 let lastCam = null;
 
 // ------------------------------------------------------------------ rendering
-function setCommon(prog, cam) { gl.useProgram(prog.p); if (prog.u.uAerialOn) { const on = state.layers.aerial && aerial.tex; gl.uniform1f(prog.u.uAerialOn, on ? 1 : 0); if (on) { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, aerial.tex); gl.uniform1i(prog.u.uAerialTex, 0); gl.uniform4fv(prog.u.uAerialMap, aerial.map); } } if(prog.u.uSceneStyle) gl.uniform1f(prog.u.uSceneStyle,SCENE_STYLES[state.sceneStyle].shader); if(prog.u.uSurface) gl.uniform1f(prog.u.uSurface,0); if (prog.u.uStudyActive) gl.uniform1f(prog.u.uStudyActive, 0); gl.uniformMatrix4fv(prog.u.uVP, false, new Float32Array(cam.vp)); gl.uniform3fv(prog.u.uCamPos, cam.eye); gl.uniform3fv(prog.u.uFog, BG); gl.uniform1f(prog.u.uFogFar, cam.fogFar); if (prog.u.uLightMix) gl.uniform1f(prog.u.uLightMix, 1.0); gl.uniform3fv(prog.u.uOffset, [0, 0, 0]); }
+function setCommon(prog, cam) { gl.useProgram(prog.p); if(prog.u.uTrafficOn){const on=state.sceneStyle==='context'&&state.layers.roads&&trafficTextures.global&&trafficTextures.local;gl.uniform1f(prog.u.uTrafficOn,on?1:0);if(on){for(const [unit,tex,name,mapName] of [[2,trafficTextures.global,'uTrafficTex','uTrafficMap'],[3,trafficTextures.local,'uTrafficDetailTex','uTrafficDetailMap']]){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex.texture);gl.uniform1i(prog.u[name],unit);gl.uniform4fv(prog.u[mapName],tex.map);}gl.activeTexture(gl.TEXTURE0);}} if (prog.u.uAerialOn) { const on = state.layers.aerial && aerial.tex; gl.uniform1f(prog.u.uAerialOn, on ? 1 : 0); if (on) { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, aerial.tex); gl.uniform1i(prog.u.uAerialTex, 0); gl.uniform4fv(prog.u.uAerialMap, aerial.map); } } if(prog.u.uSceneStyle) gl.uniform1f(prog.u.uSceneStyle,SCENE_STYLES[state.sceneStyle].shader); if(prog.u.uSurface) gl.uniform1f(prog.u.uSurface,0); if (prog.u.uStudyActive) gl.uniform1f(prog.u.uStudyActive, 0); gl.uniformMatrix4fv(prog.u.uVP, false, new Float32Array(cam.vp)); gl.uniform3fv(prog.u.uCamPos, cam.eye); gl.uniform3fv(prog.u.uFog, BG); gl.uniform1f(prog.u.uFogFar, cam.fogFar); if (prog.u.uLightMix) gl.uniform1f(prog.u.uLightMix, 1.0); gl.uniform3fv(prog.u.uOffset, [0, 0, 0]);
+  if(prog.u.uShadowOn){const on=state.sceneStyle==='context' && contextShadow.tex && contextShadow.vp;gl.uniform1f(prog.u.uShadowOn,on?1:0);if(on){gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,contextShadow.tex);gl.uniform1i(prog.u.uShadowTex,1);gl.uniformMatrix4fv(prog.u.uShadowVP,false,new Float32Array(contextShadow.vp));gl.uniform1f(prog.u.uShadowTexel,1/contextShadow.size);gl.activeTexture(gl.TEXTURE0);}}
+}
 function drawStatic(prog, key, color, offset) { if(prog.u.uSurface) gl.uniform1f(prog.u.uSurface,({buildings:1,ext_buildings:1,terrain:2,ext_terrain:2,parks:3,ext_parks:3,water:4,ext_water:4,backdrop:6})[key] || 0); const m = assets.meshes[key]; if (!m) return; gl.uniform4fv(prog.u.uColor, color); gl.uniform3fv(prog.u.uOffset, offset || [0, 0, 0]); gl.bindVertexArray(m.vao); if (m.indexed && /^(ext_)?buildings$/.test(key) && (state.removed.length || state.cleared.length) && !state.showExisting) {
     const ext = key === 'ext_buildings', cols = (ext ? assets.extIndex : assets.index).columns;
     const hidden = [...new Set([...state.removed, ...state.cleared].filter(r => r.ext === ext).map(r => r.index))].sort((a,b) => cols.index_offset[a] - cols.index_offset[b]); let start = 0;
@@ -427,13 +656,98 @@ function coneGeometry(c) { // vertical boundary walls from the apex to the far v
   const ground = [], top = []; for (let i = 0; i < n; i++) { const a = pts[i], b = pts[(i + 1) % n]; ground.push(a[0], a[1], 1, b[0], b[1], 1); top.push(a[0], a[1], CONE_TOP, b[0], b[1], CONE_TOP); } top.push(ax, ay, 0, ax, ay, CONE_TOP);
   return { wall, wallIdx, ground: new Float32Array(ground), top: new Float32Array(top) };
 }
+const trafficTextures={global:null,local:null};
+let streetSurfaces=null,streetSurfaceKey='',globalTrafficSurfaces=null,globalTrafficKey='',streetSamplers=null,streetBoxQuery=null,streetHintMap=null,streetHintQuery=null;
+function streetSegmentKey(ax,ay,bx,by){return [ax,ay,bx,by].map(v=>Math.round(v*5)).join(',');}
+function prepareStreetQueries(){
+  if(streetSamplers)return;
+  const terrain=SurfaceQuery.createMeshSampler([assets.raw.terrain,assets.raw.ext_terrain].filter(Boolean),{cellSize:100});
+  const water=SurfaceQuery.createMeshSampler([assets.raw.water,assets.raw.ext_water].filter(Boolean),{cellSize:150});
+  const parks=SurfaceQuery.createMeshSampler([assets.raw.parks,assets.raw.ext_parks].filter(Boolean),{cellSize:100});
+  const land=(x,y)=>water(x,y)===null?terrain(x,y):null;
+  streetSamplers={terrain,land,surface:(x,y)=>{const z=land(x,y);if(z===null)return null;const p=parks(x,y);return p===null?z:Math.max(z,p);}};
+  const boxes=[];for(const ext of [false,true]){const c=(ext?assets.extIndex:assets.index)?.columns;if(c)for(let index=0;index<c.bbox.length;index++)boxes.push({box:c.bbox[index],index,ext});}
+  streetBoxQuery=SurfaceQuery.createBoxIndex(boxes,{cellSize:60});
+  if(assets.streetRoads&&!assets.meshes.street_network){
+    const lines=[];for(let i=0;i<assets.streetRoads.length;i+=6){const p=assets.streetRoads,az=streetSamplers.land(p[i],p[i+1]),bz=streetSamplers.land(p[i+3],p[i+4]);if(az!==null&&bz!==null)lines.push(p[i],p[i+1],az+0.18,p[i+3],p[i+4],bz+0.18);}
+    assets.meshes.street_network=makeMesh(new Float32Array(lines),null);
+  }
+  streetHintMap=new Map();
+  for(const row of assets.streetHints?.segments||[]){const [ax,ay,bx,by,width,leftSidewalk,rightSidewalk,,skip,name]=row;
+    streetHintMap.set(streetSegmentKey(ax,ay,bx,by),{roadWidth:width,leftSidewalk,rightSidewalk,skip,name});
+    streetHintMap.set(streetSegmentKey(bx,by,ax,ay),{roadWidth:width,leftSidewalk:rightSidewalk,rightSidewalk:leftSidewalk,skip,name});
+  }
+  streetHintQuery=SurfaceQuery.createBoxIndex((assets.streetHints?.segments||[]).map(row=>({row,box:[Math.min(row[0],row[2])-1,Math.min(row[1],row[3])-1,0,Math.max(row[0],row[2])+1,Math.max(row[1],row[3])+1,1]})),{cellSize:80});
+}
+function streetHintFor(ax,ay,bx,by){
+  const key=streetSegmentKey(ax,ay,bx,by),exact=streetHintMap.get(key);if(exact)return exact;
+  const mx=(ax+bx)/2,my=(ay+by)/2,dx=bx-ax,dy=by-ay,length=Math.hypot(dx,dy);
+  for(const candidate of streetHintQuery(mx,my)){const [x0,y0,x1,y1,width,left,right,,skip,name]=candidate.row,vx=x1-x0,vy=y1-y0,len=Math.hypot(vx,vy);if(!len||!length)continue;
+    const dot=(dx*vx+dy*vy)/(length*len);if(Math.abs(dot)<0.98)continue;
+    const t=((mx-x0)*vx+(my-y0)*vy)/(len*len);if(t<0||t>1||Math.hypot(mx-x0-t*vx,my-y0-t*vy)>0.75)continue;
+    const meta={roadWidth:width,leftSidewalk:dot>=0?left:right,rightSidewalk:dot>=0?right:left,skip,name};streetHintMap.set(key,meta);return meta;
+  }
+  return {};
+}
+function clearStreetSurfaces(){if(!streetSurfaces)return;for(const mesh of Object.values(streetSurfaces.meshes)){gl.deleteVertexArray(mesh.vao);gl.deleteBuffer(mesh.vb);gl.deleteBuffer(mesh.ib);}streetSurfaces=null;}
+function uploadStreetMesh(data){const vao=gl.createVertexArray(),vb=gl.createBuffer(),ib=gl.createBuffer();gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,data.pos,gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,data.idx,gl.STATIC_DRAW);gl.bindVertexArray(null);return {vao,vb,ib,count:data.idx.length};}
+function uploadTrafficTexture(traffic,bounds,detail,previous){
+  const size=Math.min(4096,gl.getParameter(gl.MAX_TEXTURE_SIZE)),raster=document.createElement('canvas');raster.width=size;raster.height=size;
+  const result=TrafficRaster.draw(raster.getContext('2d',{alpha:false}),traffic,{bounds,width:size,height:size,detail,sidewalkWidth:2.4});
+  const texture=previous?.texture||gl.createTexture();gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,texture);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,raster);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.generateMipmap(gl.TEXTURE_2D);gl.activeTexture(gl.TEXTURE0);
+  const [x0,y0,x1,y1]=bounds,map=[1/(x1-x0),-x0/(x1-x0),-1/(y1-y0),y1/(y1-y0)];
+  raster.width=1;raster.height=1;
+  return {texture,map,bounds,stats:result.stats,size};
+}
+function prepareStreetSurfaces(cam){
+  if(state.sceneStyle!=='context'||!state.layers.roads)return;
+  prepareStreetQueries();
+  if(!assets.traffic&&assets.streetNetwork)assets.traffic=TrafficNetwork.create(assets.streetNetwork,{groundAt:streetSamplers.surface,terrainAt:streetSamplers.terrain});
+  const traffic=assets.traffic;if(!traffic)return;
+  const bounds=assets.streetNetwork.bounds_model_m,P=proposalShown()?proposalParts():[],sceneKey=JSON.stringify([state.removed,state.cleared,state.showExisting,proposalShown(),P.map(p=>[partFootprint(p),p.box])]);
+  const groundAt=streetSamplers.surface;
+  if(!trafficTextures.global)trafficTextures.global=uploadTrafficTexture(traffic,bounds,false,null);
+  const deckRoads=traffic.deckRoads||new Float32Array();
+  const occupied=(x,y,z,proposed)=>{
+    if(proposed&&P.some(p=>p.box[2]<z+1&&p.box[5]>z+0.2&&SiteGeometry.pointInPolygon([x,y],partFootprint(p))))return true;
+    for(const b of streetBoxQuery(x,y)){if((proposed&&isRemoved(b.index,b.ext)&&!state.showExisting)||b.box[2]>z+1)continue;const roof=roofZAt(b.index,b.ext,x,y);if(roof&&roof.z>z+0.4)return true;}return false;
+  };
+  if(!globalTrafficSurfaces){
+    const geometry=Streetscape.generate({roads:[deckRoads],center:[0,0],bounds,groundAt,isOccupied:(x,y,z)=>occupied(x,y,z,false),maxSegments:8000,detailRadius:0,sidewalkWidth:0,terrainTolerance:0.02,segmentOptions:traffic.segmentOptions});
+    globalTrafficSurfaces={mesh:uploadStreetMesh(geometry.asphalt),stats:{...geometry.stats,groundMode:'terrain-material',groundSegments:trafficTextures.global.stats.roadSegments,bounds,coverageComplete:true}};globalTrafficKey='static';
+  }
+  const anchor=state.mode==='observer'&&state.observer?[state.observer.x,state.observer.y]:cam.target||state.cams.overview.target,center=anchor.slice(0,2).map(v=>Math.round(v/200)*200),detailBounds=[center[0]-600,center[1]-600,center[0]+600,center[1]+600],key=JSON.stringify([center,sceneKey]);
+  if(key===streetSurfaceKey&&streetSurfaces)return;
+  if(!trafficTextures.local||trafficTextures.local.bounds.some((v,i)=>v!==detailBounds[i]))trafficTextures.local=uploadTrafficTexture(traffic,detailBounds,true,trafficTextures.local);
+  clearStreetSurfaces();
+  const geometry=Streetscape.generate({roads:[deckRoads],center,radius:650,detailCenter:center,detailRadius:600,groundAt,isOccupied:(x,y,z)=>occupied(x,y,z,true),maxSegments:8000,roadWidth:8,sidewalkWidth:2.4,terrainTolerance:0.02,segmentOptions:traffic.segmentOptions});
+  const meshes={};for(const key of ['asphalt','sidewalks','markings'])meshes[key]=uploadStreetMesh(geometry[key]);
+  const names=new Map();for(const row of assets.streetHints?.segments||[]){const [ax,ay,bx,by,,,,,skip,name]=row;if(!name||skip||Math.hypot(bx-ax,by-ay)<25)continue;const x=(ax+bx)/2,y=(ay+by)/2,d=Math.hypot(x-center[0],y-center[1]);if(d>500||(names.has(name)&&names.get(name).d<d))continue;const z=groundAt(x,y);if(z!==null)names.set(name,{name,d,p:[x,y,z+0.4]});}
+  streetSurfaces={meshes,stats:{...geometry.stats,segments:trafficTextures.local.stats.roadSegments,sidewalkPatches:trafficTextures.local.stats.sidewalkSegments,markingPatches:trafficTextures.local.stats.markingSegments,groundMode:'terrain-material'},center,labels:[...names.values()].sort((a,b)=>a.d-b.d).slice(0,5)};streetSurfaceKey=key;
+}
+function drawStreetSurfaces(cam,o){
+  if(state.sceneStyle!=='context'||!state.layers.roads)return;
+  if(!globalTrafficSurfaces)return;setCommon(PM,cam);gl.uniform1f(PM.u.uSurface,0);gl.uniform1f(PM.u.uStudyActive,0);
+  gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(-2,-2);
+  const colors={asphalt:[0.23,0.25,0.26,1],sidewalks:[0.68,0.67,0.62,1],markings:[0.88,0.87,0.76,1]},draw=(mesh,color)=>{if(!mesh?.count)return;gl.uniform4fv(PM.u.uColor,color);gl.bindVertexArray(mesh.vao);gl.drawElements(gl.TRIANGLES,mesh.count,gl.UNSIGNED_INT,0);};
+  draw(globalTrafficSurfaces.mesh,colors.asphalt);
+  if(!o.plan)for(const key of ['asphalt','sidewalks','markings'])draw(streetSurfaces?.meshes[key],colors[key]);
+  gl.bindVertexArray(null);gl.disable(gl.POLYGON_OFFSET_FILL);
+}
+
 function drawScene(cam, opts) {
   const o = Object.assign({ lines: true, markers: true, wedge: true, cones: true, backdrop: false }, opts || {});
+  const observerView = state.mode === 'observer' && !o.plan;
+  if(!o.plan){ prepareStreetSurfaces(cam); prepareContextShadow(cam); drawContextSky(cam); }
   gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.BLEND); gl.depthMask(true); setCommon(PM, cam);
   if (o.backdrop && state.showBackdrop && assets.meshes.backdrop) { gl.uniform1f(PM.u.uFogFar, 42000); drawStatic(PM, 'backdrop', C.backdrop); gl.uniform1f(PM.u.uFogFar, cam.fogFar); }
   if (assets.meshes.ext_terrain) { drawStatic(PM, 'ext_terrain', state.layers.sources ? C.extTerrain : C.terrain); drawStatic(PM, 'ext_water', state.layers.sources ? C.extWater : C.water); drawStatic(PM, 'ext_parks', state.layers.sources ? C.extParks : C.parks); }
   drawStatic(PM, 'ext_buildings', state.layers.sources ? C.extBuildings : C.buildings);
   drawStatic(PM, 'terrain', C.terrain); drawStatic(PM, 'water', C.water, [0, 0, 0.05]); drawStatic(PM, 'parks', C.parks, assets.unified ? null : [0, 0, 0.15]); drawStatic(PM, 'buildings', C.buildings);
+  drawStreetSurfaces(cam,o);
   if (state.selected !== null && assets.ready && (!isRemoved(state.selected, !!state.selectedExt) || state.showExisting)) { const cols = (state.selectedExt ? assets.extIndex : assets.index).columns; gl.uniform1f(PM.u.uSurface, 7); gl.uniform4fv(PM.u.uColor, C.buildingSel); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-2, -2);
     gl.bindVertexArray(assets.meshes[state.selectedExt ? 'ext_buildings' : 'buildings'].vao); gl.drawElements(gl.TRIANGLES, cols.index_count[state.selected], gl.UNSIGNED_INT, cols.index_offset[state.selected] * 4); gl.bindVertexArray(null); gl.disable(gl.POLYGON_OFFSET_FILL); }
   if (state.multiSel.length && assets.ready) { gl.uniform1f(PM.u.uSurface, 7); gl.uniform4fv(PM.u.uColor, C.buildingSel); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-2, -2);
@@ -448,25 +762,26 @@ function drawScene(cam, opts) {
     dynDraw(PM, gl.TRIANGLES, ...Object.values(boxMesh([eye[0] - 0.5 * s, eye[1] - 0.5 * s, eye[2] - 0.2 * s, eye[0] + 0.5 * s, eye[1] + 0.5 * s, eye[2] + 0.5 * s])), C.observer); }
   const selCone = selectedCone();
   if (selCone && selCone.origin_inside_model_extent && o.markers) { const [ox, oy] = selCone.origin_model_xy; const gz = terrainZAt(ox, oy); if (gz !== null) dynDraw(PM, gl.TRIANGLES, ...Object.values(boxMesh([ox - 1.2, oy - 1.2, gz, ox + 1.2, oy + 1.2, gz + 3])), C.origin); }
-  // lines
+  // Keep mapped linework and analysis guides on the map, clear of the eye-level scene.
   setCommon(PL, cam);
-  if (o.lines) { if (state.layers.roads) drawStatic(PL, 'roads', C.roads, assets.unified ? null : [0, 0, 0.5]); drawStatic(PL, 'shoreline', C.shoreline, [0, 0, 0.3]); if (state.layers.roads && assets.meshes.ext_roads) drawStatic(PL, 'ext_roads', C.extRoads); if (state.layers.extent && assets.extentLines) dynDraw(PL, gl.LINES, assets.extentLines, null, C.extent); if (state.layers.extent && assets.extExtentLines) dynDraw(PL, gl.LINES, assets.extExtentLines, null, C.extExtent); }
-  drawStudyBoundary(cam);
-  if (P) { for (const part of P.parts) dynDraw(PL, gl.LINES, part.edges || boxEdges(part.box), null, C.proposalEdge); if (state.site) { const sx = state.site.x, sy = state.site.y, sz = state.site.z + 0.5, k = 4; dynDraw(PL, gl.LINES, new Float32Array([sx - k, sy, sz, sx + k, sy, sz, sx, sy - k, sz, sx, sy + k, sz]), null, C.siteEdge); } }
-  else if (state.site) { const sx = state.site.x, sy = state.site.y, sz = state.site.z + 0.5, k = 6; dynDraw(PL, gl.LINES, new Float32Array([sx - k, sy, sz, sx + k, sy, sz, sx, sy - k, sz, sx, sy + k, sz]), null, C.siteEdge); }
-  if (eye && o.markers) { const tgt = proposalCentre(); const far = tgt ? tgt : V.add(eye, V.scale(observerForward(), 60)); dynDraw(PL, gl.LINES, new Float32Array([...eye, ...far]), null, C.ray);
+  if (o.lines && !observerView) { if (state.layers.roads) drawStatic(PL, assets.meshes.street_network ? 'street_network' : 'roads', C.roads, assets.unified ? null : [0, 0, 0.5]); drawStatic(PL, 'shoreline', C.shoreline, [0, 0, 0.3]); if (state.layers.roads && !assets.meshes.street_network && assets.meshes.ext_roads) drawStatic(PL, 'ext_roads', C.extRoads); if (state.layers.extent && assets.extentLines) dynDraw(PL, gl.LINES, assets.extentLines, null, C.extent); if (state.layers.extent && assets.extExtentLines) dynDraw(PL, gl.LINES, assets.extExtentLines, null, C.extExtent); }
+  if (!observerView) drawStudyBoundary(cam);
+  if (P) { for (const part of P.parts) dynDraw(PL, gl.LINES, part.edges || boxEdges(part.box), null, C.proposalEdge); if (state.site && !observerView) { const sx = state.site.x, sy = state.site.y, sz = state.site.z + 0.5, k = 4; dynDraw(PL, gl.LINES, new Float32Array([sx - k, sy, sz, sx + k, sy, sz, sx, sy - k, sz, sx, sy + k, sz]), null, C.siteEdge); } }
+  else if (state.site && !observerView) { const sx = state.site.x, sy = state.site.y, sz = state.site.z + 0.5, k = 6; dynDraw(PL, gl.LINES, new Float32Array([sx - k, sy, sz, sx + k, sy, sz, sx, sy - k, sz, sx, sy + k, sz]), null, C.siteEdge); }
+  if (!observerView && eye && o.markers) { const tgt = proposalCentre(); const far = tgt ? tgt : V.add(eye, V.scale(observerForward(), 60)); dynDraw(PL, gl.LINES, new Float32Array([...eye, ...far]), null, C.ray);
     if (state.mode !== 'observer') dynDraw(PL, gl.LINES, new Float32Array([eye[0], eye[1], eye[2], eye[0], eye[1], eye[2] + 40]), null, C.observer); }
-  if (o.cones && assets.cones && assets.cones.available) for (const c of assets.cones.cones) { if (c === selCone) { const g = coneGeometry(c); dynDraw(PL, gl.LINES, g.ground, null, C.coneEdgeSel); if (state.mode !== 'observer') dynDraw(PL, gl.LINES, g.top, null, C.coneEdgeSel); } else if (state.showAllCones) dynDraw(PL, gl.LINES, coneGeometry(c).ground, null, C.coneEdge); }
-  if (selCone && selCone.origin_inside_model_extent && o.markers) { const [ox, oy] = selCone.origin_model_xy; const gz = terrainZAt(ox, oy) || 0; dynDraw(PL, gl.LINES, new Float32Array([ox, oy, gz, ox, oy, gz + 70]), null, C.origin); }
+  if (!observerView && o.cones && assets.cones && assets.cones.available) for (const c of assets.cones.cones) { if (c === selCone) { const g = coneGeometry(c); dynDraw(PL, gl.LINES, g.ground, null, C.coneEdgeSel); if (state.mode !== 'observer') dynDraw(PL, gl.LINES, g.top, null, C.coneEdgeSel); } else if (state.showAllCones) dynDraw(PL, gl.LINES, coneGeometry(c).ground, null, C.coneEdge); }
+  if (!observerView && selCone && selCone.origin_inside_model_extent && o.markers) { const [ox, oy] = selCone.origin_model_xy; const gz = terrainZAt(ox, oy) || 0; dynDraw(PL, gl.LINES, new Float32Array([ox, oy, gz, ox, oy, gz + 70]), null, C.origin); }
   // transparent geometry last
   gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); gl.useProgram(PM.p); gl.uniform1f(PM.u.uLightMix, 0.0);
   // Filled plan-corridor walls obscure silhouettes in close and eye-level views.
   if (o.cones && selCone && state.mode === 'overview' && !o.plan) { const g = coneGeometry(selCone); dynDraw(PM, gl.TRIANGLES, g.wall, g.wallIdx, C.coneSel); }
   const area = evaluationArea();
-  if (area && !state.check.unknown && Number.isFinite(state.check.bz)) { const z = state.check.bz; const m = 4;
+  if (!observerView && area && !state.check.unknown && Number.isFinite(state.check.bz)) { const z = state.check.bz; const m = 4;
     dynDraw(PM, gl.TRIANGLES, new Float32Array([area.x_min - m, area.y_min - m, z, area.x_max + m, area.y_min - m, z, area.x_max + m, area.y_max + m, z, area.x_min - m, area.y_max + m, z]), new Uint32Array([0, 1, 2, 0, 2, 3]), C.plane);
     setCommon(PL, cam); dynDraw(PL, gl.LINES, new Float32Array([area.x_min - m, area.y_min - m, z, area.x_max + m, area.y_min - m, z, area.x_max + m, area.y_min - m, z, area.x_max + m, area.y_max + m, z, area.x_max + m, area.y_max + m, z, area.x_min - m, area.y_max + m, z, area.x_min - m, area.y_max + m, z, area.x_min - m, area.y_min - m, z]), null, C.planeEdge); gl.useProgram(PM.p); }
   if (eye && o.wedge && state.wedge && state.mode !== 'observer') { const w = wedgeGeometry(cam.aspect); if (w) { gl.useProgram(PM.p); dynDraw(PM, gl.TRIANGLES, w.pos, w.idx, C.wedge); setCommon(PL, cam); dynDraw(PL, gl.LINES, w.edges, null, C.wedgeEdge); } }
+  if (!observerView && o.cones) drawConeCeiling(cam);
   gl.depthMask(true); gl.disable(gl.BLEND);
 }
 function wedgeGeometry(aspect) { const eye = observerEye(); if (!eye) return null; const f = observerForward(); const tgt = proposalCentre(); const L = tgt ? V.len(V.sub(tgt, eye)) * 1.1 : 120;
@@ -524,7 +839,7 @@ function insetContext() {
 function drawInset(W, H, context) { const dpr = canvas.width / canvas.getBoundingClientRect().width; const fr = $('inset-frame').getBoundingClientRect(), cr = canvas.getBoundingClientRect();
   if (fr.width <= 24 || fr.height <= 24) return;
   const iw = Math.round(fr.width * dpr), ih = Math.round(fr.height * dpr), ix = Math.round((fr.left - cr.left) * dpr), iy = Math.round((cr.bottom - fr.bottom) * dpr);
-  gl.enable(gl.SCISSOR_TEST); gl.scissor(ix, iy, iw, ih); gl.viewport(ix, iy, iw, ih); gl.clearColor(...(state.sceneStyle==='night'?[...BG,1]:[0.96,0.95,0.92,1])); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.SCISSOR_TEST); gl.scissor(ix, iy, iw, ih); gl.viewport(ix, iy, iw, ih); gl.clearColor(...(state.sceneStyle!=='collage'?[...BG,1]:[0.96,0.95,0.92,1])); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   const { anchor, target, observing, preview } = context;
   const bbox = assets.manifest.extent_m.scene_bbox;
   const bounds = assets.unified?.target_extent_model_m || assets.extension?.target_extent_model_m || [bbox[0], bbox[1], bbox[3], bbox[4]];
@@ -575,6 +890,8 @@ function updateLabels(cam) { const rect = canvas.getBoundingClientRect(); const 
     if (sc.origin_inside_model_extent && state.observerSource !== 'origin') items.push({ key: 'origin', text: `Origin ${sc.view_number} (open-data apex; by-law authoritative)`, p: [sc.origin_model_xy[0], sc.origin_model_xy[1], (terrainZAt(sc.origin_model_xy[0], sc.origin_model_xy[1]) || 0) + 75], cls: 'origin' }); }
   // zoomed out, the proposal marker carries the label; the ceiling tag would sit on top of it
   const area = evaluationArea(); if (area && !state.check.unknown && Number.isFinite(state.check.bz) && state.mode !== 'observer' && !planMarkers.proposal) items.push({ key: 'plane', text: `Study ceiling · ${fmt(state.check.bz-(P?.base || 0))} m above base`, p: [area.x_max, area.y_min, state.check.bz + 2], cls: 'plane' });
+  const cr=coneCeilingResult(); if(coneStudy.show && cr.limitingPoint && Number.isFinite(coneStudy.datumOffsetM) && state.mode !== 'observer') items.push({key:'cone-ceiling',text:`Entered plane · view ${cr.limitingView} · ${fmt(cr.ceilingElevationM)} m (${coneStudy.datumName})${cr.status==='partial'?' · incomplete':''}`,p:[...cr.limitingPoint,cr.ceilingElevationM-coneStudy.datumOffsetM+2],cls:'plane'});
+  if(state.sceneStyle==='context' && state.layers.roads && state.mode!=='observer') for(const label of streetSurfaces?.labels||[]) items.push({key:'street-name-'+label.name,text:label.name,p:label.p,cls:'street'});
   const seen = new Set(), placed = []; items.sort((a,b)=>Number(!a.cls || a.cls==='ext')-Number(!b.cls || b.cls==='ext'));
   for (const it of items) { const q = it.screen ? [it.screen[0], it.screen[1], 0, 1] : project(cam.vp, it.p); const n = labelNode(it.key, it.cls); seen.add(it.key); if (q[3] <= 0 || q[0] < -1.05 || q[0] > 1.05 || q[1] < -1.05 || q[1] > 1.05) { n.style.display = 'none'; continue; }
     const px=(q[0]+1)/2*rect.width, py=(1-q[1])/2*rect.height, half=it.text.length*2.9+8;
@@ -607,6 +924,7 @@ function handleClick(cx, cy, button) { if (!assets.ready || !lastCam || button !
   if (state.mode === 'observer') { setHint('In the observer view, drag to look around and use the wheel to change the field of view. Switch to the city overview to move the site or the observer.'); return; }
   const ray = rayFromClient(cx, cy, lastCam); if (!ray) return; applyPick(pickRay(ray.o, ray.d)); }
 function applyPick(hit) {
+  if (state.tool === 'street') { if (hit.type === 'terrain' || hit.type === 'building') placeStreetObserver(hit.point[0],hit.point[1]); else setHint('Choose a mapped street over land. Water and missing model terrain cannot anchor a street viewpoint.'); return; }
   if (state.tool === 'boundary') { if (hit.type === 'terrain' || hit.type === 'building') addBoundaryPoint(hit.point[0], hit.point[1]); else setHint('Choose a point over modelled land. Water and missing terrain cannot anchor a study boundary.'); return; }
   if (hit.type === 'none') { setHint(state.tool === 'rooftop' ? 'No modelled roof under the cursor. Zoom in and choose a visible building roof.' : 'Nothing under the cursor. The placement surface is the active terrain; the outline on the ground marks the model coverage.'); return; }
   if (hit.type === 'water') { setHint(state.tool === 'rooftop' ? 'That is water, not a modelled roof.' : 'That is the water surface. Sites and observers are placed on the active terrain, not on water.'); return; }
@@ -625,13 +943,100 @@ function applyPick(hit) {
   const p = hit.point;
   if (state.tool === 'replace' || state.tool === 'multi') { state.selected = null; refreshPanels(); requestRender(); setHint(state.tool === 'multi' ? 'That is open ground. Click existing buildings to add them to the group.' : 'That is open ground. Click an existing building to replace it.'); return; }
   if (state.tool === 'aim') { if (placeObserver(p[0], p[1], 'exploratory')) endAim(false); return; }
-  if (state.tool === 'site') { if (placeSite(p[0], p[1])) { state.flow.alt.place = 'spot'; refreshFlowUI(); setHint('Site placed. Click elsewhere to move it, or proceed to Build.'); } }
+  if (state.tool === 'site') {
+    if (landZAt(p[0],p[1]) === null) { setHint('That point is water or outside modelled land. Choose another location.'); return; }
+    requestSiteConfirmation(p[0],p[1]);
+  }
   else if (state.tool === 'observer') { if (placeObserver(p[0], p[1], 'exploratory')) setHint(`Exploratory observer placed at x ${fmt(p[0])}, y ${fmt(p[1])} m (terrain z ${fmt(p[2])} m). Use “Look toward proposal”.`); }
   else if (state.tool === 'rooftop') setHint('Choose a modelled roof surface. Use the ground Observer tool for terrain locations.');
   else { state.selected = null; refreshPanels(); requestRender(); setHint(`Terrain at x ${fmt(p[0])}, y ${fmt(p[1])}, z ${fmt(p[2])} m (model-relative, unverified).`); }
 }
+let pendingSite = null;
+function requestSiteConfirmation(x,y) {
+  pendingSite={x,y};
+  $('site-confirm-title').textContent=state.site ? 'Move your building here?' : 'Place your building here?';
+  $('site-confirm-description').textContent=state.site ? 'Confirm to move your study site to the location you clicked. Cancel keeps your current site.' : 'Confirm to set the location you clicked as your study site, or cancel to choose another spot.';
+  $('site-placement-dialog').showModal(); $('btn-confirm-site').focus();
+}
+function confirmSitePlacement() {
+  const point=pendingSite; if(!point) return false;
+  pendingSite=null; $('site-placement-dialog').close();
+  if(!placeSite(point.x,point.y)) return false;
+  state.flow.alt.place='spot'; refreshFlowUI();
+  setHint('Site confirmed. Click elsewhere to review a new location, or proceed to Build.'); return true;
+}
+function cancelSitePlacement() {
+  pendingSite=null; $('site-placement-dialog').close();
+  setHint('Placement cancelled. Click another location on the plan when you are ready.'); $('gl').focus();
+}
+$('btn-confirm-site').addEventListener('click',confirmSitePlacement);
+$('btn-cancel-site-placement').addEventListener('click',cancelSitePlacement);
+$('site-placement-dialog').addEventListener('cancel',e=>{e.preventDefault();cancelSitePlacement();});
+
 function placeSite(x, y, keepRemovals = false) { const z = landZAt(x, y); if (z === null) { setHint('That point is water or outside modelled land. The site was not placed.'); return false; } if (!keepRemovals) { state.removed=[]; state.showExisting=false; } state.site = { x, y, z }; state.boundary = []; state.selected = null; state.check.result = null; refreshPanels(); requestRender(); writeHash(); return true; }
 function placeObserver(x, y, source) { const g = groundZAt(x, y); if (!g) { setHint('That point has neither terrain nor water in the model; the observer was not placed.'); return false; } state.observer = { x, y, z: g.z, ground: g.source }; state.observerSource = source || 'exploratory'; if (source !== 'origin') state.viewpointObserver = null; if (proposalBox()) aimAtProposal(); refreshPanels(); requestRender(); writeHash(); return true; }
+let observerMoveMessage='';
+function moveObserver(key,distance=1){
+  if(!assets.ready||state.mode!=='observer'||!state.observer)return false;
+  prepareStreetQueries();const roof=state.observerSource==='rooftop'?state.observer.building:null;
+  const surfaceAt=(x,y)=>roof?roofZAt(roof.index,roof.source==='extension',x,y)?.z??null:streetSamplers.land(x,y);
+  const parts=proposalShown()?proposalParts():[];
+  const canOccupy=(x,y,z)=>{
+    for(const [dx,dy] of [[0,0],[0.3,0],[-0.3,0],[0,0.3],[0,-0.3]]){
+      const px=x+dx,py=y+dy,edge=surfaceAt(px,py);if(edge===null||Math.abs(edge-z)>0.8)return false;
+      if(parts.some(p=>p.box[2]<z+state.eyeH+0.2&&p.box[5]>z+0.2&&SiteGeometry.pointInPolygon([px,py],partFootprint(p))))return false;
+      for(const b of streetBoxQuery(px,py)){
+        if((isRemoved(b.index,b.ext)&&!state.showExisting)||(roof&&b.index===roof.index&&b.ext===(roof.source==='extension'))||b.box[2]>z+state.eyeH+0.2)continue;
+        const top=roofZAt(b.index,b.ext,px,py);if(top&&top.z>z+0.4)return false;
+      }
+    }return true;
+  };
+  const result=ObserverNavigation.move({position:state.observer,yaw:state.cams.observer.yaw,key,distance,surfaceAt,canOccupy});
+  if(result.moved){
+    state.observer=result.position;state.viewpointObserver=null;
+    if(state.observerSource==='origin'){state.observerSource='exploratory';state.flow.methods.view='drag';}
+    else if(state.observerSource==='street'&&!StreetGeometry.nearest(state.observer.x,state.observer.y,streetRoadArrays(),20)){state.observerSource='exploratory';state.flow.methods.view='drag';}
+    refreshPanels();requestRender();writeHash();
+  }
+  const message=result.blocked?(roof?'Roof edge or obstruction reached. Choose another rooftop to move farther.':'Path blocked. Try sidestepping or choose another viewpoint.'):'Viewpoint moved. Use Face my building to centre the proposal again.';
+  if(message!==observerMoveMessage){observerMoveMessage=message;setHint(message);}
+  return result.moved;
+}
+function lookObserver(key,factor=1){
+  if(state.mode!=='observer'||!state.observer)return false;
+  const k=key.toLowerCase(),o=state.cams.observer;
+  if(k==='j')o.yaw+=0.045*factor;else if(k==='l')o.yaw-=0.045*factor;
+  else if(k==='i')o.pitch=clamp(o.pitch+0.035*factor,-1.48,1.48);else if(k==='k')o.pitch=clamp(o.pitch-0.035*factor,-1.48,1.48);else return false;
+  requestRender();writeHash();return true;
+}
+function streetRoadArrays() { return assets.streetRoads?[assets.streetRoads]:[assets.raw.roads?.pos,assets.raw.ext_roads?.pos].filter(Boolean); }
+function usableStreetPoint(point) {
+  prepareStreetQueries();const z=streetSamplers.land(point.x,point.y);if(z===null)return false;
+  for(const b of streetBoxQuery(point.x,point.y)){if((isRemoved(b.index,b.ext)&&!state.showExisting)||b.box[2]>z+2)continue;const roof=roofZAt(b.index,b.ext,point.x,point.y);if(roof&&roof.z>z+0.8)return false;}
+  return !proposalShown()||!proposalParts().some(p=>p.box[2]<z+2&&SiteGeometry.pointInPolygon([point.x,point.y],partFootprint(p)));
+}
+function placeStreetObserver(x,y) {
+  const point=StreetGeometry.nearest(x,y,streetRoadArrays(),40,usableStreetPoint);
+  if(!point){$('street-status').textContent='No usable mapped street within 40 m. Zoom in and click a road; this location may be water, covered by a building, or outside the street data.';setHint($('street-status').textContent);return false;}
+  const z=landZAt(point.x,point.y); if(z===null)return false;
+  state.observer={x:point.x,y:point.y,z,ground:'terrain'};state.observerSource='street';state.viewpointObserver=null;state.eyeH=1.6;$('eye-h').value=state.eyeH;
+  const P=proposalBox(); if(P){aimAtProposal();const eye=observerEye(),distances=proposalParts().flatMap(p=>partFootprint(p).map(q=>Math.hypot(q[0]-point.x,q[1]-point.y))),near=Math.max(0.5,Math.min(...distances)),bottom=Math.atan2(P.base-eye[2],near),top=Math.atan2(P.top-eye[2],near);state.cams.observer.pitch=(bottom+top)/2;state.fov=clamp(Math.max(60,(top-bottom)*180/Math.PI*1.45),20,105);$('fov').value=Math.round(state.fov);}
+  setMode('observer');revealMap();refreshPanels();requestRender();writeHash();
+  $('street-status').textContent=`Street viewpoint set${point.distance>0.5?' · snapped '+fmt(point.distance)+' m to the mapped road':''}. Eye ${fmt(state.eyeH)} m above approximate ground.`;
+  setHint('Viewing your proposal from the street. Drag to look around, scroll to adjust the field of view, or pick another street.');return true;
+}
+let streetChoicesKey='',streetViewChoices=[];
+function refreshStreetChoices(){
+  if(!assets.ready || state.flow.methods.view!=='street')return;
+  const P=proposalBox(),list=$('street-nearby'); if(!P){list.replaceChildren();streetViewChoices=[];return;}
+  const key=JSON.stringify([P.box,state.removed,state.cleared,state.showExisting]);if(key===streetChoicesKey)return;streetChoicesKey=key;list.replaceChildren();
+  const seen=StreetGeometry.nearestCandidates(P.cx,P.cy,streetRoadArrays(),400,usableStreetPoint,{limit:6,minSeparation:50,minDistance:40});streetViewChoices=seen;
+  for(const point of seen){
+    const dx=point.x-P.cx,dy=point.y-P.cy,dir=['N','NE','E','SE','S','SW','W','NW'][(Math.round(Math.atan2(dx,dy)/(Math.PI/4))+8)%8];
+    const button=document.createElement('button');button.type='button';button.className='btn';button.textContent=`${Math.round(Math.hypot(dx,dy))} m ${dir}`;button.addEventListener('click',()=>placeStreetObserver(point.x,point.y));list.appendChild(button);
+  }
+  if(!seen.length)list.textContent='No nearby street positions found. Choose a mapped road on the plan.';
+}
 function placeRoofObserver(index, ext, x, y) {
   const c = (ext ? assets.extIndex : assets.index)?.columns;
   if (!c || !Number.isInteger(index) || index < 0 || index >= c.index_offset.length || (isRemoved(index, ext) && !state.showExisting)) { setHint('That building is unavailable in the proposed scene. Restore it or compare existing buildings first.'); return false; }
@@ -654,12 +1059,13 @@ function viewFromSelectedRoof() {
   if (!placeRoofObserver(state.selected, !!state.selectedExt, roof.x, roof.y)) return false;
   setMode('observer'); revealMap(); setHint('You’re viewing from a roof. Drag to look around, or choose another roof.'); return true;
 }
+let nearbyRoofChoices = [];
 function refreshNearbyRooftops() {
   const list = $('rooftop-nearby'); if (!list || !assets.ready) return;
   const centre = state.site || (state.observerSource === 'rooftop' ? state.observer : null);
-  if (!centre) { delete list.dataset.key; list.replaceChildren(); return; }
+  if (!centre) { nearbyRoofChoices = []; delete list.dataset.key; list.replaceChildren(); return; }
   const key = `${centre.x.toFixed(1)},${centre.y.toFixed(1)},${[...state.removed, ...state.cleared].map(q => (q.ext ? 'e' : 's') + q.id).join(';')},${state.showExisting},${state.observer?.building ? state.observer.building.source + state.observer.building.index : ''}`; // 6: auto-demolished roofs are not offered
-  if (list.dataset.key === key) return; list.dataset.key = key;
+  if (list.dataset.key === key) return; list.dataset.key = key; nearbyRoofChoices = [];
   const nearby = [];
   for (const ext of [false, true]) { const c = (ext ? assets.extIndex : assets.index)?.columns; if (!c) continue;
     for (let i = 0; i < c.bbox.length; i++) { if (isRemoved(i, ext) && !state.showExisting) continue;
@@ -670,6 +1076,7 @@ function refreshNearbyRooftops() {
   nearby.sort((a, b) => a.distance - b.distance || b.top - a.top);
   const fragment = document.createDocumentFragment(); let count = 0, shownChosen = false;
   for (const q of nearby) { const roof = preferredRoofPoint(q.i, q.ext); if (!roof) continue;
+    nearbyRoofChoices.push({ index: q.i, ext: q.ext, x: roof.x, y: roof.y });
     const button = document.createElement('button'); button.type = 'button'; button.className = 'btn';
     const dx = roof.x - centre.x, dy = roof.y - centre.y, compass = ['E','NE','N','NW','W','SW','S','SE'][Math.round(((Math.atan2(dy, dx) + 2 * Math.PI) % (2 * Math.PI)) / (Math.PI / 4)) % 8];
     const ground = terrainZAt(roof.x, roof.y), height = ground === null ? null : Math.max(0, roof.z - ground);
@@ -680,6 +1087,7 @@ function refreshNearbyRooftops() {
   }
   // a roof chosen farther away than the nearest six still heads the list, so the current choice is always visible
   if (!shownChosen && state.observerSource === 'rooftop' && state.observer && centre !== state.observer) { const o = state.observer, dx = o.x - centre.x, dy = o.y - centre.y, compass = ['E','NE','N','NW','W','SW','S','SE'][Math.round(((Math.atan2(dy, dx) + 2 * Math.PI) % (2 * Math.PI)) / (Math.PI / 4)) % 8], g = terrainZAt(o.x, o.y);
+    nearbyRoofChoices.unshift({ index: o.building.index, ext: o.building.source === 'extension', x: o.x, y: o.y });
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn roof-chosen'; b.setAttribute('aria-pressed', 'true'); b.textContent = `Selected · ${Math.round(Math.hypot(dx, dy))} m ${compass} · roof${g === null ? '' : ' about ' + Math.round(Math.max(0, o.z - g)) + ' m high'}`; b.addEventListener('click', () => setMode('observer')); fragment.insertBefore(b, fragment.firstChild); count++; }
   if (!count) { const help = document.createElement('p'); help.className = 'small muted'; help.textContent = 'No modelled roofs within 600 m of this site point.'; fragment.appendChild(help); }
   const hadFocus = list.contains(document.activeElement); list.replaceChildren(fragment); if (hadFocus) list.querySelector('[aria-pressed="true"]')?.focus();
@@ -709,7 +1117,8 @@ function setTool(t) { if (t !== 'boundary' && state.drawing) { state.drawing = n
 function refreshCaption() { const cap = $('view-caption'); if (!cap) return; const m = state.mode, t = state.tool, red = !state.check.unknown && state.check.result?.overall_result === 'INTERSECTS' && proposalShown() ? ' Red marks the part above your study ceiling, not a City limit.' : '';
   const free = state.flow.stage === 'view' || !!selectedCone() || !!state.observer || m === 'inspect';
   const enter = state.flow.methods.view === 'cone' ? ' Choose “View from here” to enter the selected viewpoint.' : '';
-  if (m === 'observer') { cap.textContent = `${state.observerSource === 'origin' ? 'Protected viewpoint ' + state.viewpoint + ' · ' + (selectedCone()?.name || '') : state.observerSource === 'rooftop' ? 'From a rooftop (height approximate)' : 'From the ground'}, eye ${fmt(state.eyeH)} m up · drag to look around · scroll to widen or narrow · not an assessment.${red}`; return; }
+  if (m === 'observer') { cap.textContent = `${state.observerSource === 'origin' ? 'Protected viewpoint ' + state.viewpoint + ' · ' + (selectedCone()?.name || '') : state.observerSource === 'rooftop' ? 'From a rooftop (height approximate)' : state.observerSource === 'street' ? 'From the street (modelled)' : 'From the ground'}, eye ${fmt(state.eyeH)} m up · ↑/↓ forward/back · ←/→ sidestep · Shift faster · drag to look.${red}`; return; }
+  if(t==='street'){cap.textContent='Street view · click a mapped road to face your proposal · viewpoint snaps within 40 m · drag to pan · scroll to zoom.';return;}
   if (m === 'inspect') { cap.textContent = 'Free inspection · orbit your building · scroll to zoom.' + enter + red; return; }
   const act = { site: state.site ? 'click open ground to move your site' : 'click open ground to place your site', boundary: 'click each corner of your site; Enter finishes, Esc cancels', rooftop: 'click a roof to stand on it', replace: 'click a building to select it', multi: 'click buildings to add or remove them', aim: 'press a spot to stand there, drag toward what you want to see, release' }[t];
   const nav = t === 'aim' ? 'right-drag to pan' : m === 'plan' ? 'drag to pan' : 'drag to orbit · right-drag to pan';
@@ -736,6 +1145,39 @@ function isRemoved(index, ext) { return state.removed.some(r => r.index === inde
 function isReplaced(index, ext) { return state.removed.some(r => r.index === index && r.ext === ext); }
 // Existing buildings whose modelled roof lies under the proposal footprint (shrunk 0.5 m, so shared walls do not count), or whose corners fall inside it.
 let clearedKey = '';
+let buildingAssemblyGraph = null;
+function getBuildingAssemblyGraph() {
+  if (!buildingAssemblyGraph) {
+    const records = [];
+    for (const ext of [false, true]) {
+      const c = (ext ? assets.extIndex : assets.index)?.columns, mesh = assets.raw[ext ? 'ext_buildings' : 'buildings'];
+      if (!c || !mesh) continue;
+      for (let index = 0; index < c.bbox.length; index++) records.push({ key: (ext ? 'e' : 's') + index, index, ext, id: c.osm_id[index], box: c.bbox[index], height: c.height_m[index], heightSource: c.height_source?.[index], mesh, start: c.index_offset[index], count: c.index_count[index] });
+    }
+    buildingAssemblyGraph = BuildingAssembly.createGraph(records);
+  }
+  return buildingAssemblyGraph;
+}
+function prepareBuildingDisplay() {
+  const graph = getBuildingAssemblyGraph(), omitted = BuildingAssembly.unsupportedParts(graph);
+  assets.modelCleanup = { count: omitted.size, fragments: [...omitted].map(key => ({ key, osm_id: graph.records.get(key).id })), sourceFilesPreserved: true, reason: 'Small elevated source fragments without modelled supports; derived display indices only.' };
+  for (const ext of [false, true]) {
+    const key = ext ? 'ext_buildings' : 'buildings', catalogue = ext ? assets.extIndex : assets.index, raw = assets.raw[key];
+    if (!catalogue || !raw) continue;
+    const rows = [...omitted].filter(id => graph.records.get(id).ext === ext).map(id => graph.records.get(id).index);
+    if (rows.length) {
+      const c = catalogue.columns, compact = BuildingAssembly.compactIndex(raw.idx, c.index_offset, c.index_count, rows);
+      assets.raw[key] = { ...raw, idx: compact.idx };
+      catalogue.columns = { ...c, index_offset: compact.index_offset, index_count: compact.index_count };
+    }
+    assets.meshes[key] = makeMesh(assets.raw[key].pos, assets.raw[key].idx);
+  }
+}
+function assemblyRemovalKeys() {
+  if (!assets.ready) return new Set();
+  getBuildingAssemblyGraph();
+  return BuildingAssembly.expandRemoved(buildingAssemblyGraph, [...state.removed, ...state.cleared].map(r => (r.ext ? 'e' : 's') + r.index));
+}
 function updateCleared() {
   const P = state.clearOverlaps && state.flow.guided && state.flow.methods.build && assets.ready ? proposalBox() : null; // guided studies, once a build method is chosen
   const fps = P ? proposalParts().map(partFootprint) : []; const key = JSON.stringify([fps, state.removed.map(r => (r.ext ? 'e' : 's') + r.index)]); if (key === clearedKey) return false; clearedKey = key;
@@ -752,6 +1194,10 @@ function updateCleared() {
         let hit = samples.some(q => q[0] >= b[0] && q[0] <= b[3] && q[1] >= b[1] && q[1] <= b[4] && roofZAt(i, ext, q[0], q[1]));
         if (!hit) { const start = c.index_offset[i], end = start + c.index_count[i]; for (let k = start; k < end && !hit; k++) { const v = raw.idx[k] * 3; hit = shrunk.some(fp => SiteGeometry.pointInPolygon([raw.pos[v], raw.pos[v + 1]], fp)); } }
         if (hit) state.cleared.push({ index: i, ext, id: c.osm_id[i] }); } }
+  }
+  const hidden = new Set([...state.removed, ...state.cleared].map(r => (r.ext ? 'e' : 's') + r.index));
+  for (const key of assemblyRemovalKeys()) if (!hidden.has(key)) {
+    const r = buildingAssemblyGraph.records.get(key); state.cleared.push({ index: r.index, ext: r.ext, id: r.id });
   }
   const changed = before !== state.cleared.map(r => (r.ext ? 'e' : 's') + r.index).join(); if (changed) { invalidateRoofObserver(); requestRender(); } return changed;
 }
@@ -860,13 +1306,67 @@ function protectedViewHint() {
 }
 function viewFromHere(ref) { if (state.flow.guided) state.flow.methods.view = 'cone'; if (ref) selectView(ref); if (placeObserverAtOrigin()) { if (proposalBox()) lookTowardProposal(); else setMode('observer'); revealMap(); } }
 
+// Reuse the choices offered in View, so stepping never changes the chosen method.
+let protectedChoiceAssets = null, protectedViewChoices = [];
+let roofNavigationKey = '', roofNavigationChoices = [];
+function viewpointNavigationState() {
+  const source = state.observerSource, observer = state.observer;
+  if (!assets.ready || state.mode !== 'observer' || !observer || !['origin', 'rooftop', 'street'].includes(source)) return { source, choices: [], index: -1, visible: false };
+  let choices = [], index = -1, label = '';
+  if (source === 'origin') {
+    if (assets.cones?.available) {
+      if (protectedChoiceAssets !== assets.cones) {
+        protectedChoiceAssets = assets.cones;
+        protectedViewChoices = assets.cones.cones.filter(c => c.origin_inside_model_extent && c.origin_model_xy?.length === 2 && c.origin_model_xy.every(Number.isFinite) && groundZAt(...c.origin_model_xy));
+      }
+      choices = protectedViewChoices.filter(c => c.origin_inside_model_extent);
+    }
+    index = choices.findIndex(c => String(c.view_number) === String(state.viewpoint) && Math.hypot(c.origin_model_xy[0] - observer.x, c.origin_model_xy[1] - observer.y) < 1);
+    label = 'Protected views';
+  } else if (source === 'rooftop') {
+    const context = JSON.stringify([state.site, proposalParts().map(p => p.box), state.removed, state.cleared, state.showExisting, state.sceneStyle]);
+    if (context !== roofNavigationKey) { roofNavigationKey = context; roofNavigationChoices = nearbyRoofChoices.map(q => ({ ...q })); }
+    const building = observer.building, ext = building?.source === 'extension';
+    if (building && !roofNavigationChoices.some(q => q.index === building.index && q.ext === ext)) roofNavigationChoices.unshift({ index: building.index, ext, x: observer.x, y: observer.y });
+    choices = roofNavigationChoices.filter(q => !(isRemoved(q.index, q.ext) && !state.showExisting) && roofZAt(q.index, q.ext, q.x, q.y));
+    index = choices.findIndex(q => observer.building?.index === q.index && (observer.building.source === 'extension') === q.ext);
+    label = 'Nearby roofs';
+  } else {
+    choices = streetViewChoices.filter(usableStreetPoint);
+    index = choices.findIndex(q => Math.hypot(q.x - observer.x, q.y - observer.y) < 1);
+    label = 'Nearby streets';
+  }
+  return { source, choices, index, label, visible: true };
+}
+function refreshViewpointNavigation() {
+  const nav = $('viewpoint-navigation'); if (!nav) return;
+  $('observer-controls')?.classList.toggle('hidden',state.mode!=='observer'||!state.observer);
+  const current = viewpointNavigationState(); nav.classList.toggle('hidden', !current.visible);
+  const label = current.label || 'Viewpoints', count = current.choices.length;
+  $('viewpoint-position').textContent = `${label} · ${current.index < 0 ? count + ' available' : (current.index + 1) + ' / ' + count}`;
+  for (const id of ['btn-viewpoint-prev', 'btn-viewpoint-next']) $(id).disabled = !current.visible || count < 2;
+  nav.title = current.index >= 0 && current.source === 'origin' ? current.choices[current.index].name : `${label} available in the current model`;
+}
+function stepViewpoint(direction) {
+  const current = viewpointNavigationState(), count = current.choices.length;
+  if (!current.visible || count < 2) return false;
+  const offset = direction < 0 ? -1 : 1, next = current.index < 0 ? (offset > 0 ? 0 : count - 1) : (current.index + offset + count) % count, choice = current.choices[next];
+  if (current.source === 'origin') { viewFromHere(String(choice.view_number)); return state.observerSource === 'origin' && state.mode === 'observer'; }
+  if (current.source === 'street') return placeStreetObserver(choice.x, choice.y);
+  if (!placeRoofObserver(choice.index, choice.ext, choice.x, choice.y)) return false;
+  setMode('observer'); revealMap(); return true;
+}
+
 // ------------------------------------------------------------------ proposal UI (parts / import)
-function renderPartsList() { const list = $('parts-list'); list.innerHTML = '';
+function setDisplayUnits(unit) { state.displayUnits = VistaUnits.normalizeUnit(unit); renderPartsList(); refreshImportInfo(); refreshPanels(); writeHash(); }
+function renderPartsList() { const list = $('parts-list'), unit = VistaUnits.normalizeUnit(state.displayUnits); list.innerHTML = '';
+  const selector = $('proposal-units'); if (selector) { selector.value = unit; selector.onchange = () => setDisplayUnits(selector.value); }
   state.parts.forEach((p,i) => { const row = document.createElement('div'); row.className = 'part-row';
-    const field = (k,label,min,max,step=1) => `<label>${label}<input aria-label="${label}, block ${i+1}" data-k="${k}" data-i="${i}" type="number" min="${min}" max="${max}" step="${step}" value="${p[k] || 0}"></label>`;
-    row.innerHTML = `<label class="part-name">Block name<input data-k="name" data-i="${i}" type="text" value="${esc(p.name)}"></label><button class="x" data-del="${i}" type="button" aria-label="Remove block ${i+1}">×</button>` + field('h','Height (m)',1,400) + field('w','Width (m)',1,300) + field('d','Depth (m)',1,300) + field('rotation','Rotation (°)',-180,180) + field('dx','East offset (m)',-500,500) + field('dy','North offset (m)',-500,500) + `<label class="height-scrubber">Adjust height<input aria-label="Height slider, block ${i+1}" data-k="h" data-i="${i}" type="range" min="1" max="400" step="1" value="${p.h}"></label>`;
+    const field = (k,label) => { const spec = VistaUnits.inputSpec(k,unit), fullLabel = `${label} (${unit})`, readout = `part-${i}-${k}-conversion`; return `<label>${fullLabel}<input aria-label="${fullLabel}, block ${i+1}" aria-describedby="${readout}" data-k="${k}" data-i="${i}" type="number" min="${spec.min}" max="${spec.max}" step="any" value="${VistaUnits.inputValue(p[k] || 0,unit)}"><small class="part-conversion" id="${readout}" data-convert="${k}" data-i="${i}">≈ ${VistaUnits.formatLength(p[k] || 0,VistaUnits.alternateUnit(unit))}</small></label>`; };
+    const height = VistaUnits.inputSpec('h',unit);
+    row.innerHTML = `<label class="part-name">Block name<input data-k="name" data-i="${i}" type="text" value="${esc(p.name)}"></label><button class="x" data-del="${i}" type="button" aria-label="Remove block ${i+1}">×</button>` + field('h','Height') + field('w','Width') + field('d','Depth') + `<label>Rotation (°)<input aria-label="Rotation (°), block ${i+1}" data-k="rotation" data-i="${i}" type="number" min="-180" max="180" step="any" value="${p.rotation || 0}"></label>` + field('dx','East offset') + field('dy','North offset') + `<label class="height-scrubber">Adjust height (${unit})<input aria-label="Height slider (${unit}), block ${i+1}" data-k="h" data-i="${i}" type="range" min="${height.min}" max="${height.max}" step="${height.step}" value="${VistaUnits.inputValue(p.h,unit)}"></label>`;
     list.appendChild(row); });
-  list.querySelectorAll('input').forEach(el => { const update = () => { const i=+el.dataset.i, k=el.dataset.k; if (k === 'name') state.parts[i].name=el.value; else { const v=parseFloat(el.value); if (!Number.isFinite(v)) return; state.parts[i][k]=clamp(v,+el.min,+el.max); list.querySelectorAll(`input[data-i="${i}"][data-k="${k}"]`).forEach(peer => { if(peer!==el) peer.value=state.parts[i][k]; }); } refreshPanels(); requestRender(); writeHash(); }; el.addEventListener('input',update); el.addEventListener('change',update); });
+  list.querySelectorAll('input').forEach(el => { const update = (event) => { const i=+el.dataset.i, k=el.dataset.k; if (k === 'name') state.parts[i].name=el.value; else { const v = k === 'rotation' ? (el.value.trim() && Number.isFinite(Number(el.value)) ? clamp(Number(el.value),-180,180) : null) : VistaUnits.readDimension(el.value,unit,k); if (v === null) { if (event.type === 'change') el.value = k === 'rotation' ? state.parts[i][k] : VistaUnits.inputValue(state.parts[i][k],unit); return; } state.parts[i][k]=v; list.querySelectorAll(`input[data-i="${i}"][data-k="${k}"]`).forEach(peer => { if(peer!==el || event.type === 'change') peer.value = k === 'rotation' ? v : VistaUnits.inputValue(v,unit); }); list.querySelectorAll(`[data-convert="${k}"][data-i="${i}"]`).forEach(readout => { readout.textContent = '≈ ' + VistaUnits.formatLength(v,VistaUnits.alternateUnit(unit)); }); state.check.result = null; } refreshPanels(); requestRender(); writeHash(); }; el.addEventListener('input',update); el.addEventListener('change',update); });
   list.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click',() => { if(state.parts.length<=1) { setHint('Keep at least one block, or import a model.'); return; } state.parts.splice(+b.dataset.del,1); renderPartsList(); refreshPanels(); requestRender(); writeHash(); })); }
 function addPart(p) { const last = state.parts[state.parts.length - 1]; state.parts.push(Object.assign({ name: 'Block ' + (state.parts.length + 1), h: 20, w: Math.max(5, (last ? last.w : 30) * 0.7), d: Math.max(5, (last ? last.d : 30) * 0.7), dx: last ? last.dx : 0, dy: last ? last.dy : 0, rotation: last?.rotation || 0 }, p || {})); state.check.result = null; renderPartsList(); refreshPanels(); requestRender(); writeHash(); }
 function setProposalMode(m) { state.pmode = m; $('pmode-boxes').classList.toggle('active', m === 'boxes'); $('pmode-import').classList.toggle('active', m === 'import'); $('boxes-ui').classList.toggle('hidden', m !== 'boxes'); $('import-ui').classList.toggle('hidden', m !== 'import'); state.check.result = null; refreshPanels(); requestRender(); writeHash(); }
@@ -880,11 +1380,13 @@ function parseObj(text, unitScale) { // v / f lines, groups by o/g; fan triangul
     const idx = new Uint32Array(g.idx.map((v) => remap.get(v))); const bb = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]; for (let i = 0; i < pos.length; i += 3) { bb[0] = Math.min(bb[0], pos[i]); bb[1] = Math.min(bb[1], pos[i + 1]); bb[2] = Math.min(bb[2], pos[i + 2]); bb[3] = Math.max(bb[3], pos[i]); bb[4] = Math.max(bb[4], pos[i + 1]); bb[5] = Math.max(bb[5], pos[i + 2]); }
     parts.push({ name: g.name, bbox: bb, positions: pos, indices: idx, triangles: idx.length / 3 }); }
   return parts; }
+function refreshImportInfo() { const imported = state.imported; if (!imported) return; const bb = imported.bbox, size = [bb[3]-bb[0],bb[4]-bb[1],bb[5]-bb[2]], unit = state.displayUnits;
+  $('import-info').textContent = `${imported.name}: ${imported.parts.length} part(s), ${imported.triangles.toLocaleString()} triangles · size (width × depth × height): ${size.map(v => VistaUnits.formatLength(v,unit)).join(' × ')} (≈ ${size.map(v => VistaUnits.formatLength(v,VistaUnits.alternateUnit(unit))).join(' × ')}) · model bbox (m): ${bb.map(v => fmt(v,1)).join(', ')} · ${imported.units_status}\nEach part is checked by its bounding box. Not stored in the URL: re-upload after a reload.`; $('import-info').classList.remove('muted'); }
 function installImport(name, parts, unitsStatus) { if (!parts.length) { setHint('No faces found in that file.'); return false; }
   const bb = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]; for (const p of parts) for (let k = 0; k < 3; k++) { bb[k] = Math.min(bb[k], p.bbox[k]); bb[k + 3] = Math.max(bb[k + 3], p.bbox[k + 3]); }
   for (const p of parts) { const pos = p.positions instanceof Float32Array ? p.positions : new Float32Array(p.positions); const idx = p.indices instanceof Uint32Array ? p.indices : new Uint32Array(p.indices); p.gl = makeMesh(pos, idx); p.triangles = idx.length / 3; delete p.positions; delete p.indices; }
   state.imported = { name, parts, bbox: bb, units_status: unitsStatus, placement: $('import-placement').value, triangles: parts.reduce((s, p) => s + p.triangles, 0) }; state.check.result = null; setProposalMode('import');
-  $('import-info').textContent = `${name}: ${parts.length} part(s), ${state.imported.triangles.toLocaleString()} triangles · file bbox ${bb.map((v) => fmt(v, 1)).join(', ')} · ${unitsStatus}\nEach part is checked by its bounding box. Not stored in the URL: re-upload after a reload.`; $('import-info').classList.remove('muted');
+  refreshImportInfo();
   setHint(`Model loaded: ${parts.length} part(s). Placement “${$('import-placement').selectedOptions[0].textContent}”.`); refreshPanels(); requestRender(); return true; }
 async function importFile(file) { const name = file.name; setHint('Reading ' + name + '…');
   try { if (/\.obj$/i.test(name)) { const text = await file.text(); const scale = parseFloat($('obj-units').value) || 1; return installImport(name, parseObj(text, scale), `units declared: ${$('obj-units').selectedOptions[0].textContent} (x ${scale})`); }
@@ -901,6 +1403,70 @@ function renderClauseCards() { const g = assets.guideline; const box = $('clause
   box.innerHTML = h; }
 function partFootprint(p) { const b=p.box; return p.footprint || [[b[0],b[1]],[b[3],b[1]],[b[3],b[4]],[b[0],b[4]]]; }
 let planCacheKey='', planCache=[];
+// Cone ceilings are explicit study planes; the City polygons supply no vertical data.
+let coneStudy = { planes: {}, datumOffsetM: null, datumName: '', show: true };
+let coneCeilingCacheKey = '', coneCeilingCache = null;
+function coneCeilingResult() {
+  const P = (!state.flow.guided || state.flow.methods.build) ? proposalBox() : null, footprints = P ? proposalParts().map(partFootprint) : [];
+  const ground = P ? P.base : state.site ? terrainZAt(state.site.x, state.site.y) : null;
+  const input = { cones: assets.cones?.available ? assets.cones.cones : [], footprints,
+    point: state.site ? [state.site.x, state.site.y] : null, groundModelZ: ground,
+    proposalTopModelZ: P ? P.top : null, planes: coneStudy.planes, datumOffsetM: coneStudy.datumOffsetM };
+  const key = JSON.stringify(input);
+  if (key !== coneCeilingCacheKey) { coneCeilingCacheKey = key; coneCeilingCache = ConeCeiling.evaluate(input); }
+  return coneCeilingCache;
+}
+function loadConePlaneEditor() {
+  const id = $('cone-ceiling-view').value, c = assets.cones?.cones?.find(c => String(c.view_number) === id), p = coneStudy.planes[id];
+  const vals = { 'cone-origin-x': p?.origin[0] ?? c?.origin_model_xy?.[0] ?? '', 'cone-origin-y': p?.origin[1] ?? c?.origin_model_xy?.[1] ?? '',
+    'cone-observer-elevation': p?.observerElevationM ?? '', 'cone-bearing': p?.bearingDeg ?? '', 'cone-pitch': p?.pitchDeg ?? '', 'cone-source': p?.source ?? '' };
+  for (const [id, value] of Object.entries(vals)) $(id).value = value;
+  $('cone-plane-error').textContent = '';
+}
+function refreshConeCeiling() {
+  const cones = assets.cones?.cones || [], select = $('cone-ceiling-view');
+  if (select.dataset.loaded !== String(cones.length)) { const previous = select.value; select.innerHTML = cones.map(c => `<option value="${esc(c.view_number)}">${esc(c.view_number)} · ${esc(c.name)}</option>`).join(''); select.dataset.loaded = String(cones.length); if (cones.some(c => String(c.view_number) === previous)) select.value = previous; else if (state.viewpoint) select.value = state.viewpoint; loadConePlaneEditor(); }
+  const r = coneCeilingResult(), aligned = Number.isFinite(coneStudy.datumOffsetM), partial = r.status === 'partial';
+  const available = r.ceilingElevationM != null;
+  $('m-cone-height').textContent = r.maxHeightM != null ? `${fmt(r.maxHeightM,0)} m${partial ? ' · partial' : ' · study'}` : r.status === 'outside' ? 'Outside cones' : 'Unavailable';
+  $('cone-ceiling-elevation').textContent = available ? `${fmt(r.ceilingElevationM)} m${partial ? ' (known planes only)' : ''}` : 'Unavailable';
+  $('cone-ceiling-height').textContent = r.maxHeightM != null ? `${fmt(r.maxHeightM)} m${partial ? ' (provisional)' : ''}` : 'Unavailable';
+  $('cone-ceiling-clearance').textContent = r.clearanceM != null ? r.clearanceM < 0 ? `${fmt(-r.clearanceM)} m above ceiling` : `${fmt(r.clearanceM)} m remaining` : 'Unavailable';
+  const messages = { no_site: 'Click a study location or select a building first.', outside: 'Outside the loaded view corridors. This does not establish a zoning height allowance.', unknown: 'Height unavailable: the overlapping mapped corridors have no vertical geometry.', partial: 'Incomplete: some overlapping corridors have no plane. The known ceiling may be too high.', ready: 'Most restrictive entered plane across the study geometry, updated automatically.' };
+  $('cone-ceiling-status').textContent = !assets.cones?.available ? 'View corridor data is unavailable.' : messages[r.status] || 'Height unavailable.';
+  const P = (!state.flow.guided || state.flow.methods.build) ? proposalBox() : null;
+  const groundZ = P ? P.base : state.site ? terrainZAt(state.site.x,state.site.y) : null;
+  $('cone-ceiling-scope').textContent = [available ? `Study assumption · limiting view ${r.limitingView}.` : '', aligned ? groundZ !== null ? `Ground ${fmt(groundZ + coneStudy.datumOffsetM)} m in ${coneStudy.datumName}.` : `Ground unavailable; datum ${coneStudy.datumName}.` : 'Ground datum unaligned: enter an offset before using above-ground heights.', r.missingViews?.length ? `Missing planes: ${r.missingViews.join(', ')}.` : '', P ? `All part footprints checked${state.pmode === 'import' ? ' using bounding boxes' : ' with their rotation'}. Ground reference: proposal base; clearance uses the tallest proposal top, conservatively.` : 'Point study at the selected site.', 'This is a view-plane study, not an overall buildable height or policy assessment.'].filter(Boolean).join(' ');
+  $('cone-ceiling-show').checked = coneStudy.show;
+}
+function drawConeCeiling(cam) {
+  if (!coneStudy.show || !Number.isFinite(coneStudy.datumOffsetM)) return;
+  const r = coneCeilingResult();
+  for (const patch of r.patches || []) {
+    const points = patch.points; if (points.length < 2) continue;
+    if (points.length >= 3) { const idx = []; for (let i=1;i<points.length-1;i++) idx.push(0,i,i+1); setCommon(PM,cam); dynDraw(PM,gl.TRIANGLES,new Float32Array(points.flat()),new Uint32Array(idx),C.plane); }
+    const lines=[]; for(let i=0;i<points.length;i++) lines.push(...points[i],...points[(i+1)%points.length]); setCommon(PL,cam); dynDraw(PL,gl.LINES,new Float32Array(lines),null,C.planeEdge);
+  }
+  if (r.limitingPoint && r.ceilingElevationM != null && state.site) { const [x,y]=r.limitingPoint, z=r.ceilingElevationM-coneStudy.datumOffsetM, ground=terrainZAt(x,y); if(ground !== null) { setCommon(PL,cam); dynDraw(PL,gl.LINES,new Float32Array([x,y,ground,x,y,z]),null,C.planeEdge); } }
+  setCommon(PM,cam);
+}
+$('cone-ceiling-view').addEventListener('change',loadConePlaneEditor);
+$('cone-plane-save').addEventListener('click',()=>{
+  const read=id=>$(id).value.trim() === '' ? NaN : Number($(id).value), origin=[read('cone-origin-x'),read('cone-origin-y')], elev=read('cone-observer-elevation'), bearing=read('cone-bearing'), pitch=read('cone-pitch'), source=$('cone-source').value.trim(), id=$('cone-ceiling-view').value;
+  if(!id || ![...origin,elev,bearing,pitch].every(Number.isFinite) || bearing<0 || bearing>360 || Math.abs(pitch)>=89 || !source) { $('cone-plane-error').textContent='Enter finite origin coordinates, observer elevation, bearing 0–360°, slope between −89° and 89°, and a source or assumption.'; return; }
+  coneStudy.planes[id]={origin,observerElevationM:elev,bearingDeg:bearing,pitchDeg:pitch,source}; refreshPanels(); requestRender(); writeHash(); $('cone-plane-error').textContent='Study plane applied. It is not verified City geometry.';
+});
+$('cone-plane-remove').addEventListener('click',()=>{ delete coneStudy.planes[$('cone-ceiling-view').value]; loadConePlaneEditor(); refreshPanels(); requestRender(); writeHash(); });
+$('cone-datum-save').addEventListener('click',()=>{ const raw=$('cone-datum-offset').value.trim(), name=$('cone-datum-name').value.trim(); if(raw && (!Number.isFinite(Number(raw)) || !name)) { $('cone-plane-error').textContent='Give the datum a name and enter a finite offset, or clear the offset to mark it unknown.'; return; } coneStudy.datumOffsetM=raw ? Number(raw) : null; coneStudy.datumName=name; refreshPanels(); requestRender(); writeHash(); });
+$('cone-ceiling-show').addEventListener('change',e=>{coneStudy.show=e.target.checked;requestRender();writeHash();});
+function restoreConeStudy(raw) {
+  coneStudy={planes:{},datumOffsetM:null,datumName:'',show:true};
+  if (!raw || typeof raw !== 'object') raw={};
+  for(const [id,p] of Object.entries(raw.planes || {}).slice(0,100)) if(assets.cones?.cones?.some(c=>String(c.view_number)===id) && p && Array.isArray(p.origin) && p.origin.length===2 && [...p.origin,p.observerElevationM,p.bearingDeg,p.pitchDeg].every(v=>typeof v==='number' && Number.isFinite(v)) && p.bearingDeg>=0 && p.bearingDeg<=360 && Math.abs(p.pitchDeg)<89 && typeof p.source==='string' && p.source.trim()) coneStudy.planes[id]={origin:p.origin.slice(),observerElevationM:p.observerElevationM,bearingDeg:p.bearingDeg,pitchDeg:p.pitchDeg,source:p.source.slice(0,200)};
+  if(typeof raw.datumOffsetM==='number' && Number.isFinite(raw.datumOffsetM) && typeof raw.datumName==='string' && raw.datumName.trim()) {coneStudy.datumOffsetM=raw.datumOffsetM;coneStudy.datumName=raw.datumName.slice(0,80);}
+  coneStudy.show=raw.show!==false; $('cone-datum-offset').value=coneStudy.datumOffsetM ?? ''; $('cone-datum-name').value=coneStudy.datumName; loadConePlaneEditor();
+}
+
 function planAnalysis() { if (!assets.cones?.available) return []; const fps=proposalParts().map(partFootprint), key=JSON.stringify(fps); if(key===planCacheKey) return planCache;
   planCacheKey=key; planCache=assets.cones.cones.map(cone=> { const hits=fps.map(fp=>ProposalGeometry.planOverlap(cone.polygon_model_xy,fp)); return {cone,relation:hits.some(h=>h.relation==='overlap')?'overlap':hits.some(h=>h.relation==='touch')?'touch':'none',area:hits.reduce((n,h)=>n+h.area,0)}; }).filter(m=>m.relation!=='none'); return planCache; }
 function resultLabel(r) { if (!r) return ''; switch(r.overall_result) {
@@ -982,12 +1548,12 @@ function updateMetrics() {
   if (!show) $('metrics-help')?.classList.add('hidden');
   el.classList.toggle('hidden', !show); const wide = matchMedia('(min-width: 861px)').matches; $('live-feedback').classList.toggle('hidden', (show && wide) || !P); $('scene-status').classList.toggle('hidden', show && wide); if (!show) return; // the strip replaces the small scene badge
   const r = state.check.result, an = P && assets.cones?.available ? planAnalysis() : null, met = an ? an.length : null, touch = an ? an.filter((m) => m.relation === 'touch').length : 0;
-  $('m-height').textContent = P ? `${fmt(P.top - P.base, 0)} m` : '–';
+  $('m-height').textContent = P ? VistaUnits.formatLength(P.top-P.base,state.displayUnits) : '–';
   $('m-site').textContent = state.boundary.length >= 3 ? formatArea(SiteGeometry.metrics(state.boundary).area) : 'Point';
   // a plan overlap count, never a pass/fail
   $('m-views').textContent = !P ? '–' : met === null ? 'Unavailable' : touch ? `${met - touch} overlap · ${touch} touch${touch === 1 ? 'es' : ''}` : `${met} of ${assets.cones.cones.length} views`; $('m-views').classList.remove('alert');
   $('m-demolished').textContent = String(state.removed.length + state.cleared.length);
-  $('m-view').textContent = !state.observer ? '–' : state.observerSource === 'origin' ? `View ${state.viewpoint}` : state.observerSource === 'rooftop' ? 'Rooftop' : 'Ground';
+  $('m-view').textContent = !state.observer ? '–' : state.observerSource === 'origin' ? `View ${state.viewpoint}` : state.observerSource === 'rooftop' ? 'Rooftop' : state.observerSource === 'street' ? 'Street' : 'Ground';
   const off = state.check.unknown || !P, kind = off || !r ? null : r.overall_result; $('m-ceiling-dt').textContent = kind === 'INTERSECTS' ? 'Above study ceiling' : kind === 'BELOW_BOUNDARY' ? 'Below study ceiling' : 'Study ceiling';
   $('m-ceiling').textContent = off ? 'Not set' : r ? (kind === 'INTERSECTS' ? `${fmt(r.max_penetration_m, 0)} m` : kind === 'BELOW_BOUNDARY' ? `${fmt(r.min_signed_margin_m, 0)} m` : kind === 'BOUNDARY_CONTACT' ? 'touching' : resultLabel(r)) : '…';
   $('m-ceiling').classList.remove('alert');
@@ -998,9 +1564,9 @@ function updateMetrics() {
 // Each stage asks for one method. Once chosen, the other methods are hidden until the user returns to the chooser;
 // choosing a different method clears that stage's result. Stages unlock in order.
 const FLOW = ['site', 'build', 'view', 'output'];
-const FLOW_METHODS = { site: ['point', 'replace', 'multi'], build: ['platform', 'import'], view: ['cone', 'roof', 'drag'] };
+const FLOW_METHODS = { site: ['point', 'replace', 'multi'], build: ['platform', 'import'], view: ['cone', 'roof', 'street', 'drag'] };
 const FLOW_NAMES = { site: 'Site', build: 'Build', view: 'View', output: 'Output' };
-const METHOD_NAMES = { point: 'Open spot on the plan', replace: 'Replace a building', multi: 'Replace several buildings', platform: 'Build on the platform', import: 'Import a model', cone: 'Protected view cone', roof: 'From a building', drag: 'Drag and view' };
+const METHOD_NAMES = { point: 'Open spot on the plan', replace: 'Replace a building', multi: 'Replace several buildings', platform: 'Build on the platform', import: 'Import a model', cone: 'Protected view cone', roof: 'From a building', street: 'From the street', drag: 'Drag and view' };
 const FLOW_HINTS = {
   site: 'Step 1 · Choose how you want to pick your site.', build: 'Step 2 · Choose how you will make your building.', view: 'Step 3 · Choose where you want to look from.',
   output: 'Output · Check the results, choose what goes in the PDF, then Export PDF.',
@@ -1011,11 +1577,12 @@ const FLOW_HINTS = {
   import: 'Choose a .3dm or .obj file. It is read on your device.',
   cone: 'Free inspection. Choose a protected viewpoint, then “View from here” to stand there. The corner map stays visible.',
   roof: 'Click a roof in the plan, or pick a nearby building in the panel.',
+  street: 'Click a mapped street on the plan, or choose a nearby street position. The view faces your proposal at eye level.',
   drag: 'Press a spot on the plan, drag toward what you want to see, and release.',
 };
-const SWITCH_LABELS = { point: 'Open spot on the plan', replace: 'Replace a building', multi: 'Replace several buildings', platform: 'Build on the platform', import: 'Import a model', cone: 'View from a protected cone', roof: 'View from a building', drag: 'Drag and view' };
-const METHOD_ICONS = { point: 'pin', replace: 'replace', multi: 'multi', platform: 'blocks', import: 'upload', cone: 'cone', roof: 'roof', drag: 'drag' };
-const FLOW_TOOLS = { point: 'site', replace: 'replace', multi: 'multi', cone: 'identify', roof: 'rooftop', drag: 'aim' };
+const SWITCH_LABELS = { point: 'Open spot on the plan', replace: 'Replace a building', multi: 'Replace several buildings', platform: 'Build on the platform', import: 'Import a model', cone: 'View from a protected cone', roof: 'View from a building', street: 'View from the street', drag: 'Drag and view' };
+const METHOD_ICONS = { point: 'pin', replace: 'replace', multi: 'multi', platform: 'blocks', import: 'upload', cone: 'cone', roof: 'roof', street: 'eye', drag: 'drag' };
+const FLOW_TOOLS = { point: 'site', replace: 'replace', multi: 'multi', cone: 'identify', roof: 'rooftop', street: 'street', drag: 'aim' };
 function flowMethod(stage) { return state.flow.methods[stage] || null; }
 function flowChoosing(stage) { return stage !== 'output' && (!flowMethod(stage) || state.flow.choosing === stage); }
 function stageComplete(stage) {
@@ -1070,7 +1637,7 @@ function chooseMethod(stage, method) {
   state.flow.methods[stage] = method; state.flow.choosing = null; state.flow.guided = true;
   if (stage === 'build') setProposalMode(method === 'import' ? 'import' : 'boxes');
   applyFlowTool();
-  if (stage === 'site' || method === 'roof' || method === 'drag') { if (state.mode !== 'plan') planView(); revealMap(); }
+  if (stage === 'site' || method === 'roof' || method === 'drag' || method === 'street') { if (method==='street') {state.layers.roads=true;$('layer-roads').checked=true;} if (state.mode !== 'plan') planView(); revealMap(); }
   if (stage === 'build' && proposalBox()) { if (state.mode === 'plan') setMode('overview'); focusSite(); }
   setHint(FLOW_HINTS[method]); refreshPanels(); requestRender(); writeHash(); focusStageHeading(); return true;
 }
@@ -1128,7 +1695,7 @@ function endAim(moved) {
 function inferMethods() {
   const m = { site: state.removed.length > 1 ? 'multi' : state.removed.length === 1 ? 'replace' : state.site ? 'point' : null, build: null, view: null };
   if (m.site) m.build = state.pmode === 'import' ? 'import' : 'platform';
-  if (state.observer) m.view = state.observerSource === 'origin' ? 'cone' : state.observerSource === 'rooftop' ? 'roof' : 'drag';
+  if (state.observer) m.view = state.observerSource === 'origin' ? 'cone' : state.observerSource === 'rooftop' ? 'roof' : state.observerSource === 'street' ? 'street' : 'drag';
   return m;
 }
 function inferFlow(step) {
@@ -1148,7 +1715,7 @@ function refreshFlowUI() {
   document.querySelectorAll('.stage-common').forEach(el => el.classList.toggle('hidden', el.dataset.stage !== stage || choosing));
   document.querySelectorAll('.method-card').forEach(el => { const on = flowMethod(el.dataset.stage) === el.dataset.method; el.classList.toggle('chosen', on); el.setAttribute('aria-pressed', String(on)); });
   document.querySelectorAll('.method-keep').forEach(el => { const m = flowMethod(el.dataset.keep); el.classList.toggle('hidden', !m || state.flow.choosing !== el.dataset.keep); if (m) el.textContent = `Keep “${METHOD_NAMES[m]}”`; });
-  document.querySelectorAll('.stage-active').forEach(el => { const s = el.dataset.activeFor; if (!s) return; const m = flowMethod(s); el.innerHTML = m && !flowChoosing(s) ? `<svg class="ico" aria-hidden="true"><use href="#i-${{ point: 'pin', replace: 'replace', multi: 'multi', platform: 'blocks', import: 'upload', cone: 'cone', roof: 'roof', drag: 'drag' }[m]}"/></svg>${esc(METHOD_NAMES[m])}` : ''; });
+  document.querySelectorAll('.stage-active').forEach(el => { const s = el.dataset.activeFor; if (!s) return; const m = flowMethod(s); el.innerHTML = m && !flowChoosing(s) ? `<svg class="ico" aria-hidden="true"><use href="#i-${{ point: 'pin', replace: 'replace', multi: 'multi', platform: 'blocks', import: 'upload', cone: 'cone', roof: 'roof', street: 'eye', drag: 'drag' }[m]}"/></svg>${esc(METHOD_NAMES[m])}` : ''; });
   document.querySelectorAll('.method-switch').forEach(el => { const s = el.dataset.switchFor, m = flowMethod(s), show = s === stage && !choosing && !!m; el.classList.toggle('hidden', !show); if (!show) return;
     const key = s + ':' + m + ':' + stageComplete(s); if (el.dataset.key === key) return; el.dataset.key = key; el.replaceChildren();
     const lab = document.createElement('span'); lab.className = 'ms-label'; lab.textContent = 'Other ways'; el.appendChild(lab);
@@ -1203,16 +1770,16 @@ function refreshTechReadout(P, eye) { // coordinates and source IDs live in Tech
     P ? `Building: ${P.parts.length} part(s), base z ${fmt(P.base)} m, top z ${fmt(P.top)} m, bounding extent ${fmt(P.box[3] - P.box[0], 0)} × ${fmt(P.box[4] - P.box[1], 0)} m.` : 'Building: none.',
     eye ? `Viewpoint: x ${fmt(eye[0])}, y ${fmt(eye[1])} m, eye z ${fmt(eye[2])} m${roof ? `; roof z ${fmt(state.observer.z)} m on ${roof.source} building ${roof.id}, height ${roof.height_source}, unverified` : ''}.` : 'Viewpoint: none.'].join(' ');
 }
-function refreshPanels() { updateCleared(); refreshStudyUI(); const P = proposalBox(); const eye = observerEye();
-  refreshNearbyRooftops();
+function refreshPanels() { refreshConeCeiling(); updateCleared(); refreshStudyUI(); const P = proposalBox(); const eye = observerEye();
+  refreshNearbyRooftops(); refreshStreetChoices(); refreshViewpointNavigation();
   $('site-info').textContent = state.site ? (state.boundary.length >= 3 ? 'Site set: your drawn boundary.' : state.removed.length ? `Site set: replacing ${state.removed.length} existing building${state.removed.length === 1 ? '' : 's'}.` : 'Site set: a point on open ground.') : 'No site yet.'; $('site-info').classList.toggle('muted', !state.site);
   $('proposal-info').textContent = P ? `${P.parts.length} block${P.parts.length === 1 ? '' : 's'} · ${fmt(P.top - P.base, 0)} m tall · about ${fmt(P.box[3] - P.box[0], 0)} × ${fmt(P.box[4] - P.box[1], 0)} m overall` : (state.site ? 'No building yet.' : 'Set the site first; your building stands on it.');
   refreshTechReadout(P, eye);
   const pill = (id, txt, ok) => { const el = $(id); el.textContent = txt; el.classList.toggle('ok', !!ok); };
-  pill('pill-site', state.site ? 'Set' : 'Not set', !!state.site); const built = !!P && (!state.flow.guided || !!state.flow.methods.build); pill('pill-proposal', built ? `${fmt(P.top-P.base, 0)} m` : 'None', built); pill('pill-view', state.observer ? (state.observerSource === 'origin' ? `${state.viewpoint}` : state.observerSource === 'rooftop' ? 'Roof' : 'Ground') : 'None', !!state.observer);
-  if (eye) { let extra = ''; const tgt = proposalCentre(); if (tgt && P) { const dh = Math.hypot(tgt[0] - eye[0], tgt[1] - eye[1]); const ang = Math.atan2(P.top - eye[2], dh) * 180 / Math.PI; extra = ` · ${fmt(dh, 0)} m to your building, its top ${fmt(Math.abs(ang), 0)}° ${ang < 0 ? 'below' : 'above'} eye level${ang > state.fov / 2 ? ' (out of view at this field: scroll to widen it, or stand farther away)' : ''}`; }
+  pill('pill-site', state.site ? 'Set' : 'Not set', !!state.site); const built = !!P && (!state.flow.guided || !!state.flow.methods.build); pill('pill-proposal', built ? `${VistaUnits.formatLength(P.top-P.base,state.displayUnits)}` : 'None', built); pill('pill-view', state.observer ? (state.observerSource === 'origin' ? `${state.viewpoint}` : state.observerSource === 'rooftop' ? 'Roof' : state.observerSource === 'street' ? 'Street' : 'Ground') : 'None', !!state.observer);
+  if (eye) { let extra = ''; const tgt = proposalCentre(); if (tgt && P) { const dh = Math.hypot(tgt[0] - eye[0], tgt[1] - eye[1]); const ang = Math.atan2(P.top - eye[2], dh) * 180 / Math.PI; extra = ` · ${fmt(dh, 0)} m to your building, its top ${fmt(Math.abs(ang), 0)}° ${ang < 0 ? 'below' : 'above'} eye level${Math.abs(ang-state.cams.observer.pitch*180/Math.PI) > state.fov / 2 ? ' (out of view at this field: scroll to widen it, or stand farther away)' : ''}`; }
     const roof = state.observerSource === 'rooftop' ? state.observer.building : null;
-    $('obs-info').textContent = `${state.observerSource === 'origin' ? (state.mode === 'observer' ? 'Standing at' : 'Saved viewpoint at') + ' the origin of protected view ' + state.viewpoint + ' · eye ' + fmt(state.eyeH) + ' m above ground' : roof ? 'Rooftop viewpoint · eye ' + fmt(state.eyeH) + ' m above the roof' + (terrainZAt(state.observer.x, state.observer.y) !== null ? ', roof about ' + fmt(Math.max(0, state.observer.z - terrainZAt(state.observer.x, state.observer.y)), 0) + ' m high' : '') : 'Ground viewpoint · eye ' + fmt(state.eyeH) + ' m above ' + (state.observer.ground === 'water' ? 'the water (no deck modelled)' : 'ground')}${extra}.${roof ? ' Roof height is approximate; access is unknown.' : ''}`; $('obs-info').classList.remove('muted'); }
+    $('obs-info').textContent = `${state.observerSource === 'origin' ? (state.mode === 'observer' ? 'Standing at' : 'Saved viewpoint at') + ' the origin of protected view ' + state.viewpoint + ' · eye ' + fmt(state.eyeH) + ' m above ground' : roof ? 'Rooftop viewpoint · eye ' + fmt(state.eyeH) + ' m above the roof' + (terrainZAt(state.observer.x, state.observer.y) !== null ? ', roof about ' + fmt(Math.max(0, state.observer.z - terrainZAt(state.observer.x, state.observer.y)), 0) + ' m high' : '') : (state.observerSource==='street' ? 'Street viewpoint · eye ' : 'Ground viewpoint · eye ') + fmt(state.eyeH) + ' m above ' + (state.observer.ground === 'water' ? 'the water (no deck modelled)' : 'ground')}${extra}.${roof ? ' Roof height is approximate; access is unknown.' : ''}`; $('obs-info').classList.remove('muted'); }
   else { $('obs-info').textContent = { cone: selectedCone() ? 'Selected on the map. You’re still in free inspection; “View from here” moves you to this viewpoint.' : 'Free inspection. Choose a protected view, then “View from here”.', roof: 'No viewpoint yet. Click a roof in the plan or pick a nearby building.', drag: 'No viewpoint yet. Press a spot on the plan and drag to aim.' }[state.flow.methods.view] || 'No viewpoint yet.'; $('obs-info').classList.add('muted'); }
   $('mode-observer').disabled = !state.observer; $('mode-inspect').disabled = !P; $('btn-look').disabled = !(state.observer && P); $('btn-run-check').disabled = !P; for (const id of ['cam-n', 'cam-e', 'cam-s', 'cam-w', 'cam-opposite', 'cam-top']) $(id).disabled = !P;
   const selectedRoofButton = $('btn-observer-on-building'); if (selectedRoofButton) { selectedRoofButton.classList.toggle('hidden', state.selected === null); selectedRoofButton.disabled = state.selected === null || (isRemoved(state.selected, !!state.selectedExt) && !state.showExisting); }
@@ -1227,13 +1794,15 @@ function refreshPanels() { updateCleared(); refreshStudyUI(); const P = proposal
 function technicalState() { const m = assets.manifest; const P = proposalBox(); const c = selectedCone();
   return { schema: 'vancouver-site-study/1', name: state.studyName, resume_hash: serializeHash(), saved_at: new Date().toISOString(), imported_geometry_included: false, label: 'VISUAL EXPLORATION AND TEACHING ONLY — NOT A PROTECTED-VIEW ASSESSMENT', regulatory_applicability: 'NOT ASSESSED', coordinates: assets.unified ? 'model XY metres, Z up; rebuilt SRTM ground, building bases shifted vertically (see context_rebuild)' : 'model metres, Z up, untransformed (see source.display_transform)',
     step: state.step, flow: { stage: state.flow.stage, methods: state.flow.methods }, site: state.site, study_area: state.boundary.length >= 3 ? { boundary_model_xy: state.boundary, ...SiteGeometry.metrics(state.boundary), units: 'metres; horizontal area in square metres', status: 'user-defined study boundary, not a legal parcel; total horizontal study area may include water; vacancy, ownership and redevelopment eligibility unknown' } : null, hypothetical_removals: state.removed.map(r => ({ osm_id: r.id, source: r.ext ? 'extension' : 'supplied' })), cleared_for_proposal: { enabled: state.clearOverlaps, buildings: state.cleared.map(r => ({ osm_id: r.id, source: r.ext ? 'extension' : 'supplied' })), method: 'model roof under the proposal footprint (shrunk 0.5 m) or a building vertex inside it' }, existing_comparison_visible: state.showExisting, display_layers: state.layers, visual_style:state.sceneStyle, proposal_mode: state.pmode, blocks: state.pmode === 'boxes' ? state.parts : null, imported: state.imported ? { name: state.imported.name, parts: state.imported.parts.map((p) => ({ name: p.name, bbox: p.bbox, triangles: p.triangles })), units_status: state.imported.units_status, placement: state.imported.placement } : null,
+    display_units: state.displayUnits, geometry_units: 'm',
     proposal: P ? { footprint_bbox: P.box, base_z_model_relative: P.base, top_z_model_relative: P.top, parts: P.parts.map(p => ({name:p.name,box:p.box,rotation:state.pmode==='boxes' ? p.rotation || 0 : null,footprint:p.footprint || null})) } : null,
     observer: state.observer ? { source: state.observerSource, ground: state.observer, eye_height_m: state.eyeH, eye_height_reference: state.observerSource === 'rooftop' ? 'above modelled roof surface' : 'above modelled ground or water', roof_model_height_unverified: state.observerSource === 'rooftop', visibility_status: 'exploratory visualisation, not a verified sightline or regulatory assessment', eye: observerEye(), yaw_rad: state.cams.observer.yaw, pitch_rad: state.cams.observer.pitch, fov_deg: state.fov } : null,
     viewpoint: c ? { view_number: c.view_number, name: c.name, description: c.description, origin_model_xy: c.origin_model_xy, origin_latlon: c.origin_latlon, origin_derivation: c.origin_derivation, origin_inside_model_extent: c.origin_inside_model_extent, height_boundary: c.height_boundary, height_boundary_status: c.height_boundary_status, city_page: c.url } : (state.viewpoint || null),
     plan_overlap: {status: assets.cones?.available ? (P ? 'evaluated in plan only' : 'no proposal') : 'data unavailable', approximation: state.pmode === 'import' ? 'part bounding boxes' : 'rotated block footprints', corridors: planAnalysis().map(m=>({view_number:m.cone.view_number,name:m.cone.name,relation:m.relation})), regulatory_applicability:'NOT ASSESSED'},
+    cone_ceiling: {geometry:coneStudy,result:coneCeilingResult(),classification:'USER STUDY PLANES; NOT VERIFIED CITY HEIGHT LIMITS'},
     study_ceiling: {enabled:!state.check.unknown,reference:state.check.reference,height_above_base_m: P ? state.check.bz-P.base : null,elevation_model_m:state.check.unknown?null:state.check.bz},
     view_cones_source: assets.cones && assets.cones.available ? assets.cones.provenance : null, transformation: assets.geo,
-    context_rebuild: assets.unified,
+    context_rebuild: assets.unified, context_display_cleanup: assets.modelCleanup,
     context_extension: assets.extension ? { purpose: assets.extension.purpose, target_extent_model_m: assets.extension.target_extent_model_m, counts: assets.extension.counts, height_rules: { measured: assets.extension.height_rules.measured, levels: assets.extension.height_rules.levels, estimated: assets.extension.height_rules.estimated }, sources: assets.extension.sources, caveats: assets.extension.caveats } : null,
     check: state.check.result ? { hypothesis: state.check.result.hypothesis, overall_result: state.check.result.overall_result, max_penetration_m: state.check.result.max_penetration_m, min_signed_margin_m: state.check.result.min_signed_margin_m, parts: state.check.result.parts.map((p) => ({ part: p.part, geometric_result: p.result.geometric_result, signed_margin_m: p.result.signed_margin_m, penetration_m: p.result.penetration_m })), evaluation_area: state.check.input ? state.check.input.test_area : null, statement_kinds: state.check.result.statement_kinds } : null,
     guideline_source: assets.guideline ? assets.guideline.source : null, mode: state.mode, cameras: state.cams,
@@ -1265,14 +1834,19 @@ function renderReport() { const t = technicalState(); const g = assets.guideline
 // ------------------------------------------------------------------ URL hash state
 let hashTimer = null;
 function serializeHash() { const p = new URLSearchParams(); const r = (v) => Number(v).toFixed(3);
+  p.set('u', VistaUnits.normalizeUnit(state.displayUnits));
   p.set('style',state.sceneStyle); p.set('name', state.studyName); p.set('boundary', state.boundary.map(q => q.map(r).join(',')).join(';')); p.set('removed', state.removed.map(q => (q.ext ? 'e:' : 's:') + q.id).join(',')); p.set('existing', state.showExisting ? '1' : '0'); if (!state.clearOverlaps) p.set('clear', '0'); p.set('layers', Object.entries(state.layers).filter(([,v]) => v).map(([k]) => k).join(','));
   p.set('step', state.step); p.set('flow', state.flow.stage); p.set('fm', ['site', 'build', 'view'].map(k => state.flow.methods[k] || '').join(',')); if (state.site) p.set('site', `${r(state.site.x)},${r(state.site.y)}`); p.set('parts', state.parts.map((q) => [q.h, q.w, q.d, q.dx, q.dy].join(',') + ',' + encodeURIComponent(q.name)).join(';')); p.set('pm', state.pmode); p.set('rot',state.parts.map(q=>q.rotation || 0).join(','));
   if (state.observer) { p.set('obs', `${r(state.observer.x)},${r(state.observer.y)}`); p.set('osrc', state.observerSource); if (state.observerSource === 'rooftop' && state.observer.building) p.set('roof', `${state.observer.building.source === 'extension' ? 'e' : 's'}:${state.observer.building.id}`); } p.set('eye', state.eyeH); p.set('fov', state.fov); p.set('mode', state.mode); p.set('wedge', state.wedge ? 1 : 0); p.set('allcones', state.showAllCones ? 1 : 0); p.set('bd', state.showBackdrop ? 1 : 0);
   if (state.viewpoint) p.set('view', state.viewpoint); p.set('bz', state.check.unknown ? 'unknown' : state.check.bz); p.set('cref', state.check.reference); p.set('ch', state.check.height); p.set('area', state.check.area); if (state.check.custom) p.set('carea', [state.check.custom.x_min, state.check.custom.x_max, state.check.custom.y_min, state.check.custom.y_max].join(','));
   const o = state.cams.overview; p.set('cam', [o.az, o.el, o.dist, o.target[0], o.target[1], o.target[2]].map(r).join(',')); const i = state.cams.inspect; p.set('icam', [i.az, i.el, i.dist].map(r).join(',')); const l = state.cams.observer; p.set('look', [l.yaw, l.pitch].map(r).join(','));
+  if (Object.keys(coneStudy.planes).length || coneStudy.datumOffsetM !== null || !coneStudy.show) p.set('cp', JSON.stringify(coneStudy));
   return '#' + p.toString(); }
 function writeHash() { if (hashTimer) return; hashTimer = setTimeout(() => { hashTimer = null; history.replaceState(null, '', serializeHash()); }, 150); }
 function applyHash(hash) { const p = new URLSearchParams((hash || location.hash).replace(/^#/, '')); const num = (k, lo, hi, dflt) => { const v = parseFloat(p.get(k)); return Number.isFinite(v) ? clamp(v, lo, hi) : dflt; };
+  window.dispatchEvent(new Event('vista:clear-address'));
+  state.displayUnits = VistaUnits.normalizeUnit(p.get('u'));
+  try { restoreConeStudy(p.has('cp') ? JSON.parse(p.get('cp')) : null); } catch (_) { restoreConeStudy(null); }
   setSceneStyle(p.get('style') || 'collage',false);
   state.studyName = (p.get('name') || 'Untitled study').slice(0,80); $('study-name').value = state.studyName; state.drawing = null; state.selected = null;
   const pair = (k) => { const s = p.get(k); if (!s) return null; const a = s.split(',').map(Number); return a.length === 2 && a.every(Number.isFinite) ? a : null; };
@@ -1296,14 +1870,14 @@ function applyHash(hash) { const p = new URLSearchParams((hash || location.hash)
       const highest = highestRoofAtXY(o[0], o[1]);
       if (roof && highest && highest.z <= roof.z + 0.2) { state.observer = { x: o[0], y: o[1], z: roof.z, ground: 'roof', building: { id, source: ext ? 'extension' : 'supplied', index, height_m: c.height_m[index], height_source: HS[c.height_source[index]] || HS[3] } }; state.observerSource = 'rooftop'; }
     }
-  } else if (o) { const g = groundZAt(o[0], o[1]); state.observer = g ? { x: o[0], y: o[1], z: g.z, ground: g.source } : null; state.observerSource = p.get('osrc') === 'origin' ? 'origin' : 'exploratory'; }
+  } else if (o) { const g = groundZAt(o[0], o[1]); state.observer = g ? { x: o[0], y: o[1], z: g.z, ground: g.source } : null; state.observerSource = p.get('osrc') === 'origin' ? 'origin' : p.get('osrc') === 'street' && g?.source === 'terrain' && StreetGeometry.nearest(o[0],o[1],streetRoadArrays(),20) ? 'street' : 'exploratory'; }
   if(liveTimer) clearTimeout(liveTimer); liveTimer=null; liveSignature=''; state.check.busy=false; state.check.error=null;
   state.check.result=null; state.check.input=null; state.check.requestId++; state.check.reference=p.get('cref') === 'height' || !p.has('bz') ? 'height' : 'elevation'; state.check.height=num('ch',0,500,120); state.check.unknown=true;
   state.viewpoint = p.get('view') || null; const bz = p.get('bz'); if (bz === 'unknown') state.check.unknown = true; else if (Number.isFinite(parseFloat(bz))) { state.check.bz = parseFloat(bz); state.check.unknown = false; }
   state.check.area = p.get('area') === 'custom' ? 'custom' : 'footprint'; const ca = (p.get('carea') || '').split(',').map(Number); if (ca.length === 4 && ca.every(Number.isFinite)) state.check.custom = { x_min: ca[0], x_max: ca[1], y_min: ca[2], y_max: ca[3] };
   $('eye-h').value = state.eyeH; $('fov').value = state.fov; $('chk-wedge').checked = state.wedge; $('chk-cones').checked = state.showAllCones; $('chk-backdrop').checked = state.showBackdrop; $('check-bz').value = state.check.bz; $('chk-bz-unknown').checked = state.check.unknown; $('check-area').value = state.check.area; $('custom-area').classList.toggle('hidden', state.check.area !== 'custom');
   if (state.check.custom) { $('ca-xmin').value = state.check.custom.x_min; $('ca-xmax').value = state.check.custom.x_max; $('ca-ymin').value = state.check.custom.y_min; $('ca-ymax').value = state.check.custom.y_max; }
-  renderPartsList(); setProposalMode(state.pmode); populateViews(); selectView(state.viewpoint);
+  renderPartsList(); refreshImportInfo(); setProposalMode(state.pmode); populateViews(); selectView(state.viewpoint);
   if (lk.length !== 2 && state.observer && proposalBox()) aimAtProposal();
   const mode = p.get('mode'); if (!setMode(mode === 'observer' || mode === 'inspect' || mode === 'plan' ? mode : 'overview')) setMode('overview'); const st = num('step', 1, 5, 1), step = st >= 4 ? st - 2 : st; // old 5-step links map onto the 3 stages
   state.flow.choosing = null;
@@ -1315,6 +1889,7 @@ function applyHash(hash) { const p = new URLSearchParams((hash || location.hash)
   while (state.flow.stage !== 'site' && !stageReachable(state.flow.stage)) state.flow.stage = FLOW[FLOW.indexOf(state.flow.stage) - 1];
   state.multiSel = state.flow.methods.site === 'multi' || state.removed.length > 1 ? state.removed.map(q => ({ ...q })) : []; // a one-building group restores as a group
   flowGo(state.flow.stage, { force: true, step, quiet: true });
+  if(state.observerSource==='street' && state.observer && !usableStreetPoint(state.observer)){state.observer=null;state.observerSource='exploratory';setMode('plan');applyFlowTool();setHint('The saved street position is no longer usable with this model. Choose another mapped street.');}
   // refreshPanels schedules a live calculation for a saved ceiling.
 }
 
@@ -1335,7 +1910,7 @@ $('tool-rooftop')?.addEventListener('click', () => setTool('rooftop'));
 $('btn-observer-on-building')?.addEventListener('click', viewFromSelectedRoof);
 $('btn-look').addEventListener('click', lookTowardProposal);
 $('btn-clear-site').addEventListener('click', () => { state.flow.alt = { find: null, place: null }; state.site = null; state.boundary = []; state.drawing = null; state.removed = []; state.multiSel = []; state.showExisting = false; state.check.result = null; applyFlowTool(); refreshPanels(); requestRender(); writeHash(); });
-$('btn-clear-observer').addEventListener('click', () => { state.observer = null; state.observerSource = 'exploratory'; setMode(state.mode === 'inspect' ? 'inspect' : 'overview'); if (state.flow.methods.view === 'drag' || state.flow.methods.view === 'roof') { planView(); applyFlowTool(); } });
+$('btn-clear-observer').addEventListener('click', () => { state.observer = null; state.observerSource = 'exploratory'; setMode(state.mode === 'inspect' ? 'inspect' : 'overview'); if (['drag','roof','street'].includes(state.flow.methods.view)) { planView(); applyFlowTool(); } });
 $('btn-reset-context').addEventListener('click', resetToContext); $('btn-plan').addEventListener('click', planView);
 // Export to PDF is handled by report.js (PDF contents builder).
 $('cam-n').addEventListener('click', () => inspectFrom(Math.PI / 2, 0.3)); $('cam-e').addEventListener('click', () => inspectFrom(0, 0.3)); $('cam-s').addEventListener('click', () => inspectFrom(-Math.PI / 2, 0.3)); $('cam-w').addEventListener('click', () => inspectFrom(Math.PI, 0.3));
@@ -1361,10 +1936,11 @@ document.querySelectorAll('[data-open-example]').forEach((b) => b.addEventListen
 { const ex = EXAMPLES.find((e) => e.key === new URLSearchParams(location.search).get('example'));
   if (ex && $('example-banner')) { $('example-banner-text').innerHTML = `<b>Real tower · ${ex.name}</b> · ${ex.address} · ${ex.facts}. The modelled tower is replaced by one block of its published height; the footprint is approximate. Explore any step, or use <b>Output › Start a new study</b> for your own.`; $('example-banner').classList.remove('hidden'); } }
 $('btn-example-close')?.addEventListener('click', () => $('example-banner').classList.add('hidden'));
-// keyboard route for the map: arrows look, orbit or pan; +/- zoom; Enter acts at the centre of the view (place a site, add a corner, pick a roof, stand here)
+// Keyboard route: observer arrows translate; other map modes orbit or pan.
 canvas.addEventListener('keydown', (e) => { if (!assets.ready || e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key, f = e.shiftKey ? 4 : 1, r = canvas.getBoundingClientRect(); let used = true;
-  if (k.startsWith('Arrow')) { const dx = k === 'ArrowLeft' ? -1 : k === 'ArrowRight' ? 1 : 0, dy = k === 'ArrowUp' ? -1 : k === 'ArrowDown' ? 1 : 0;
-    if (state.mode === 'observer' && state.observer) { const o = state.cams.observer; o.yaw -= dx * 0.05 * f; o.pitch = clamp(o.pitch - dy * 0.035 * f, -1.48, 1.48); }
+  if (/^[ijkl]$/i.test(k)&&state.mode==='observer'&&state.observer)lookObserver(k,f);
+  else if (k.startsWith('Arrow')) { const dx = k === 'ArrowLeft' ? -1 : k === 'ArrowRight' ? 1 : 0, dy = k === 'ArrowUp' ? -1 : k === 'ArrowDown' ? 1 : 0;
+    if (state.mode === 'observer' && state.observer) moveObserver(k,(e.repeat?0.2:1)*f);
     else if (state.mode === 'plan') { const o = state.cams.overview, d = o.dist * 0.04 * f; o.target[0] += dx * d; o.target[1] -= dy * d; }
     else { const o = state.mode === 'inspect' ? state.cams.inspect : state.cams.overview; o.az -= dx * 0.07 * f; o.el = clamp(o.el - dy * 0.04 * f, 0.03, 1.55); } }
   else if (k === '+' || k === '=') zoomBy(-0.15); else if (k === '-' || k === '_') zoomBy(0.15);
@@ -1372,15 +1948,24 @@ canvas.addEventListener('keydown', (e) => { if (!assets.ready || e.ctrlKey || e.
   else if (k === 'Enter' || k === ' ') { const cx = r.left + r.width / 2, cy = r.top + r.height / 2; if (state.tool === 'aim' && state.mode !== 'observer') { if (beginAim(cx, cy)) endAim(false); } else handleClick(cx, cy, 0); }
   else used = false;
   if (used) { e.preventDefault(); e.stopPropagation(); requestRender(); } });
+// Viewpoint action buttons keep focus after selection; arrows still walk unless a text/form control owns them.
+document.addEventListener('keydown',e=>{
+  if(e.target===canvas||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||state.mode!=='observer'||!state.observer||!(/^Arrow(Up|Down|Left|Right)$/.test(e.key)||/^[ijkl]$/i.test(e.key)))return;
+  if(e.target.isContentEditable||e.target.closest('input,select,textarea,[role="dialog"],dialog')||document.querySelector('dialog[open]'))return;
+  e.preventDefault();if(e.key.startsWith('Arrow'))moveObserver(e.key,(e.repeat?0.2:1)*(e.shiftKey?4:1));else lookObserver(e.key,e.shiftKey?4:1);canvas.focus({preventScroll:true});
+});
 // pressed state for the camera and tool buttons, which otherwise show it by colour only
 document.querySelectorAll('.vp-toolbar .seg-btn, [id^="pmode-"]').forEach((b) => { const sync = () => b.setAttribute('aria-pressed', String(b.classList.contains('active'))); sync(); new MutationObserver(sync).observe(b, { attributes: true, attributeFilter: ['class'] }); });
 // the "?" at the end of the strip opens plain definitions of each number
 $('btn-metrics-help')?.addEventListener('click', (e) => { const box = $('metrics-help'), open = box.classList.toggle('hidden') === false; e.currentTarget.setAttribute('aria-expanded', String(open)); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('metrics-help')?.classList.contains('hidden')) { $('metrics-help').classList.add('hidden'); $('btn-metrics-help').setAttribute('aria-expanded', 'false'); if (!/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) $('btn-metrics-help').focus(); } });
 $('btn-face')?.addEventListener('click', () => { if (lookTowardProposal()) setHint('Now facing your building. Your viewpoint has not moved.'); });
+$('btn-viewpoint-prev')?.addEventListener('click', () => stepViewpoint(-1));
+$('btn-viewpoint-next')?.addEventListener('click', () => stepViewpoint(1));
 $('btn-flow-back').addEventListener('click', flowBack); $('btn-flow-next').addEventListener('click', flowNext); $('btn-nav-pdf')?.addEventListener('click', async (e) => { const b = e.currentTarget; b.textContent = 'Exporting…'; await window.__report?.exportPdf(); b.textContent = 'Export PDF'; $('flow-need').textContent = $('pdf-status').textContent; });
 document.querySelectorAll('[data-proceed]').forEach(b => b.addEventListener('click', flowNext));
 $('btn-multi-apply').addEventListener('click', applyMultiSelection); $('btn-multi-clear').addEventListener('click', () => { state.multiSel = []; setHint('Selection cleared. Click buildings to start a new group.'); refreshPanels(); requestRender(); });
+$('btn-street-pick').addEventListener('click',()=>{planView();applyFlowTool();revealMap();setHint(FLOW_HINTS.street);});
 $('btn-drag-again').addEventListener('click', () => { planView(); applyFlowTool(); revealMap(); setHint(FLOW_HINTS.drag); });
 // Start a new study from Output: clears the study and goes straight to the Site chooser (no intro).
 function clearAddressUI() { $('address-query').value = ''; $('address-results').replaceChildren(); $('address-status').textContent = 'Start typing a street number, for example 801 W Georgia.'; }
@@ -1443,7 +2028,7 @@ $('study-name').addEventListener('input',e=>{ state.studyName=e.target.value.sli
 $('btn-save-study').addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(technicalState(),null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=(state.studyName.replace(/[^a-z0-9_-]+/gi,'-') || 'site-study')+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); setHint('Study JSON saved. Keep it beside your iteration notes; Open study restores its settings. Imported geometry must be reopened separately.'); });
 $('btn-open-study').addEventListener('click',()=>$('file-study').click());
 $('file-study').addEventListener('change',async e=>{const f=e.target.files[0]; if (!f) return; try { if(f.size>1024*1024) throw new Error('Study JSON must be smaller than 1 MB.'); openStudy(JSON.parse(await f.text())); } catch(err) {setHint('Could not open study: '+err.message);} finally {e.target.value='';} });
-$('place-select').addEventListener('change',e=>{ if(e.target.value==='') return; const place=assets.places[+e.target.value]; if(!place) return; state.cams.overview.target=[place.x,place.y,place.z]; state.cams.overview.dist=1800; planView(); applyFlowTool(); revealMap(); setHint('Viewing '+place.text+'. '+(state.drawing ? 'Keep clicking to add boundary corners.' : 'Now click open ground to place your site, or draw a boundary.')); });
+$('place-select').addEventListener('change',e=>{ if(e.target.value==='') return; const place=assets.places[+e.target.value]; if(!place) return; state.cams.overview.target=[place.x,place.y,place.z]; state.cams.overview.dist=1800; planView(); applyFlowTool(); revealMap(); setHint('Viewing '+place.text+'. '+(state.drawing ? 'Keep clicking to add boundary corners.' : 'Now click open ground and confirm the location, or draw a boundary.')); });
 
 // ------------------------------------------------------------------ boot
 function frame() { if (needsRender) { needsRender = false; try { render(); } catch (e) { showError('Render error: ' + (e && e.message || e)); } } requestAnimationFrame(frame); }
@@ -1515,8 +2100,9 @@ let lastPdfPages = 0;
 async function buildPdfReport(opts, onProgress) { if (!window.__report) throw new Error('report.js not loaded'); const r = await window.__report.build(opts, onProgress); lastPdfPages = r.pages; return r.blob; }
 
 // ------------------------------------------------------------------ public hook (self-test, debugging)
-window.__explorer = { studySentence, setHint, setAddressPin, loadAerial, aerial, updateCleared, isReplaced, startNewStudy, captureScene, proposalShown, partFootprint, highestRoofAtXY, formatArea, planAnalysis, renderClauseCards, SCENE_STYLES, HS, applyFlowTool, flowGo, chooseMethod, changeMethod, flowBack, flowNext, stageComplete, toggleMultiBuilding, applyMultiSelection, replaceSingleBuilding, beginAim, aimDragTo, endAim, setSceneStyle, planAnalysis, refreshLiveStudy, resultLabel, serializeHash, openStudy, landZAt, beginBoundary, addBoundaryPoint, finishBoundary, cancelBoundary, rectangleSite, replaceSelectedBuilding, restoreBuildings, focusSite, focusLocation, planView, applyPick, isRemoved, state, assets, ready: readyPromise, placeSite, placeObserver, placeObserverAtOrigin, lookTowardProposal, setMode, setTool, setStep, aimAtProposal, resetToContext, inspectFrom, selectView, selectedCone, addPart, renderPartsList, setProposalMode, parseObj, installImport, runCheck, evaluationArea,
+window.__explorer = { trafficRenderInfo:()=>({enabled:state.sceneStyle==='context'&&state.layers.roads,global:trafficTextures.global?{bounds:trafficTextures.global.bounds,size:trafficTextures.global.size,stats:trafficTextures.global.stats}:null,detail:trafficTextures.local?{bounds:trafficTextures.local.bounds,size:trafficTextures.local.size,stats:trafficTextures.local.stats}:null,deck:globalTrafficSurfaces?.stats}), moveObserver, streetscapeStats:()=>streetSurfaces?{...streetSurfaces.stats,global:globalTrafficSurfaces?.stats,network:assets.traffic?.stats}:null, clearStreetSurfaces, placeStreetObserver, refreshStreetChoices, streetRoadArrays, usableStreetPoint, coneCeilingResult, restoreConeStudy, refreshConeCeiling, studySentence, setHint, setAddressPin, loadAerial, aerial, updateCleared, isReplaced, startNewStudy, captureScene, proposalShown, partFootprint, highestRoofAtXY, formatArea, planAnalysis, renderClauseCards, SCENE_STYLES, HS, applyFlowTool, flowGo, chooseMethod, changeMethod, flowBack, flowNext, stageComplete, toggleMultiBuilding, applyMultiSelection, replaceSingleBuilding, beginAim, aimDragTo, endAim, setSceneStyle, planAnalysis, refreshLiveStudy, resultLabel, serializeHash, openStudy, landZAt, beginBoundary, addBoundaryPoint, finishBoundary, cancelBoundary, rectangleSite, replaceSelectedBuilding, restoreBuildings, focusSite, focusLocation, planView, applyPick, isRemoved, state, assets, ready: readyPromise, placeSite, placeObserver, placeObserverAtOrigin, lookTowardProposal, setMode, setTool, setStep, aimAtProposal, resetToContext, inspectFrom, selectView, selectedCone, addPart, renderPartsList, setProposalMode, parseObj, installImport, runCheck, evaluationArea,
   terrainZAt, groundZAt, roofZAt, preferredRoofPoint, placeRoofObserver, placeRooftopAtXY, viewFromSelectedRoof, proposalBox, proposalParts, proposalCentre, observerEye, observerForward, pickRay, rayFromClient, applyHash, refreshPanels, technicalState, explainCheck, buildPdfReport,
+  setDisplayUnits, refreshImportInfo, viewFromHere, lookObserver, viewpointNavigationState, refreshViewpointNavigation, stepViewpoint,
   renderOnce: () => { needsRender = false; render(); return lastCam; }, camera: () => lastCam, canvas, gl,
   readPixel: (fx, fy) => { const px = new Uint8Array(4); gl.readPixels(Math.round(fx * (canvas.width - 1)), Math.round(fy * (canvas.height - 1)), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); return Array.from(px); },
   buildingsPositionsChecksum: () => { const p = assets.raw.buildings.pos; let s = 0; for (let i = 0; i < p.length; i += 997) s += p[i]; return s; } };

@@ -52,7 +52,7 @@
   (async () => {
     const files = ['intro.js', 'browser-api.js'];
     if (window.VANCOUVER_STATIC) files.push('browser-check.js', 'browser-rhino.js');
-    files.push('site-geometry.js', 'proposal-geometry.js', 'inset-camera.js', 'pdf.js', 'explorer.js', 'aerial-context.js', 'address-search.js', 'report.js');
+    files.push('site-geometry.js', 'proposal-geometry.js', 'cone-ceiling.js', 'street-geometry.js', 'surface-query.js', 'traffic-network.js', 'traffic-raster.js', 'streetscape.js', 'building-assembly.js', 'observer-navigation.js', 'units.js', 'inset-camera.js', 'pdf.js', 'explorer.js', 'aerial-context.js', 'address-search.js', 'report.js');
     for (const file of files) await load(fileUrl(file));
     const query = new URLSearchParams(location.search);
     if (query.get('studytest') === '1') await load(fileUrl('study-selftest.js'));
@@ -60,6 +60,8 @@
     if (query.get('workflowtest') === '1') await load(fileUrl('workflow-selftest.js'));
     if (query.get('rooftest') === '1') await load(fileUrl('rooftop-selftest.js'));
     if (query.get('flowtest') === '1') await load(fileUrl('flow-selftest.js'));
+    if (query.get('citytest') === '1') await load(fileUrl('city-selftest.js'));
+    if (query.get('viewpointtest') === '1') await load(fileUrl('viewpoint-selftest.js'));
     if (query.get('selftest') === '1') await load(fileUrl('selftest.js'));
   })().catch(error => {
     const strip = document.getElementById('error-strip');
