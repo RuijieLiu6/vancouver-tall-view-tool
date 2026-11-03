@@ -10,7 +10,7 @@
 <script>if (location.protocol === 'file:') document.documentElement.classList.add('local-entry');
 // Keep the page hidden until explorer.css arrives (entry.js marks it), so unstyled icons never flash; first visits start dark under the intro.
 (function () { var q = new URLSearchParams(location.search), d = document.documentElement, seen = false; try { seen = localStorage.getItem('vancouver-view-lab-intro-seen/1') === '1'; } catch (e) {}
-  var testing = ['selftest', 'workflowtest', 'studytest', 'surfacetest', 'rooftest', 'flowtest'].some(function (k) { return q.get(k) === '1'; });
+  var testing = ['selftest', 'workflowtest', 'studytest', 'surfacetest', 'rooftest', 'flowtest', 'importselftest'].some(function (k) { return q.get(k) === '1'; });
   if (!testing && q.get('intro') !== '0' && (q.get('intro') === '1' || !seen)) d.classList.add('intro-pending');
   setTimeout(function () { d.classList.add('app-styled'); }, 4000); })();</script>
 <style>
@@ -81,6 +81,8 @@
     <h1><span class="brand-mark" aria-hidden="true"><svg class="ico"><use href="#i-eye"/></svg></span><span class="brand-copy"><span class="brand-title">Vista</span><span class="brand-subtitle">Vancouver View Protection Tool</span></span></h1>
   </div>
   <div class="header-actions">
+    <button id="btn-imagine" class="btn" type="button" aria-haspopup="dialog" title="Explore citywide parcel heights and test skyline assumptions"><svg class="imagine-city-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V10h5v11M10 21V3h6v18M16 21v-7h4v7M12 7h2M12 11h2M12 15h2M7 14h1M7 17h1"/></svg>Imagine Vancouver</button>
+    <button id="btn-sources" class="btn sources-open" type="button" aria-expanded="false" aria-controls="vista-sources" title="Read the height research methods, public sources and calculation limits"><svg class="sources-book-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v15M3 4.5c3-.8 6-.5 9 1.5 3-2 6-2.3 9-1.5v14c-3-.8-6-.5-9 1.5-3-2-6-2.3-9-1.5z"/></svg>Sources</button>
     <button id="btn-intro" class="btn intro-open" type="button" aria-haspopup="dialog">Help</button>
     <label class="style-picker">Style<select id="scene-style" aria-label="Scene style"><option value="collage">Plain</option><option value="night">Night</option><option value="context">Context</option></select></label>
   </div>
@@ -162,6 +164,7 @@
       <div class="method-body hidden" data-stage="site" data-method="replace">
         <p class="method-howto"><b>Click an existing building</b> in the plan, check its details, then choose <b>Replace this building</b>. Picking another building and replacing it swaps the choice.</p>
         <p id="building-info" class="data muted small hidden"></p>
+        <details id="building-view-details" class="small hidden"><summary>View-cone height &amp; calculation</summary><p id="building-view-info" role="status" aria-live="polite"></p><p>This precomputed study covers the existing model’s building footprint. It is separate from parcel zoning heights in Imagine Vancouver.</p><p><a href="https://guidelines.vancouver.ca/bulletins/bulletin-building-height.pdf" target="_blank" rel="noopener">City height guidance · view cones, §10</a></p></details>
         <button id="btn-replace-building" class="btn primary hidden" type="button">Replace this building</button>
         <div class="inline-proceed hidden" data-proceed-for="replace" role="status"><span class="ip-check" aria-hidden="true">✓</span><span class="ip-text">Building replaced</span><button class="btn primary" type="button" data-proceed>Proceed to Build ›</button></div>
       </div>
@@ -190,7 +193,7 @@
         <p class="chooser-q">How will you make the building?</p>
         <div class="method-grid two">
           <button class="method-card" type="button" data-stage="build" data-method="platform"><svg class="ico" aria-hidden="true"><use href="#i-blocks"/></svg><b>Build on the platform</b><span>Stack, size and rotate blocks here.</span></button>
-          <button class="method-card" type="button" data-stage="build" data-method="import"><svg class="ico" aria-hidden="true"><use href="#i-upload"/></svg><b>Import a model</b><span>Bring in a Rhino <code>.3dm</code> or <code>.obj</code> file.</span></button>
+          <button class="method-card" type="button" data-stage="build" data-method="import"><svg class="ico" aria-hidden="true"><use href="#i-upload"/></svg><b>Upload model</b><span>Bring in a Rhino <code>.3dm</code> or <code>.obj</code> file.</span></button>
         </div>
         <button class="btn link method-keep hidden" type="button" data-keep="build"></button>
       </div>
@@ -203,17 +206,20 @@
           <label class="field units-picker">Tower dimensions<select id="proposal-units" aria-describedby="proposal-unit-note"><option value="m">Metres (m)</option><option value="ft">Feet (ft)</option><option value="mm">Millimetres (mm)</option></select></label>
           <p id="proposal-unit-note" class="small muted">Switch units at any time. Dimensions convert automatically; the building stays the same size.</p>
           <div id="parts-list"></div>
-          <div class="row wrap"><button id="btn-add-part" class="btn" type="button">+ Block</button><span class="small muted">Blocks stack; the lowest sits on the terrain at the site. Offsets are from the site point. Positive rotation turns clockwise in plan, around each block’s centre.</span></div>
+          <div class="row wrap"><button id="btn-add-part" class="btn" type="button">+ Block</button><span class="small muted">Blocks stack; the lowest sits on the terrain at the site. Offsets are from the site point. Open Rotate block to turn each block around its centre, or enter an exact angle. Closing the control keeps the angle.</span></div>
         </div>
       </div>
       <div class="method-body hidden" data-stage="build" data-method="import">
         <div id="import-ui" class="hidden">
-          <label class="file-drop"><svg class="ico" aria-hidden="true"><use href="#i-upload"/></svg><span>Choose a <b>.3dm</b> or <b>.obj</b> file</span><input id="file-import" type="file" accept=".3dm,.obj"></label>
+          <label class="file-drop"><svg class="ico" aria-hidden="true"><use href="#i-upload"/></svg><span><b>Upload model</b> · .3dm or .obj</span><input id="file-import" type="file" accept=".3dm,.obj" aria-label="Upload model (.3dm or .obj)"></label>
+          <button id="cancel-import" class="btn hidden" type="button">Cancel import</button>
           <div class="grid2">
             <label>.obj units<select id="obj-units"><option value="1">metres</option><option value="0.001">millimetres</option><option value="0.01">centimetres</option><option value="0.3048">feet</option><option value="0.0254">inches</option></select></label>
             <label>Placement<select id="import-placement"><option value="site">Centre on site, base on terrain</option><option value="file">File coordinates = model coordinates</option></select></label>
           </div>
-          <p id="import-info" class="data muted small">No model loaded. .3dm is read on the local server (rhino3dm, read-only); .obj in this browser.</p>
+          <p id="import-info" class="data muted small" role="status" aria-live="polite" tabindex="-1">No model loaded. .3dm and .obj files are read in your browser and stay on your device.</p>
+          <p id="import-parcel-info" class="small muted" role="status" aria-live="polite"></p>
+          <details class="small"><summary>Preparing a Rhino file</summary><p>Visible meshes and planar polygonal solids import directly, including embedded blocks. Curved surfaces need saved render meshes: if a surface is missing, run <b>Mesh</b> in Rhino and export the meshes as <b>.3dm</b> or <b>.obj</b>. Partial imports list omissions. Hidden layers stay hidden and Rhino units convert to metres. Limits: 80 MB, 2 million triangles, 2,000 parts.</p><p>Property parcels beneath your placed model are matched automatically to the dated City snapshot. Joined outlines appear on the ground; ambiguous joins stay as separate parcels for review. Your drawn study boundary stays in place. The model remains on your device.</p></details>
         </div>
       </div>
       <div class="stage-common hidden" data-stage="build">
@@ -288,22 +294,23 @@
       <p id="view-near" class="view-near small hidden"></p>
       <p class="caveat small">Plan overlap only: changing the height does not change this list. City view-cone height limits are unavailable, so this cannot decide whether a building meets the policy.</p>
       <section class="cone-ceiling-study" aria-labelledby="cone-ceiling-title">
-        <h3 id="cone-ceiling-title">How tall could I build here?</h3>
+        <h3 id="cone-ceiling-title">View-cone envelope</h3>
+        <p class="small">Explore the allowable upper surface across the site. The values below summarize its most restrictive point; they do not replace the 3D geometry.</p>
         <p id="cone-ceiling-status" class="small" role="status">Choose a site to inspect its view-cone ceiling.</p>
         <dl class="ceiling-values">
           <div><dt>View-cone ceiling elevation</dt><dd id="cone-ceiling-elevation">Unavailable</dd></div>
-          <div><dt>Maximum height above site ground</dt><dd id="cone-ceiling-height">Unavailable</dd></div>
+          <div><dt>Ceiling above proposal base (study)</dt><dd id="cone-ceiling-height">Unavailable</dd></div>
           <div><dt>Remaining proposal clearance</dt><dd id="cone-ceiling-clearance">Unavailable</dd></div>
         </dl>
         <p id="cone-ceiling-scope" class="small muted"></p>
-        <label class="checks"><span><input id="cone-ceiling-show" type="checkbox" checked> Show entered ceiling surfaces in 3D</span></label>
+        <label class="checks"><span><input id="cone-ceiling-show" type="checkbox" checked> Show lower envelope in 3D</span></label>
         <details><summary>Enter vertical geometry for a study</summary>
           <p class="small muted">City map polygons have no height geometry. These inputs define a sloping lower plane for a design study, not a verified City limit. Camera tilt and rooftop observers do not change this plane.</p>
           <label class="field">Mapped view corridor<select id="cone-ceiling-view"><option value="">Loading views…</option></select></label>
           <div class="grid2">
             <label class="field">Origin X (model m)<input id="cone-origin-x" type="number" step="0.01"></label>
             <label class="field">Origin Y (model m)<input id="cone-origin-y" type="number" step="0.01"></label>
-            <label class="field">Observer elevation (datum m)<input id="cone-observer-elevation" type="number" step="0.01"></label>
+            <label class="field">Plane reference elevation (datum m)<input id="cone-observer-elevation" type="number" step="0.01"></label>
             <label class="field">Plane bearing (degrees)<input id="cone-bearing" type="number" min="0" max="360" step="0.1"></label>
             <label class="field">Lower-plane slope (degrees)<input id="cone-pitch" type="number" min="-88.9" max="88.9" step="0.01"></label>
           </div>
@@ -461,7 +468,7 @@
     <div class="view-utilities">
       <button id="btn-focus" class="btn" type="button" title="Fit the current study site">Focus site</button>
       <button id="btn-zoom-in" class="btn" type="button" aria-label="Zoom in">+</button><button id="btn-zoom-out" class="btn" type="button" aria-label="Zoom out">−</button>
-      <details class="layer-menu"><summary>Layers</summary><label><input id="layer-labels" type="checkbox" checked> Place labels</label><label><input id="layer-roads" type="checkbox" checked> Roads / street surfaces</label><label><input id="layer-sources" type="checkbox"> Distinguish data sources</label><label><input id="layer-extent" type="checkbox"> Coverage outlines</label><label><input id="layer-aerial" type="checkbox"> Aerial photo texture <em>(experimental)</em></label><p>Context adds continuous road surfaces and nearby lane markings. Lane widths, sidewalks and bridge levels are illustrative; pedestrian-only routes are not traffic lanes. Heights remain approximate.</p></details>
+      <details class="layer-menu"><summary>Layers</summary><label><input id="layer-labels" type="checkbox" checked> Place labels</label><label><input id="layer-roads" type="checkbox" checked> Roads / street surfaces</label><label><input id="layer-sources" type="checkbox"> Distinguish data sources</label><label><input id="layer-extent" type="checkbox"> Coverage outlines</label><label><input id="layer-aerial" type="checkbox"> Aerial photo texture <em>(experimental)</em></label><p>Context adds continuous asphalt roads and pale paving. Road widths, sidewalks and bridge levels are illustrative; pedestrian-only routes are not traffic lanes. Heights remain approximate.</p></details>
     </div>
     <div id="live-feedback" class="live-feedback hidden" role="status"></div>
     <dl id="metrics" class="metrics hidden" aria-label="Study at a glance">
@@ -510,7 +517,7 @@
   <p id="site-confirm-description">Confirm this location as your study site.</p>
   <div class="row wrap"><button id="btn-confirm-site" class="btn primary" type="button">Place building here</button><button id="btn-cancel-site-placement" class="btn" type="button">Cancel</button></div>
 </dialog>
-<footer class="statusbar"><span class="statusbar-note">Teaching tool, not a protected-view assessment.</span><span id="context-style-note" class="hidden">Context: mapped roads · illustrative lanes, sidewalks and bridge levels.</span><span id="status-coverage">Coverage: —</span></footer>
+<footer class="statusbar"><span class="statusbar-note">Teaching tool, not a protected-view assessment.</span><span id="context-style-note" class="hidden">Context: illustrative façades · mapped roads · illustrative widths, sidewalks and bridge levels.</span><span id="status-coverage">Coverage: —</span></footer>
 
 <script>
   var entry = document.createElement('script');

@@ -2,6 +2,7 @@
    for roof and land picks; image pixels supply only a georeferenced XY. */
 (function (root) {
   'use strict';
+  const sharedGeo = typeof module !== 'undefined' && module.exports ? require('./georeference.js') : root.VistaGeoreference;
   const ORIGIN_LAT = 49.2827, ORIGIN_LON = -123.1207;
   const METRES_LON = 111320 * Math.cos(ORIGIN_LAT * Math.PI / 180);
   const METRES_LAT = 110574;
@@ -9,8 +10,8 @@
   const TILE_URL = 'https://tiles.arcgis.com/tiles/qrcTTRTwUoS8N47o/arcgis/rest/services/Orthophotos_2022/MapServer/tile/';
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
-  function modelToLonLat(x, y) { return { lon: ORIGIN_LON + x / METRES_LON, lat: ORIGIN_LAT + y / METRES_LAT }; }
-  function lonLatToModel(lon, lat) { return { x: (lon - ORIGIN_LON) * METRES_LON, y: (lat - ORIGIN_LAT) * METRES_LAT }; }
+  function modelToLonLat(x, y) { return sharedGeo ? sharedGeo.modelToLonLat(x,y) : { lon: ORIGIN_LON + x / METRES_LON, lat: ORIGIN_LAT + y / METRES_LAT }; }
+  function lonLatToModel(lon, lat) { return sharedGeo ? sharedGeo.lonLatToModel(lon,lat) : { x: (lon - ORIGIN_LON) * METRES_LON, y: (lat - ORIGIN_LAT) * METRES_LAT }; }
   function lonLatToWorld(lon, lat, zoom) {
     const world = TILE_SIZE * 2 ** zoom;
     const sin = Math.sin(clamp(lat, -85.05112878, 85.05112878) * Math.PI / 180);

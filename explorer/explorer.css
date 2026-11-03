@@ -1043,3 +1043,37 @@ body[data-scene-style="night"] .observer-keyboard kbd{background:#202a3a;border-
   .observer-keyboard > div{left:auto;right:0;width:280px;}
 }
 @media(prefers-reduced-motion:reduce){.observer-controls *{transition:none!important;}}
+
+/* Block rotation stays local to the proposal editor. */
+.part-rotation{grid-column:1 / -1;border-top:1px solid var(--line);color:var(--ink);}
+.part-rotation > summary{min-height:44px;padding:10px 0;cursor:pointer;list-style-position:inside;}
+.part-rotation-value{float:right;font-variant-numeric:tabular-nums;}
+.part-rotation-controls{display:flex;align-items:end;gap:12px;}
+.part-rotation-controls > label{flex:1;min-width:0;}
+.part-rotation-controls input[type=range]{min-height:44px;padding:0;margin:0;touch-action:pan-y;}
+.part-rotation-controls > button{min-height:44px;flex:none;}
+.part-rotation p{margin:4px 0 10px;}
+.part-rotation :is(summary,input,button):focus-visible{outline:2px solid var(--obs);outline-offset:3px;}
+
+/* The optional regulation height keeps the Build flow compact. */
+.height-reference-card { border: 0; border-bottom: 1px solid var(--line, #cbd5d7); border-radius: 0; padding: 0 0 16px; margin: 0 0 20px; background: transparent; }
+.height-regulation-action { width: 100%; min-height: 44px; white-space: normal; text-align: center; }
+.height-reference-card > p { margin: 8px 0; }
+.height-reference-card .details { margin-top: 12px; }
+.height-reference-card .details > summary { min-height: 44px; display: list-item; align-content: center; }
+.height-reference-card .ceiling-values dd { font-variant-numeric: tabular-nums; max-width: 58%; text-align: right; }
+
+/* The envelope remains a map task; detailed source requirements expand inline. */
+#view-envelope-panel { margin: 16px 0 22px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.envelope-certainty { color: var(--ink); font-weight: 650; }
+#view-envelope-panel .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#view-envelope-panel :is(button,summary) { min-height: 44px; }
+#view-envelope-panel :is(p,li,dd) { overflow-wrap: anywhere; }
+#view-envelope-panel input[type=file] { max-width: 100%; min-height: 44px; }
+#view-envelope-panel :is(button,summary,input):focus-visible { outline: 2px solid var(--obs); outline-offset: 3px; }
+#view-envelope-panel .ceiling-values { font-variant-numeric: tabular-nums; }
+#geographic-location :is(p,dd) { overflow-wrap: anywhere; }
+#geographic-location .actions { display:flex; flex-wrap:wrap; gap:8px; }
+#geographic-location :is(button,summary) { min-height:44px; }
+#geographic-location .ceiling-values { font-variant-numeric:tabular-nums; }
+#geographic-location :is(button,summary,input,select):focus-visible { outline:2px solid var(--obs); outline-offset:3px; }

@@ -1,0 +1,20 @@
+Vista Context water surface — asset provenance
+
+Asset: Ocean Normal Map Seamless PBR Texture, 1K normal map
+Creator / source: ProcTexture
+https://proctexture.com/textures/water/normal-maps/ocean-normal-map
+Original pack: https://proctexture.com/pbr-packs/water/ocean-normal-map.zip
+License: CC0 1.0, as stated on the source asset page (retrieved 2026-10-27).
+https://creativecommons.org/publicdomain/zero/1.0/
+
+The original normal.png is included unchanged as ocean-normal-map-1k.png.
+Resolution: 1024 x 1024; bytes: 929899
+SHA-256: adc44dd8d95d138990369989cad79a067797e220e5ead4cc1de4da33cbf55cb0
+Original pack SHA-256: 82f0ccd52e22843cf42f0664908a23d046512948a94a3800d68b02e8933b114c
+
+Vista uses this linear-data normal map for subtle surface ripples in Context
+only, with an illustrative turquoise colour wash inspired by the user's
+reference. Tile scales are artistic choices, not measured waves. Water is
+opaque; colour does not represent depth, surveyed bathymetry or water quality.
+The mapped coastline and water mesh are unchanged. A procedural fallback is
+used if the optional image is unavailable. Plain and Night retain their styles.

@@ -1,0 +1,41 @@
+{
+  "source": "User-supplied reference images, 27 October 2026",
+  "use": "Vista Context carriageways and building ground/sidewalks. Supplied images copied unchanged; no external licence claim. Repetition dimensions are illustrative, not measured. Concrete image frame excluded by shader UV inset.",
+  "assets": [
+    {
+      "file": "asphalt-user-v01.png",
+      "pixels": [
+        480,
+        960
+      ],
+      "bytes": 650454,
+      "sha256": "08afd8008bf88532370bbe786d3ad469d0ee005475d982f046ecf72919482687",
+      "repeat_metres": [
+        4,
+        8
+      ],
+      "uv_inset_offset_scale": null,
+      "modified": false
+    },
+    {
+      "file": "paving-concrete-user-v01.png",
+      "pixels": [
+        1152,
+        2048
+      ],
+      "bytes": 1677491,
+      "sha256": "8eac9cece5a953f42586aa894608ae111c197a6308a03409f1b5d28bd0c08118",
+      "repeat_metres": [
+        5,
+        10
+      ],
+      "uv_inset_offset_scale": [
+        0.055,
+        0.025,
+        0.89,
+        0.95
+      ],
+      "modified": false
+    }
+  ]
+}

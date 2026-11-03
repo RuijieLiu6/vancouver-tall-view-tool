@@ -44,15 +44,17 @@
   stylesheet.onload = () => document.documentElement.classList.add('app-styled'); // reveals the page (see index.html)
   stylesheet.onerror = () => { document.documentElement.classList.add('app-styled'); const strip = document.getElementById('error-strip'); if (strip) { strip.textContent = 'The page styles could not be loaded. Reload the page to try again.'; strip.classList.remove('hidden'); } };
   document.head.appendChild(stylesheet);
+  const imagineStyles=document.createElement('link'); imagineStyles.rel='stylesheet'; imagineStyles.href=fileUrl('imagine.css'); document.head.appendChild(imagineStyles);
+  const sourcesStyles=document.createElement('link'); sourcesStyles.rel='stylesheet'; sourcesStyles.href=fileUrl('sources.css'); document.head.appendChild(sourcesStyles);
   const load = (src) => new Promise((resolve, reject) => {
     const script = document.createElement('script'); script.src = src;
     script.onload = resolve; script.onerror = () => reject(new Error('Could not load ' + src));
     document.body.appendChild(script);
   });
   (async () => {
-    const files = ['intro.js', 'browser-api.js'];
-    if (window.VANCOUVER_STATIC) files.push('browser-check.js', 'browser-rhino.js');
-    files.push('site-geometry.js', 'proposal-geometry.js', 'cone-ceiling.js', 'street-geometry.js', 'surface-query.js', 'traffic-network.js', 'traffic-raster.js', 'streetscape.js', 'building-assembly.js', 'observer-navigation.js', 'units.js', 'inset-camera.js', 'pdf.js', 'explorer.js', 'aerial-context.js', 'address-search.js', 'report.js');
+    const files = ['intro.js', 'sources.js', 'browser-api.js', 'browser-rhino.js', 'import-parcels.js', 'building-view-heights.js'];
+    if (window.VANCOUVER_STATIC) files.push('browser-check.js');
+    files.push('georeference.js', 'site-geometry.js', 'proposal-geometry.js', 'cone-ceiling.js', 'view-envelope.js', 'view-certainty.js', 'height-policy.js', 'street-geometry.js', 'surface-query.js', 'traffic-network.js', 'traffic-raster.js', 'streetscape.js', 'building-assembly.js', 'building-materials.js', 'facade-bounds.js', 'observer-navigation.js', 'units.js', 'inset-camera.js', 'water-surface.js', 'pdf.js', 'explorer.js', 'view-envelope-ui.js', 'aerial-context.js', 'georeference-ui.js', 'address-search.js', 'report.js', 'height-presets.js', 'imagine-data.js', 'view-impact.js', 'imagine-renderer.js', 'imagine.js');
     for (const file of files) await load(fileUrl(file));
     const query = new URLSearchParams(location.search);
     if (query.get('studytest') === '1') await load(fileUrl('study-selftest.js'));
@@ -60,9 +62,13 @@
     if (query.get('workflowtest') === '1') await load(fileUrl('workflow-selftest.js'));
     if (query.get('rooftest') === '1') await load(fileUrl('rooftop-selftest.js'));
     if (query.get('flowtest') === '1') await load(fileUrl('flow-selftest.js'));
-    if (query.get('citytest') === '1') await load(fileUrl('city-selftest.js'));
+    if (query.get('citytest') === '1' || query.get('importselftest') === '1') await load(fileUrl('city-selftest.js'));
+    if (query.get('imagineperf') === '1') await load(fileUrl('imagine-performance-selftest.js'));
+    if (query.get('imaginetest') === '1') await load(fileUrl('imagine-selftest.js'));
     if (query.get('viewpointtest') === '1') await load(fileUrl('viewpoint-selftest.js'));
     if (query.get('selftest') === '1') await load(fileUrl('selftest.js'));
+    if (query.get('envelopetest') === '1') await load(fileUrl('envelope-selftest.js'));
+    if (query.get('geotest') === '1') await load(fileUrl('georeference-selftest.js'));
   })().catch(error => {
     const strip = document.getElementById('error-strip');
     strip.textContent = error.message + (window.VANCOUVER_STATIC ? '. Reload this page to try again.' : '. Keep the local server running and reload this page.');

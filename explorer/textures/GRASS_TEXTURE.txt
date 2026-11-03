@@ -1,0 +1,17 @@
+Vista Context grass / park surface — asset provenance
+
+File: grass-watercolour-v01.png
+Created: 2026-10-27 with the built-in image-generation tool.
+Reference: user-supplied olive / sage watercolour texture.
+The generated texture was copied unchanged into this project. It is not an
+orthophoto or observed vegetation dataset. No third-party CC0 licence is claimed.
+Dimensions: 1254 x 1254; bytes: 3574622
+SHA-256: aab68048ff8db89de1ea30a435e47199ba3caee88d48f945abdfcac89ec3da0c
+
+Flat illustrative albedo with soft cloudy sage/olive pigment and paper grain.
+Sampled in world XY on mapped park surfaces in Context only, at artistic scales.
+Both source and extension parks use the same palette and texture coordinates.
+No grass blades, relief, geometry or animation are added. Road material is
+composited afterwards. Context aerial photography does not override this grass
+material. Terrain outside mapped green areas and Plain/Night retain their styles.
+Texture loading is optional; a soft procedural wash is available as a fallback.

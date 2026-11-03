@@ -47,6 +47,34 @@
     if (convex && p.some((q, i) => cross(q, p[(i + 1) % p.length], p[(i + 2) % p.length]) < -tol.area)) return null;
     return p;
   }
+  function footprint(value) {
+    const area = polygon(value, false);
+    if (area) return area;
+    if (!Array.isArray(value) || value.length < 3 || !value.every(xy)) return null;
+    const points = value.map(p => p.slice(0, 2)), tol = tolerance(points);
+    let a = points[0], b = a, longest = 0;
+    for (const p of points) for (const q of points) {
+      const length = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      if (length > longest) { a = p; b = q; longest = length; }
+    }
+    // Valid vertical mesh parts collapse to a segment or point in plan. Other
+    // invalid polygons must still never fall back to a point-only check.
+    if (points.some(p => Math.abs(cross(a, b, p)) > tol.area)) return null;
+    return longest <= tol.linear ? [a] : [a, b];
+  }
+  function clipLine(triangle, line) {
+    const a = line[0], b = line[line.length - 1], tol = tolerance(triangle.concat(line));
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 3; i++) {
+      const p = triangle[i], q = triangle[(i + 1) % 3], da = cross(p, q, a), db = cross(p, q, b);
+      if (da < -tol.area && db < -tol.area) return [];
+      if (da < -tol.area) lo = Math.max(lo, da / (da - db));
+      else if (db < -tol.area) hi = Math.min(hi, da / (da - db));
+      if (lo > hi) return [];
+    }
+    const at = t => [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])];
+    return same(at(lo), at(hi), tol.linear) ? [at(lo)] : [at(lo), at(hi)];
+  }
   function insideTriangle(p, a, b, c, eps) {
     return cross(a, b, p) >= -eps && cross(b, c, p) >= -eps && cross(c, a, p) >= -eps;
   }
@@ -94,6 +122,75 @@
     }
     return result;
   }
+  // Subtract a convex cutter without sampling. Each outside half-plane is
+  // emitted once; the remaining inside region is passed to the next edge.
+  // Closed half-planes retain hole boundary contacts in the occupied closure.
+  function subtractConvex(subject, cutter) {
+    let inside = subject;
+    const outside = [], tol = tolerance(subject.concat(cutter));
+    function half(points, a, b, sign) {
+      const out = [];
+      for (let i = 0; i < points.length; i++) {
+        const s = points[i], e = points[(i + 1) % points.length];
+        const ds = sign * cross(a, b, s), de = sign * cross(a, b, e);
+        const si = ds >= -tol.area, ei = de >= -tol.area;
+        if (si !== ei) { const t = ds / (ds - de); out.push([s[0] + t * (e[0] - s[0]), s[1] + t * (e[1] - s[1])]); }
+        if (ei) out.push(e);
+      }
+      return out;
+    }
+    for (let i = 0; i < cutter.length && inside.length; i++) {
+      const a = cutter[i], b = cutter[(i + 1) % cutter.length];
+      const part = half(inside, a, b, -1);
+      if (part.length >= 3 && Math.abs(signedArea(part)) > tol.area) outside.push(part);
+      inside = half(inside, a, b, 1);
+    }
+    return outside;
+  }
+  function ringsMeet(a, b) {
+    const tol = tolerance(a.concat(b));
+    return a.some((p, i) => b.some((q, j) => intersects(p, a[(i + 1) % a.length], q, b[(j + 1) % b.length], tol)));
+  }
+  function polygonPieces(raw) {
+    if (!Array.isArray(raw) || !raw.length) return null;
+    const rings = raw.map(r => polygon(r, false));
+    if (rings.some(r => !r)) return null;
+    const [outer, ...holes] = rings;
+    for (let i = 0; i < holes.length; i++) {
+      const h = holes[i];
+      if (ringsMeet(outer, h) || !contains(outer, h[0])) return null;
+      for (let j = 0; j < i; j++) if (ringsMeet(h, holes[j]) || contains(h, holes[j][0]) || contains(holes[j], h[0])) return null;
+    }
+    let pieces = triangulate(outer);
+    if (!pieces) return null;
+    // A deterministic budget prevents pathological supplied topology from
+    // monopolizing the browser; failure stays unresolved, never point-sampled.
+    let work = 0;
+    for (const hole of holes) {
+      const cutters = triangulate(hole);
+      if (!cutters) return null;
+      for (const cutter of cutters) {
+        const next = [];
+        for (const piece of pieces) {
+          work += piece.length * cutter.length;
+          if (work > 1000000) return null;
+          next.push(...subtractConvex(piece, cutter));
+        }
+        pieces = next;
+      }
+    }
+    return pieces;
+  }
+  function footprintPieces(value) {
+    if (value && value.type === 'Polygon') return polygonPieces(value.coordinates);
+    if (value && value.type === 'MultiPolygon') {
+      if (!Array.isArray(value.coordinates) || !value.coordinates.length) return null;
+      const parts = value.coordinates.map(polygonPieces);
+      return parts.some(p => !p) ? null : parts.flat();
+    }
+    const f = footprint(Array.isArray(value) ? value : value && (value.points || value.polygon_model_xy));
+    return !f ? null : f.length < 3 ? [f] : triangulate(f);
+  }
   function contains(polygon, point) {
     const tol = tolerance(polygon);
     let inside = false;
@@ -115,7 +212,10 @@
     const o = options || {}, output = {status: "no_site", ceilingElevationM: null, maxHeightM: null,
       clearanceM: null, limitingView: null, limitingPoint: null, patches: [], missingViews: [], overlappingViews: []};
     const supplied = Array.isArray(o.footprints) ? o.footprints : [];
-    const footprints = supplied.map(f => polygon(Array.isArray(f) ? f : f && (f.points || f.polygon_model_xy), true));
+    const prepared = supplied.map(footprintPieces);
+    if (o.polygons !== undefined) prepared.push(footprintPieces({type: 'MultiPolygon', coordinates: o.polygons}));
+    if (prepared.some(p => !p)) return output;
+    const footprints = prepared.flat();
     // An invalid supplied footprint must not silently become a point-only check.
     if (footprints.some(f => !f) || (!footprints.length && !xy(o.point))) return output;
     const point = xy(o.point) ? o.point.slice(0, 2) : null;
@@ -127,7 +227,7 @@
       if (!ring) { output.missingViews.push(view); continue; }
       const triangles = triangulate(ring);
       if (!triangles) { output.missingViews.push(view); continue; }
-      const pieces = footprints.length ? footprints.flatMap(f => triangles.map(t => clip(t, f)).filter(p => p.length)) : (contains(ring, point) ? [[point]] : []);
+      const pieces = footprints.length ? footprints.flatMap(f => triangles.map(t => f.length < 3 ? clipLine(t, f) : clip(t, f)).filter(p => p.length)) : (contains(ring, point) ? [[point]] : []);
       if (!pieces.length) continue;
       output.overlappingViews.push(view);
       const plane = o.planes instanceof Map ? o.planes.get(view) : o.planes && o.planes[view];

@@ -1,6 +1,7 @@
 /* Ground-road masks painted directly onto the model's terrain surface.
  * R = estimated carriageway, B = estimated sidewalk, G = lane marking.
  * All dimensions and dash phases use model metres. Bridge decks stay in 3D.
+ * Set markings:false to omit lane markings while retaining surface coverage.
  */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.TrafficRaster=api;})(typeof globalThis==='undefined'?this:globalThis,function(){
 'use strict';
@@ -54,7 +55,7 @@ function draw(ctx,traffic,options){
      */
     ctx.strokeStyle='#f00';
     for(const s of segments){stroke(ctx,s,s.roadWidth);stats.roadSegments++;}
-    if(detail){
+    if(detail&&o.markings!==false){
       ctx.strokeStyle='#0f0';ctx.lineCap='butt';ctx.setLineDash([DASH_LENGTH,DASH_PERIOD-DASH_LENGTH]);
       for(const s of segments){if(s.roadWidth<6.2||s.highway==='service')continue;
         const reverse=s.bx<s.ax||(s.bx===s.ax&&s.by<s.ay),line=reverse?{...s,ax:s.bx,ay:s.by,bx:s.ax,by:s.ay}:s,ux=(line.bx-line.ax)/s.length,uy=(line.by-line.ay)/s.length,start=line.ax*ux+line.ay*uy;

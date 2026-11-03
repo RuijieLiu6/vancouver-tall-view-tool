@@ -1,0 +1,71 @@
+/* The source reader stays independent of model loading and leaves the scene usable. */
+.app-header .header-actions .sources-open,
+body[data-scene-style] .app-header .header-actions .sources-open {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 44px;
+  padding: 4px 0; border: 0; border-bottom: 1px solid transparent;
+  border-radius: 0; background: transparent; color: var(--ink);
+  box-shadow: none; font-size: 14px; font-weight: 400; letter-spacing: .3px;
+}
+.app-header .header-actions .sources-open:hover,
+.app-header .header-actions .sources-open[aria-expanded="true"] {
+  border-bottom-color: currentColor; background: transparent; transform: none;
+}
+.sources-book-icon { flex: none; }
+.vista-sources {
+  position: fixed; top: var(--sources-header-bottom, 76px); right: 0; bottom: 0;
+  z-index: 50; width: min(580px, 100vw); display: flex; flex-direction: column;
+  background: var(--panel, #f7f5ed); color: var(--ink, #29342e);
+  border-left: 1px solid var(--line, #bfc5b8); font: 14px/1.6 var(--font, sans-serif);
+  letter-spacing: 0; font-variant-numeric: tabular-nums;
+}
+.vista-sources[hidden], .vista-sources [hidden] { display: none !important; }
+.sources-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 28px 16px; border-bottom: 1px solid var(--line); flex: none; }
+.sources-header h2 { margin: 0; font-size: 25px; font-weight: 400; letter-spacing: -.025em; line-height: 1.2; }
+.vista-sources button { font: inherit; color: var(--ink); cursor: pointer; }
+.sources-close { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; padding: 10px; background: transparent; border: 1px solid var(--line); border-radius: 2px; }
+.sources-close:hover { background: var(--soft); border-color: var(--ink); }
+.sources-reader { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; padding: 22px 28px 38px; scrollbar-color: var(--muted) var(--soft); scrollbar-width: thin; }
+.vista-sources p { margin: 0 0 14px; max-width: 72ch; }
+.vista-sources h3 { margin: 28px 0 10px; font-size: 18px; line-height: 1.35; font-weight: 500; letter-spacing: -.015em; }
+.sources-intro { font-size: 16px; line-height: 1.55; }
+.sources-updated { font-size: 12px; color: var(--muted); }
+.sources-status { color: var(--muted); }
+.sources-retry { min-height: 44px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 2px; background: var(--soft); margin: 0 0 18px; }
+.sources-retry:hover { border-color: var(--ink); }
+.sources-certainty { margin: 24px 0 26px; border-block: 1px solid var(--line); }
+.sources-certainty summary { min-height: 56px; padding-block: 16px; cursor: pointer; font-weight: 500; line-height: 1.4; }
+.sources-certainty dl { margin: 0 0 18px; }
+.sources-certainty dt { font-weight: 600; margin: 14px 0 2px; }
+.sources-certainty dt:first-child { margin-top: 0; }
+.sources-certainty dd { margin: 0; }
+.sources-method { border-bottom: 1px solid var(--line); }
+.sources-method summary { min-height: 56px; padding-block: 16px; cursor: pointer; font-weight: 500; line-height: 1.4; text-wrap: pretty; }
+.sources-method summary:hover { color: var(--obs, #426b61); }
+.sources-method-body { padding: 0 0 18px; }
+.sources-method ol { padding-left: 24px; margin: 14px 0 18px; }
+.sources-method li { margin-bottom: 8px; padding-left: 2px; }
+.sources-method h4 { font: inherit; font-weight: 600; margin: 18px 0 4px; }
+.sources-links { list-style: none; padding: 0; margin: 16px 0 0; }
+.sources-links li { padding: 0; margin: 8px 0; }
+.vista-sources a { color: var(--obs, #426b61); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; overflow-wrap: anywhere; }
+.vista-sources a:hover { color: var(--ink); }
+.sources-link-domain { display: block; font-size: 11px; color: var(--muted); }
+.sources-workflow { padding: 0 0 0 24px; margin: 0; }
+.sources-workflow li { padding: 0 0 0 4px; margin: 0 0 20px; }
+.sources-workflow strong { display: block; font-weight: 600; margin-bottom: 4px; }
+.sources-worked-example { margin-top: 28px; padding-top: 1px; border-top: 1px solid var(--line); }
+.sources-formula { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--soft); padding: 12px 14px; font: inherit; line-height: 1.6; }
+.sources-example-inputs { margin: 18px 0; }
+.sources-example-inputs div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.sources-example-inputs dt { color: var(--muted); }
+.sources-example-inputs dd { margin: 0; overflow-wrap: anywhere; }
+.vista-sources :focus-visible, .app-header .sources-open:focus-visible { outline: 2px solid var(--obs, #426b61); outline-offset: 4px; }
+.vista-sources ::selection { background: var(--obs, #426b61); color: var(--panel, #f7f5ed); }
+@media (max-width: 650px) {
+  .app-header .header-actions { flex-wrap: wrap; justify-content: flex-end; gap: 4px 16px; max-width: 100%; }
+  .vista-sources { width: 100%; border-left: 0; }
+  .sources-header { padding: 14px 18px; }
+  .sources-reader { padding: 20px 18px 32px; }
+  .sources-header h2 { font-size: 23px; }
+  .sources-example-inputs div { grid-template-columns: 1fr; gap: 2px; }
+}

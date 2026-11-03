@@ -1,6 +1,6 @@
 # Vista — Vancouver View Protection Tool
 
-**[Open the tool in your browser](https://ruijieliu6.github.io/vancouver-tall-view-tool/)** · [Report an issue or a review](https://github.com/RuijieLiu6/vancouver-tall-view-tool/issues/new) · ARCH 540, Assignment 1 · release v14 (October 27, 2026)
+**[Open the tool in your browser](https://ruijieliu6.github.io/vancouver-tall-view-tool/)** · [Report an issue or a review](https://github.com/RuijieLiu6/vancouver-tall-view-tool/issues/new) · ARCH 540, Assignment 1 · release v34 (November 2, 2026)
 
 [Watch the recorded demo (2:04)](https://drive.google.com/file/d/1DWnL5P9Co1HlqFtK4MfyUDTMS3ZeET8c/view) · [Replay the opening animation](https://ruijieliu6.github.io/vancouver-tall-view-tool/?intro=1)
 
@@ -19,9 +19,17 @@ The tool is a web page; it needs no installation. Open the link above in a deskt
 The tool works in four steps. In each step you choose one method; the panel then offers the other methods as buttons if you want to switch, **Proceed** moves on and **Return** goes back.
 
 1. **Site.** *Open spot on the plan*: optionally find an area with a neighbourhood or a downtown address (live suggestions support incomplete addresses and typos; **Place site here** puts the site at the address), then click open ground or draw a boundary. *Replace a building* or *Replace several buildings*: click buildings in the plan, then use them as the site.
-2. **Build.** *Build on the platform*: stack and size blocks (height, width, depth, rotation, offsets), with tower dimensions in metres, feet or millimetres (m/ft/mm). *Import a model*: a Rhino `.3dm` or `.obj` file, read on your device. Existing buildings under the proposal are shown as demolished; a checkbox keeps them.
+2. **Build.** *Build on the platform*: stack and size blocks (height, width, depth, rotation, offsets), with tower dimensions in metres, feet or millimetres (m/ft/mm). *Upload model*: a Rhino `.3dm` or `.obj` file, processed on your device with progress and cancellation. Source cadastral parcels beneath the placed proposal are matched and joined automatically where the source geometry supports a safe union; ambiguous joins remain separate for review. Existing buildings under the proposal are shown as demolished; a checkbox keeps them.
 3. **View.** *View from a protected cone*: select a viewpoint, then click **View from here** to stand at an approximate origin derived from the mapped polygon. *View from a building*: stand on a modelled roof. *From the street*: click a mapped street for an approximate eye-level view facing your proposal. **Previous** and **Next** cycle nearby streets, roofs or protected viewpoints. *Drag and view*: press a spot in the plan, drag toward what you want to see and release. Before entering a viewpoint, **Free inspection** lets you orbit the model. The corner map stays visible, previews the selected origin, and shows your position and viewing direction after you enter. In Observer view, arrow keys walk forward/back or sidestep; hold Shift for faster steps. Drag or use I/J/K/L to look around. Movement follows approximate ground or the selected roof and checks modelled obstacles.
 4. **Output.** A one-sentence summary, then the mapped view corridors that overlap the proposal in plan; optionally test a study ceiling (your own assumption, not a City limit), then choose the **PDF contents** and **Export PDF**. Every protected view whose corridor overlaps the proposal gets a page with existing and proposed views from its polygon-derived origin, a key plan and a section. **Start a new study** clears everything.
+
+**Imagine Vancouver** is a separate citywide parcel lab. Its stored parcel geometry and source facts load once; rotating, panning and changing one parcel height reuse the existing geometry. Compare sourced zoning references with an explicitly hypothetical skyline study. Missing permitted heights remain unknown. An optional view-effect preset uses level observer planes and an assumed ground elevation; it does not establish actual City ceilings. Select a parcel and choose **Show this parcel in the model** to locate its corresponding context position.
+
+**Geographic location** reads and locates positions using the existing model anchor. It accepts WGS84 longitude/latitude, Web Mercator and approximate NAD83 / UTM zone 10N. **Show on model** moves the view first; **Use as study site** asks for placement confirmation. GeoJSON boundary/location imports and exports preserve coordinate provenance. Approximate horizontal alignment is not a survey transformation, and no vertical datum conversion is applied.
+
+**Sources** explains public alternatives for reconstructing height information: published development-application height sheets, policy reference geometry, released technical records, LiDAR/terrain, cadastral boundaries and independent cross-checks. Direct source links, a worked historical reconstruction and explicit limitations distinguish retrieved measurements from assumptions and verified current limits. No private survey or editable Rhino file is included.
+
+**View-cone envelope** in Output accepts a full parcel boundary and supplied lower-plane geometry. It clips all applicable surfaces across the footprint, including holes, islands and overlapping corridors, and reports the lowest controlling surface. **Check proposal geometry** compares actual proposal triangles and reports control coordinates, clearance and sources. OBJ and calculation JSON exports retain the resulting upper constraint surface. A complete sourced reconstruction may be Preliminary; self-declared assessment records do not unlock Verified. Missing surfaces or coordinate/datum evidence remain unresolved.
 
 The strip above the map summarizes the study as you work; **?** at its end explains each number. **Style** in the top bar switches between Plain, Night and Context. Context adds continuous ground road surfaces, nearby sidewalks and lane markings, plus illustrative bridge decks; these road surfaces appear only in Context. Widths, sidewalks and bridge levels are approximate. **Layers** controls labels, road surfaces and an experimental 2022 aerial photo texture. The map also works from the keyboard: arrow keys move the view, + and − zoom, and Enter acts at the centre of the view.
 
@@ -33,7 +41,7 @@ The strip above the map summarizes the study as you work; **?** at its end expla
   - Section 3.2, Building Height and Massing, clause printed 3.1.1 (p.6): no part of a building should encroach into the relevant view cones. Clauses 3.1.2 to 3.1.5 (pp.6–7) are shown as text for people to judge.
 - City of Vancouver open data, [view-cones](https://opendata.vancouver.ca/explore/dataset/view-cones/) (plan polygons only; the cone heights are not in this dataset).
 
-The tool computes the plan relation between your proposal and each mapped corridor, renders each view from an origin estimated from its polygon, and compares the proposal with a height *you* set. It does not test the City's cone heights, view shadows (3.3) or Exceptional Downtown Sites (3.4).
+The tool computes plan relations, exploratory views and constraints from the inputs supplied to a study. The public corridor dataset alone does not define the City's ceiling surfaces. The tool does not establish current permitted heights, view-shadow compliance (3.3) or Exceptional Downtown Sites (3.4).
 
 ## 4. One example
 
@@ -46,9 +54,9 @@ The tool computes the plan relation between your proposal and each mapped corrid
 ## 5. Skill and limits
 
 - Building heights come from OpenStreetMap and the supplied model and are unverified; the model's vertical datum is unknown. Terrain is approximate (60 m SRTM).
-- View-cone heights are not in the open data, so the tool cannot show whether a building rises into a cone. Plan overlap and the study ceiling are not a City assessment. User-entered flat or sloping study ceilings are assumptions, not verified policy limits.
+- View-cone ceiling surfaces are not established by the loaded public corridor data. A supplied or reconstructed surface can be evaluated mathematically, but plan overlap and study results are not a City assessment. Current citywide official maxima remain unknown.
 - Study boundaries and replaced-building outlines are approximate model outlines, not legal parcels.
-- Viewpoint origins are estimated from polygon geometry, not verified survey coordinates; the applicable by-law is authoritative. Rendered views are exploratory, not verified sightlines. Imported models are checked by their part bounding boxes.
+- Viewpoint origins are estimated from polygon geometry, not verified survey coordinates; rendered views are exploratory. Routine per-part checks use bounding approximations. The separate on-request envelope geometry check clips actual triangles within its stated analysis budgets. Neither establishes a legal development entitlement.
 - The address box sends what you type to the City of Vancouver open-data portal (once, to load downtown addresses) and to the BC Address Geocoder for suggestions. The aerial texture loads City orthophoto tiles. Studies and PDF reports are made on your device and are not uploaded.
 - A person must check any result against the City's by-laws and the Public Views Guidelines.
 

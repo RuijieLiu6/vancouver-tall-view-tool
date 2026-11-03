@@ -4,6 +4,7 @@
  * segmentOptions receives original directed endpoints, so its left/right follow that direction.
  * bounds selects the whole model; maxSegments is a soft terrain-patch budget.
  * detailCenter/detailRadius localize sidewalks and markings without omitting asphalt.
+ * Set markings:false to omit centre markings while retaining all surface geometry.
  * Segment heightAt(x,y) overrides terrain for estimated bridge decks, including water;
  * isOccupied(x,y,z) receives that surface elevation. terrainTolerance optionally
  * refines terrain curvature, independently of the soft source-patch budget.
@@ -206,10 +207,12 @@ function generate(options){
     /* A world-aligned phase keeps consecutive collinear source segments from
      * restarting the dash pattern at every terrain-triangle split.
      */
-    const start=s.ax*s.ux+s.ay*s.uy+t0*s.length,end=start+(t1-t0)*s.length;
-    for(let k=Math.floor(start/18);k*18<end;k++){const a=Math.max(start,k*18),b=Math.min(end,k*18+3);if(b-a<0.15)continue;
-      const ma=t0+(a-start)/s.length,mb=t0+(b-start)/s.length;
-      if(ribbon(markings,s,ma,mb,-0.075,0.075,OFFSETS.marking,sample))stats.markingPatches++;
+    if(o.markings!==false){
+      const start=s.ax*s.ux+s.ay*s.uy+t0*s.length,end=start+(t1-t0)*s.length;
+      for(let k=Math.floor(start/18);k*18<end;k++){const a=Math.max(start,k*18),b=Math.min(end,k*18+3);if(b-a<0.15)continue;
+        const ma=t0+(a-start)/s.length,mb=t0+(b-start)/s.length;
+        if(ribbon(markings,s,ma,mb,-0.075,0.075,OFFSETS.marking,sample))stats.markingPatches++;
+      }
     }
   }}
   stats.junctionPatches=junctions(asphalt,segments);stats.coverageComplete=true;

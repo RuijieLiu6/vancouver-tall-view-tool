@@ -70,7 +70,39 @@
       }
     }
     const winding = Math.sign(signedArea(convexFootprint));
-    if (winding === 0) throw new Error('Clip footprint must have positive area.');
+    if (winding === 0) {
+      // A vertical imported surface has a line (or point) as its XY bounding
+      // footprint. It can contact a corridor even though its plan area is zero.
+      let a = convexFootprint[0], b = a, longest = 0;
+      for (const p of convexFootprint) for (const q of convexFootprint) {
+        const length = Math.hypot(q[0] - p[0], q[1] - p[1]);
+        if (length > longest) { a = p; b = q; longest = length; }
+      }
+      const eps = 1e-9;
+      if (convexFootprint.some(p => Math.abs(cross(a, b, p)) > longest * eps))
+        throw new Error('Clip footprint must have positive area or be collinear.');
+      const onSegment = (p, q, v) => Math.abs(cross(p, q, v)) <= Math.hypot(q[0] - p[0], q[1] - p[1]) * eps &&
+        v[0] >= Math.min(p[0], q[0]) - eps && v[0] <= Math.max(p[0], q[0]) + eps &&
+        v[1] >= Math.min(p[1], q[1]) - eps && v[1] <= Math.max(p[1], q[1]) + eps;
+      const inside = point => {
+        let hit = false;
+        for (let i = 0, j = subjectPolygon.length - 1; i < subjectPolygon.length; j = i++) {
+          const p = subjectPolygon[j], q = subjectPolygon[i];
+          if (onSegment(p, q, point)) return true;
+          if ((p[1] > point[1]) !== (q[1] > point[1]) &&
+              point[0] < (q[0] - p[0]) * (point[1] - p[1]) / (q[1] - p[1]) + p[0]) hit = !hit;
+        }
+        return hit;
+      };
+      let contact = inside(a) || inside(b);
+      for (let i = 0; !contact && i < subjectPolygon.length; i++) {
+        const p = subjectPolygon[i], q = subjectPolygon[(i + 1) % subjectPolygon.length];
+        const u = cross(a, b, p), v = cross(a, b, q), w = cross(p, q, a), z = cross(p, q, b);
+        contact = onSegment(a, b, p) || onSegment(a, b, q) || onSegment(p, q, a) || onSegment(p, q, b) ||
+          ((u > 0 && v < 0 || u < 0 && v > 0) && (w > 0 && z < 0 || w < 0 && z > 0));
+      }
+      return {area: 0, relation: contact ? 'touch' : 'none'};
+    }
     let clipped = subjectPolygon.slice();
     for (let i = 0; i < convexFootprint.length; i++) {
       const a = convexFootprint[i], b = convexFootprint[(i + 1) % convexFootprint.length];

@@ -1,7 +1,7 @@
 {
   "format": "vancouver-static-pages/1",
-  "file_count": 73,
-  "total_bytes": 56779195,
+  "file_count": 118,
+  "total_bytes": 131755534,
   "files": {
     ".github/workflows/pages.yml": {
       "bytes": 591,
@@ -12,8 +12,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "README.md": {
-      "bytes": 9876,
-      "sha256": "7098790b2f8baee0519f9b1cb665ba25c8a22b82e2b988dcbf3cf392be0b56da"
+      "bytes": 12306,
+      "sha256": "951271a7dd24b4eac954c28bc65a0b7dc503df2e9145f0721c7a3780f7d4979f"
     },
     "data/context.json": {
       "bytes": 7679,
@@ -44,8 +44,8 @@
       "sha256": "3cfc5aa8b04311e7bdc977fb93ca5ded0ca410277b9a2799c151527861e49c14"
     },
     "explorer/aerial-context.js": {
-      "bytes": 14439,
-      "sha256": "d971b870d0fd68b3f8e6f77afc5b55aef02cb89080a741266b4615e3eec298f9"
+      "bytes": 14654,
+      "sha256": "c2d571581c5e9f81f8e460e631956ed17f96b131c056649f96504399dc34445f"
     },
     "explorer/browser-api.js": {
       "bytes": 3108,
@@ -56,40 +56,112 @@
       "sha256": "19b1a524fb7a76df700d4c1f74dc7a4691778254b4af760e5ceb22fc82e91681"
     },
     "explorer/browser-rhino.js": {
-      "bytes": 8609,
-      "sha256": "423bb75586bbf848d7480671ea06b4218998a2ab9b2d8224b91c9c5940759730"
+      "bytes": 15577,
+      "sha256": "de9658f306f3e1a7ebe53366711dd845d25a28ae540b28b2e601c0f8439ab75d"
     },
     "explorer/building-assembly.js": {
       "bytes": 6788,
       "sha256": "359057dc43bd105e21893125364de36a18f4341f3ef207548233d57756522843"
     },
+    "explorer/building-materials.js": {
+      "bytes": 8489,
+      "sha256": "65b52d31a9a35ed78c63df9388f67c6d8ef930de168b5d2759fc79b32e39954b"
+    },
+    "explorer/building-view-heights.js": {
+      "bytes": 3341,
+      "sha256": "8f589d5d799a3aca27ffa8af9ac79a490f4ab628ebddf5b52a41439116678672"
+    },
     "explorer/city-selftest.js": {
-      "bytes": 6428,
-      "sha256": "4b5f1a4be46263d6ebb77baeb32c21bcd614915f603010a81cf03c772383b4dd"
+      "bytes": 27988,
+      "sha256": "3bd371d9fb0bdb179421bef63677d14e9888a51422df2d81a8cedbfb3e080293"
     },
     "explorer/cone-ceiling.js": {
-      "bytes": 8478,
-      "sha256": "1efadefe0b0da2435ab8c1155685c3c8a90dd53d23cc961edb1ccacd310699f9"
+      "bytes": 13135,
+      "sha256": "683df27cd7c13cec0676a99b086dff60cd67cf6f6a2192d1e1f3d57175fcf20c"
     },
     "explorer/entry.js": {
-      "bytes": 4273,
-      "sha256": "35f92e705a456a64f36e1381e9f5a51e34d6fc81e50f986a20e92f02287b2a33"
+      "bytes": 5361,
+      "sha256": "669b3bb312b5dbe11656e742c8c809b00d4dae9ad0d65bac8d0500092360e4d7"
+    },
+    "explorer/envelope-selftest.js": {
+      "bytes": 10544,
+      "sha256": "75baa28c2e899bbd4db51643ebac4925ddf5ec3b6c4c81dd8e5f993958b31cad"
     },
     "explorer/explorer.css": {
-      "bytes": 94168,
-      "sha256": "0c291a5a8b41703a2a6b764024d583e69970ee7205196e1ac0a3e43fe9982f80"
+      "bytes": 96675,
+      "sha256": "51e78e1a9732256987436c9abceff54da4c0bb9a3720d885a2435918e8674cfc"
     },
     "explorer/explorer.js": {
-      "bytes": 271714,
-      "sha256": "c6a4e3f6a6c72abc3642ca63af6db44388b32769d548f5f4412f89602167d962"
+      "bytes": 309551,
+      "sha256": "eb1a193523ca42eb856e5bd3b33edb148d998d72a6a572959b2b43127128584b"
+    },
+    "explorer/facade-bounds.js": {
+      "bytes": 10426,
+      "sha256": "b38b0ffe03d8bd85fbaba6eb2c675e17cfd0d16aa48d87b142f7c146d0260165"
+    },
+    "explorer/facade-worker.js": {
+      "bytes": 1123,
+      "sha256": "c51a70f1b6323f8723dbc80fbfb514df842ca026363641835f639e6edbf3b0bd"
     },
     "explorer/flow-selftest.js": {
       "bytes": 11152,
       "sha256": "89147278889a3d3bea68b24dac2f993025a265586c3193095e01dde05b97c878"
     },
+    "explorer/georeference-selftest.js": {
+      "bytes": 14180,
+      "sha256": "c5525931cf18228638500746ad6482d1b3d797dd1c0be1e76440f6b7ea37077d"
+    },
+    "explorer/georeference-ui.js": {
+      "bytes": 8670,
+      "sha256": "6404acbd2b7d8a778f111daa995a39db2f0ffdaaa3a3d0b30c55353be3f253c2"
+    },
+    "explorer/georeference.js": {
+      "bytes": 14280,
+      "sha256": "bf081059b55dcb626fe615e0862c1c3c298c55cfb710505935678684848eefc8"
+    },
+    "explorer/height-policy.js": {
+      "bytes": 16001,
+      "sha256": "65b650b9b6476b2c611f94cbd664bcdd0ed8012400f1e117a05e346d1db4eb33"
+    },
+    "explorer/height-presets.js": {
+      "bytes": 18204,
+      "sha256": "8750443c87f655e3075340e1d28ae0664fb0c3824e03bf7f6f42ee96e9d4cb89"
+    },
+    "explorer/imagine-data.js": {
+      "bytes": 6800,
+      "sha256": "8141eb8a7d813fd41b026f8f29ead4e501bb58b9f612375207969b099e3e535b"
+    },
+    "explorer/imagine-performance-selftest.js": {
+      "bytes": 15032,
+      "sha256": "eb5d8692a044bb4317aec7d656a8fbe553ab5a74e71ad32e9a95ab07e269e703"
+    },
+    "explorer/imagine-renderer.js": {
+      "bytes": 13828,
+      "sha256": "21930694aa3da373d565b3efd70094088ca463a72be9e82cffc945160d6e10b6"
+    },
+    "explorer/imagine-selftest.js": {
+      "bytes": 12078,
+      "sha256": "510b55e93b3c3352d53102a55786afc58524c1d19319fa3b7097a94738eeaa05"
+    },
+    "explorer/imagine.css": {
+      "bytes": 12423,
+      "sha256": "739949e04053280f7a21eea4f34b6233ae81caf1933226362c61ff43ec103413"
+    },
+    "explorer/imagine.js": {
+      "bytes": 70602,
+      "sha256": "137fdedbc377b003b6e9780eaafe4e7cdc9200b0b17e777fa65e302418f1bf5d"
+    },
+    "explorer/import-parcels-worker.js": {
+      "bytes": 1941,
+      "sha256": "458a3ab4c4dd27103d076384ea0f1573f8b7644c7cca47edfa0d5b27c724be8a"
+    },
+    "explorer/import-parcels.js": {
+      "bytes": 12106,
+      "sha256": "42fd41cd1c4f64091a5885758a350d42bf53d71486724eb7bc6b6a9fa2226692"
+    },
     "explorer/index.html": {
-      "bytes": 54636,
-      "sha256": "5a772204abcf63c9d6a383b3881ed1491141c84a1835cac191bd4ba917d6e7a7"
+      "bytes": 57355,
+      "sha256": "8de839a1db90a26f14d70db8e8cc5a23c0fd1eb629d0f530476f6b7ef4f81ad3"
     },
     "explorer/inset-camera.js": {
       "bytes": 3122,
@@ -108,12 +180,16 @@
       "sha256": "65d157b51141e31f269d642ab2c4d671f293ee02800e6599c8ff99ca325e0164"
     },
     "explorer/proposal-geometry.js": {
-      "bytes": 4662,
-      "sha256": "54b67c465a03a5d5ec8458e8a073d0fa086e33364e0adb9d3c072c3d2829a8e2"
+      "bytes": 6508,
+      "sha256": "cfa3e04f8bda4d5adfbc395d51113e40e5fbe548dfda8e9f1ccbc22c460f5c3e"
     },
     "explorer/report.js": {
       "bytes": 61257,
       "sha256": "479ccbc6f15b46c93d17d7a1684c973e13e587ece0e124e4a36021d4697d9ac8"
+    },
+    "explorer/rhino-planar.js": {
+      "bytes": 15973,
+      "sha256": "b9ee9ff1221bdbdd9b2314981f097c145661eb9dbee9e9ad8e406e8fa80f5c05"
     },
     "explorer/rooftop-selftest.js": {
       "bytes": 7296,
@@ -131,13 +207,25 @@
       "bytes": 6185,
       "sha256": "36d2627acf7e0e5ae7b4288e8d25a97196da2da471d52471a05501733922ee2d"
     },
+    "explorer/source-catalogue.json": {
+      "bytes": 13194,
+      "sha256": "8cf3a74162967a7ac6862e77a65103cabd49059faa1cd5fc09f5c3806c125a44"
+    },
+    "explorer/sources.css": {
+      "bytes": 5264,
+      "sha256": "d74e9e40f5475a4565cfffd4c00fb0dd78ff57764ceee52af984a0558146cadc"
+    },
+    "explorer/sources.js": {
+      "bytes": 11996,
+      "sha256": "ccf7a23e248282c19c5f742fcd338df0f0a367b3adc146f2949ec52b1d86a242"
+    },
     "explorer/street-geometry.js": {
       "bytes": 3904,
       "sha256": "3ece1ec81e902ef9fe281433e9320ae3f9c9cbdff4f129ef8c9f5091e3359f00"
     },
     "explorer/streetscape.js": {
-      "bytes": 16665,
-      "sha256": "824c6aed6ef1f83fb75713f8a0e400a0058650d84cd5e5ffb61e5f619999509b"
+      "bytes": 16793,
+      "sha256": "3a5ce1d726aff444bf97defdc39a6af3748638744dacc61ac78d545e76bdf51b"
     },
     "explorer/study-selftest.js": {
       "bytes": 14408,
@@ -151,13 +239,57 @@
       "bytes": 3225,
       "sha256": "39293665c664623c8cccf054f90bb51acbc26c92c05f2d06e729d238c2eb8f0d"
     },
+    "explorer/textures/FACADE_TEXTURES.json": {
+      "bytes": 4468,
+      "sha256": "e922037587fe690aea6d420887bab2565a49cbc953076776472218481a52c620"
+    },
+    "explorer/textures/GRASS_TEXTURE.txt": {
+      "bytes": 1034,
+      "sha256": "1f20f80c93d2e24a2907f5d52cf63fd450698aca35ed60087526e2970dabcdde"
+    },
+    "explorer/textures/PAVING_TEXTURES.json": {
+      "bytes": 1045,
+      "sha256": "b29ea8563a87a8812cb12b7fe89af79893d032b113d95e6fb3b701897252af06"
+    },
+    "explorer/textures/WATER_TEXTURE.txt": {
+      "bytes": 1147,
+      "sha256": "ab42fa8f12d10747581132042aef1da6899dca0174b31d85018676e3d9bfed0e"
+    },
+    "explorer/textures/asphalt-user-v01.png": {
+      "bytes": 650454,
+      "sha256": "08afd8008bf88532370bbe786d3ad469d0ee005475d982f046ecf72919482687"
+    },
+    "explorer/textures/brick_wall_003_diffuse_1k.jpg": {
+      "bytes": 665706,
+      "sha256": "cb691df78201bd292c1004a796b76ef8ee9895548fb545a4a4d6d77903eeec01"
+    },
+    "explorer/textures/concrete_wall_001_diff_1k.jpg": {
+      "bytes": 79320,
+      "sha256": "c3c936da86d57997d9fc4022371c3798c8d438aeecb8f41546104da6d3947c02"
+    },
+    "explorer/textures/grass-watercolour-v01.png": {
+      "bytes": 3574622,
+      "sha256": "aab68048ff8db89de1ea30a435e47199ba3caee88d48f945abdfcac89ec3da0c"
+    },
+    "explorer/textures/ocean-normal-map-1k.png": {
+      "bytes": 929899,
+      "sha256": "adc44dd8d95d138990369989cad79a067797e220e5ead4cc1de4da33cbf55cb0"
+    },
+    "explorer/textures/paving-concrete-user-v01.png": {
+      "bytes": 1677491,
+      "sha256": "8eac9cece5a953f42586aa894608ae111c197a6308a03409f1b5d28bd0c08118"
+    },
+    "explorer/textures/whitewashed_brick_diff_1k.jpg": {
+      "bytes": 844123,
+      "sha256": "a2cb551d73a4488cc5816c1ca48e9114875d8c2f3f0f39947b6dfcd913d792f3"
+    },
     "explorer/traffic-network.js": {
       "bytes": 13232,
       "sha256": "09a765b6ef6c4e08c7077fd5159e7fd0432b5afa98ffc1467050d44ac0e24d77"
     },
     "explorer/traffic-raster.js": {
-      "bytes": 4893,
-      "sha256": "d6edfe4e75ccf477214df91c2d5a0446c6dc89ea9e12bf99f618f4895dc4d848"
+      "bytes": 4991,
+      "sha256": "1aa27a6e93b13b46dd312c1c3c52eb23a34f2171ae6f83af21bfc7d2996cf73a"
     },
     "explorer/units.js": {
       "bytes": 2885,
@@ -179,9 +311,29 @@
       "bytes": 2670316,
       "sha256": "18cb4b663cda1167d510e49c7780808a14f8ea3b609bcf751f5b6062e7692df2"
     },
+    "explorer/view-certainty.js": {
+      "bytes": 5898,
+      "sha256": "845372e9095c5c7d3063da211328a61893b70a4589ac98d301fdd1de7738eacc"
+    },
+    "explorer/view-envelope-ui.js": {
+      "bytes": 18498,
+      "sha256": "e8f30086bb91c294224aa06a6244a2cff67f8bd2c82d133002ace16cfa0293c9"
+    },
+    "explorer/view-envelope.js": {
+      "bytes": 25973,
+      "sha256": "eb8e8f5f54c199bc37db9de90c2f7e0d03acbe08df5d08f2df14c065610ee248"
+    },
+    "explorer/view-impact.js": {
+      "bytes": 3416,
+      "sha256": "f9374d443e9f28f088d7d010b912a6ce581471add1a97fc44e1097044a59b061"
+    },
     "explorer/viewpoint-selftest.js": {
       "bytes": 7476,
       "sha256": "ef9fee4ef51994a600ef8c6fba9f435390bc7776db28c8fe6b87e8afbfef6d15"
+    },
+    "explorer/water-surface.js": {
+      "bytes": 5039,
+      "sha256": "3a40571dda351aa359af755a80e1b49057a3b2b178ad47dbed8d508d22245e17"
     },
     "explorer/workflow-selftest.js": {
       "bytes": 16484,
@@ -191,6 +343,14 @@
       "bytes": 1774,
       "sha256": "26f56dc46062c56323fa8522d4ac4886d69dc27860f76a7be59f1711f0e3c465"
     },
+    "generated/building_view_heights.json": {
+      "bytes": 6812871,
+      "sha256": "8dfc0980a78f60bf2aa7b0bbd939c442ae8f767e75ef7e8e4647c5f21344498a"
+    },
+    "generated/building_view_heights_metadata.json": {
+      "bytes": 2226,
+      "sha256": "99743c1b0d748b4fd3d1475a9d57cb2f9943236b053c3456bee200622aeb6b77"
+    },
     "generated/extension_labels.json": {
       "bytes": 1274,
       "sha256": "9d1cc6027df37d718769c24c1eba1319e892a48ddbd8ca433165e29449378805"
@@ -198,6 +358,26 @@
     "generated/extension_manifest.json": {
       "bytes": 7533,
       "sha256": "a0cc10dd856c5bdb3b1e8ed2eb876037f6be42d29d6ef39700a9fd099c3fe1b3"
+    },
+    "generated/height_policy.json": {
+      "bytes": 1636010,
+      "sha256": "85f7ddf730524f3df1b7f5a3fafbe24e8f3e938dc5b76aa735d410a4ebccd7fa"
+    },
+    "generated/imagine_facts.json": {
+      "bytes": 5571847,
+      "sha256": "11c2d65316c2f8725656febfed99483b07af1cb378c59612f553e6c6321373b1"
+    },
+    "generated/imagine_manifest.json": {
+      "bytes": 43870,
+      "sha256": "5449c0f5531767b929cf6ce5beccd09e97336fbbbef7fa3a4d211e8daa52205a"
+    },
+    "generated/imagine_parcels.json": {
+      "bytes": 36138518,
+      "sha256": "8a131dd5a374117f67b66227674285450e513bf89cbfbe2f617d6b0c77c2c040"
+    },
+    "generated/imagine_render.bin": {
+      "bytes": 15904316,
+      "sha256": "7182127029067e759f4af5c5cff67f18a3351d588e97ef14b601c45741f994c1"
     },
     "generated/labels.json": {
       "bytes": 1428,
