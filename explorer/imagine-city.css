@@ -10,6 +10,12 @@
   border-color:#e3656b;
   color:#fff;
 }
+.imagine-city-hover{position:absolute;z-index:12;pointer-events:none;max-width:230px;padding:10px 12px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:2px;box-shadow:0 3px 12px rgba(0,0,0,.16);line-height:1.4;}
+.imagine-city-hover[hidden]{display:none;}
+.imagine-city-hover strong,.imagine-city-hover span,.imagine-city-hover small{display:block;}
+.imagine-city-hover strong{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;}
+.imagine-city-hover span{font-size:12px;margin:2px 0 5px;}
+.imagine-city-hover small{font-size:11px;color:var(--muted);}
 body.imagine-city-open #panel > :not(#imagine-city-panel){display:none!important;}
 body.imagine-city-open #metrics,body.imagine-city-open #legend{display:none!important;}
 .imagine-city-panel[hidden]{display:none;}

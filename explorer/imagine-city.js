@@ -80,7 +80,7 @@
     paragraph(code, 'The Vancouver Building By-law regulates construction, fire safety, access and other technical requirements. A zoning height is not a building-code approval. These technical checks are not simulated.');
     link(code, 'Vancouver Building By-law', 'https://vancouver.ca/your-government/vancouver-building-bylaw.aspx');
     const selected = element('section', '', '', panel, 'imagine-city-selection'); element('h3', '', 'Inspect a building', selected);
-    paragraph(selected, 'Click a building in the city to see its height, controlling corridor and available zoning references.', 'imagine-city-selection-help'); element('div', 'imagine-city-selection', '', selected);
+    paragraph(selected, 'Hover over a building to see its height. Click for the controlling corridor and zoning references.', 'imagine-city-selection-help'); element('div', 'imagine-city-selection', '', selected);
     const actions = element('div', '', '', panel, 'imagine-city-footer'); button(actions, 'imagine-city-sources', 'Read methods & sources', () => root.VistaSources?.open?.());
     button(actions, 'imagine-city-export', 'Export building results (CSV)', exportCSV).disabled = true;
     const exportStatus = paragraph(actions, '', 'imagine-city-export-status'); exportStatus.setAttribute('role','status'); exportStatus.setAttribute('aria-live','polite');
@@ -150,6 +150,7 @@
   }
   async function calculate() {
     if (!S.open || !S.data) return;
+    root.VistaImagineHover?.clear();
     const generation = ++S.generation; S.loading = false; S.calculating = true; S.error = ''; update(); progress('Calculating building heights beneath every study view surface…');
     await new Promise(resolve => root.setTimeout ? root.setTimeout(resolve, 0) : resolve());
     if (!S.open || generation !== S.generation) return;
@@ -191,6 +192,7 @@
   }
   function close() {
     if (!S.open) return;
+    root.VistaImagineHover?.clear();
     S.open = false; ++S.generation; ++exportVersion; controller?.abort(); controller = null; root.clearTimeout?.(timeout); timeout = null; S.loading = false; S.calculating = false; S.exporting = false; $('imagine-city-export-status').textContent='';
     doc.body.classList.remove('imagine-city-open'); X()?.setImagineCityScene?.(null); panel.hidden = true;
     const host = $('panel'); if (host && original) {host.classList.toggle('collapsed', original.collapsed); host.scrollTop = original.scrollTop; $('btn-panel-toggle')?.setAttribute('aria-expanded', String(!original.collapsed));}
@@ -199,6 +201,10 @@
     doc.dispatchEvent?.(new root.Event('vista-imagine-city-closed'));
   }
   function selectBuilding(value) {if (!S.open || !S.data || !S.result) return false; S.selected = value && typeof value.asset === 'string' && Number.isInteger(value.index ?? value.row) ? {asset:value.asset,row:value.index ?? value.row} : null; selection(); return true;}
+  function getHoverBuilding(value) {
+    if (!S.open || S.loading || S.calculating || !S.data || !S.result || !value || typeof value.asset !== 'string' || !Number.isSafeInteger(value.index)) return null;
+    return root.ImagineCityEngine?.getBuilding?.(S.data,S.result,value.asset,value.index) || null;
+  }
   function selection() {
     const host = $('imagine-city-selection'); if (!host) return;
     host.replaceChildren(); $('imagine-city-selection-help').hidden = !!S.selected;
@@ -237,9 +243,9 @@
     } catch(error) {if(token===exportVersion)$('imagine-city-export-status').textContent='The CSV could not be prepared. Try exporting again.';}
     finally {if(token===exportVersion){S.exporting=false;if(S.open)update();}}
   }
-  function refresh() {if (S.open) update();}
+  function refresh() {root.VistaImagineHover?.clear();if (S.open) update();}
   function bind() {const b = $('btn-imagine'); if (!b || b.dataset.imagineCityBound) return; b.dataset.imagineCityBound = 'true'; b.addEventListener('click',() => S.open ? close() : open()); if (new root.URLSearchParams(root.location?.search || '').get('imagine') === '1') open();}
   doc.addEventListener('keydown',e=>{if (e.key !== 'Escape' || !S.open || !panel.contains(doc.activeElement) || e.defaultPrevented) return; e.preventDefault();e.stopPropagation();close();},true);
-  root.VistaImagineCity = {open,close,refresh,selectBuilding,setScenario,toggleCones,getState:()=>({open:S.open,loading:S.loading,calculating:S.calculating,exporting:S.exporting,loaded:!!S.data,error:S.error,scenario:S.scenario,showCones:S.showCones,studyHeightM:S.studyHeightM,missingHeightM:S.missingHeightM,useAssumptions:S.useAssumptions,selected:S.selected,stats:S.result?.stats || null,cacheEntries:results.size,cacheHits:S.cacheHits})};
+  root.VistaImagineCity = {open,close,refresh,selectBuilding,getHoverBuilding,setScenario,toggleCones,getState:()=>({open:S.open,loading:S.loading,calculating:S.calculating,exporting:S.exporting,loaded:!!S.data,error:S.error,scenario:S.scenario,showCones:S.showCones,studyHeightM:S.studyHeightM,missingHeightM:S.missingHeightM,useAssumptions:S.useAssumptions,selected:S.selected,stats:S.result?.stats || null,cacheEntries:results.size,cacheHits:S.cacheHits})};
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded',bind,{once:true}); else bind();
 })(typeof window !== 'undefined' ? window : globalThis);

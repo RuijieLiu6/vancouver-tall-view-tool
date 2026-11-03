@@ -1,7 +1,7 @@
 {
   "format": "vancouver-static-pages/1",
-  "file_count": 132,
-  "total_bytes": 144845114,
+  "file_count": 134,
+  "total_bytes": 144863083,
   "files": {
     ".github/workflows/pages.yml": {
       "bytes": 591,
@@ -80,8 +80,8 @@
       "sha256": "683df27cd7c13cec0676a99b086dff60cd67cf6f6a2192d1e1f3d57175fcf20c"
     },
     "explorer/entry.js": {
-      "bytes": 5536,
-      "sha256": "cba67d6a7cb400489c303da69c429a1a6913afb12f94766cb16d091ec62d3376"
+      "bytes": 5651,
+      "sha256": "06cf61545f6c7a708e223a4808574a4e036d41ee5b944260b2b92f1c655b0664"
     },
     "explorer/envelope-selftest.js": {
       "bytes": 10544,
@@ -92,8 +92,8 @@
       "sha256": "4925d44bdf0872b83dec2383f35a163ec5888cdb252cfab087756bde11f90843"
     },
     "explorer/explorer.js": {
-      "bytes": 319451,
-      "sha256": "0297d23a2ef67d0a3006ae9e370bbff4869083ecf1d1106e174c5cf287a54da1"
+      "bytes": 321822,
+      "sha256": "76368c95f1a57a1520cd9963d65e3b70834f4b18aec951445531dfad5dc65398"
     },
     "explorer/facade-bounds.js": {
       "bytes": 10426,
@@ -131,25 +131,33 @@
       "bytes": 16518,
       "sha256": "819b935140bc83984303e431fe6c4bae09ef428c7d9aaf8f5fc2255948795af3"
     },
+    "explorer/imagine-city-hover.js": {
+      "bytes": 4112,
+      "sha256": "b1660d50f3459cd4a7d653821fd4f07e84134b5fb09deb1926aaac68a10facf7"
+    },
     "explorer/imagine-city-render.js": {
-      "bytes": 1807,
-      "sha256": "2493798f35384b33a975e67d2d8f198bcab8e52623c4389f70f12f48849bf6c9"
+      "bytes": 8159,
+      "sha256": "b370a098b36f8acc8d5c846a20a9c257a289fff07e6e947a22fe5e7428d5c2a2"
     },
     "explorer/imagine-city-selftest.js": {
       "bytes": 10421,
       "sha256": "2dbbeab9aae660adc6c68258a08846292dd223960f1a0b43c76230a20aa617cd"
     },
     "explorer/imagine-city.css": {
-      "bytes": 4675,
-      "sha256": "7cca685df23bf2cd117e1ecc6cccc7d42fe7e7a6a718b0ed315c80e40cfade85"
+      "bytes": 5274,
+      "sha256": "f5b07fc0148784bd719d2523691c2ded093b28ab6e2c4f07ee0d0d847e3c0e18"
     },
     "explorer/imagine-city.js": {
-      "bytes": 26809,
-      "sha256": "3212a3f9fd2e2a4b851a2b92e7fe4c684d1c7c11fd5492385d8e93eb475b7469"
+      "bytes": 27236,
+      "sha256": "526a8a2edecc01c5f9936d0fb554ac92a12c00438f040924a88b62a1625aff62"
     },
     "explorer/imagine-data.js": {
       "bytes": 6800,
       "sha256": "8141eb8a7d813fd41b026f8f29ead4e501bb58b9f612375207969b099e3e535b"
+    },
+    "explorer/imagine-hover-selftest.js": {
+      "bytes": 3993,
+      "sha256": "d79b60636beb7d4132a07690712373306e6c41e6623d8a564cf928bf2224abaa"
     },
     "explorer/imagine-performance-selftest.js": {
       "bytes": 15032,

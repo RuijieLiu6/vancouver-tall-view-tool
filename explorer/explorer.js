@@ -848,9 +848,12 @@ function setCommon(prog, cam) { gl.useProgram(prog.p);
   } if(prog.u.uTrafficOn){const on=state.sceneStyle==='context'&&state.layers.roads&&trafficTextures.global&&trafficTextures.local;gl.uniform1f(prog.u.uTrafficOn,on?1:0);if(on){for(const [unit,tex,name,mapName] of [[2,trafficTextures.global,'uTrafficTex','uTrafficMap'],[3,trafficTextures.local,'uTrafficDetailTex','uTrafficDetailMap']]){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex.texture);gl.uniform1i(prog.u[name],unit);gl.uniform4fv(prog.u[mapName],tex.map);}gl.activeTexture(gl.TEXTURE0);}} if (prog.u.uAerialOn) { const on = state.layers.aerial && aerial.tex; gl.uniform1f(prog.u.uAerialOn, on ? 1 : 0); if (on) { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, aerial.tex); gl.uniform1i(prog.u.uAerialTex, 0); gl.uniform4fv(prog.u.uAerialMap, aerial.map); } } if(prog.u.uSceneStyle) gl.uniform1f(prog.u.uSceneStyle,SCENE_STYLES[state.sceneStyle].shader); if(prog.u.uImagineCity) gl.uniform1f(prog.u.uImagineCity,0); if(prog.u.uSurface) gl.uniform1f(prog.u.uSurface,0); if (prog.u.uStudyActive) gl.uniform1f(prog.u.uStudyActive, 0); gl.uniformMatrix4fv(prog.u.uVP, false, new Float32Array(cam.vp)); gl.uniform3fv(prog.u.uCamPos, cam.eye); gl.uniform3fv(prog.u.uFog, BG); gl.uniform1f(prog.u.uFogFar, cam.fogFar); if (prog.u.uLightMix) gl.uniform1f(prog.u.uLightMix, 1.0); gl.uniform3fv(prog.u.uOffset, [0, 0, 0]);
   if(prog.u.uShadowOn){const on=state.sceneStyle==='context' && contextShadow.tex && contextShadow.vp;gl.uniform1f(prog.u.uShadowOn,on?1:0);if(on){gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,contextShadow.tex);gl.uniform1i(prog.u.uShadowTex,1);gl.uniformMatrix4fv(prog.u.uShadowVP,false,new Float32Array(contextShadow.vp));gl.uniform1f(prog.u.uShadowTexel,1/contextShadow.size);gl.activeTexture(gl.TEXTURE0);}}
 }
-let imagineCityScene=null,imagineCityUploads=0,imagineCityBytes=0;
+let imagineCityScene=null,imagineCityUploads=0,imagineCityBytes=0,imaginePickIndex=null,imagineOcclusionIndex=null;
+const imaginePickMetrics={buildMs:0,occlusionBuildMs:0,lastPickMs:0};
 function imagineCityOpen(){return document.body.classList.contains('imagine-city-open');}
 function setImagineCityScene(scene){
+  if(scene?.assets!==imagineCityScene?.assets){imaginePickIndex=null;window.VistaImagineHover?.clear();}
+  if(!scene)imagineOcclusionIndex=null;
   if(scene){
     if(imagineCityScene?.assets===scene.assets&&imagineCityScene?.dataset===scene.dataset){imagineCityScene=scene;window.VistaViewcone?.refresh();requestRender();return true;}
     if(!window.ImagineCityEngine.matchesManifest(scene.dataset,assets.unified))throw new Error('Imagine references belong to another city model. Rebuild the prepared data.');
@@ -879,6 +882,33 @@ function setImagineCityScene(scene){
     for(const key of ['buildings','ext_buildings']){const mesh=assets.meshes[key];if(!mesh?.imagineBuffer)continue;gl.bindVertexArray(mesh.vao);gl.disableVertexAttribArray(4);gl.deleteBuffer(mesh.imagineBuffer);mesh.imagineBuffer=null;}gl.bindVertexArray(null);
   }
   contextShadow.key=null;panelToggleLabel();window.VistaViewcone?.refresh();requestRender();return true;
+}
+function pickImagineBuildingAt(cx,cy){
+  if(!imagineCityOpen()||!imagineCityScene||!assets.ready||!lastCam||needsRender)return null;
+  const rect=canvas.getBoundingClientRect();if(cx<rect.left||cy<rect.top||cx>rect.right||cy>rect.bottom)return null;
+  const ray=rayFromClient(cx,cy,lastCam);if(!ray)return null;
+  if(!imaginePickIndex){
+    const started=performance.now();
+    imaginePickIndex=ImagineCityRender.createPickIndex([{asset:'buildings',columns:assets.index?.columns},{asset:'ext_buildings',columns:assets.extIndex?.columns}],imagineCityScene.assets);
+    imaginePickMetrics.buildMs=performance.now()-started;
+  }
+  if(!imagineOcclusionIndex){
+    const started=performance.now();
+    imagineOcclusionIndex=ImagineCityRender.createOcclusionIndex(['terrain','ext_terrain','water','ext_water'].map(asset=>({asset,...assets.raw[asset]})));
+    imaginePickMetrics.occlusionBuildMs=performance.now()-started;
+  }
+  const started=performance.now();
+  const hit=imaginePickIndex.pick(ray.o,ray.d,(row)=>{
+    const columns=(row.asset==='buildings'?assets.index:assets.extIndex).columns;
+    const inverse=ImagineCityRender.inverseRay(ray.o,ray.d,row.base,row.scale);
+    return rayMesh(inverse.o,inverse.d,assets.raw[row.asset],columns.index_offset[row.index],columns.index_count[row.index]);
+  });
+  // Terrain and water can obscure a distant building. Translucent view surfaces
+  // deliberately do not block inspection of the city underneath them.
+  const occluder=hit&&imagineOcclusionIndex.pick(ray.o,ray.d,row=>rayMesh(ray.o,ray.d,assets.raw[row.asset],row.start,row.count));
+  const visible=hit&&(!occluder||occluder.t>=hit.t-1e-4);
+  imaginePickMetrics.lastPickMs=performance.now()-started;
+  return visible?{asset:hit.asset,index:hit.index}:null;
 }
 function drawStatic(prog, key, color, offset) { if(prog.u.uSurface) gl.uniform1f(prog.u.uSurface,({buildings:1,ext_buildings:1,terrain:2,ext_terrain:2,parks:3,ext_parks:3,water:4,ext_water:4,backdrop:6})[key] || 0); const m = assets.meshes[key]; if (!m) return;const cityBuilding=!!imagineCityScene&&/^(ext_)?buildings$/.test(key);if(prog.u.uImagineCity)gl.uniform1f(prog.u.uImagineCity,cityBuilding?1:0); gl.uniform4fv(prog.u.uColor, color); gl.uniform3fv(prog.u.uOffset, offset || [0, 0, 0]); gl.bindVertexArray(m.vao); if (m.indexed && /^(ext_)?buildings$/.test(key) && !imagineCityOpen() && (state.removed.length || state.cleared.length) && !state.showExisting) {
     const ext = key === 'ext_buildings', cols = (ext ? assets.extIndex : assets.index).columns;
@@ -1082,7 +1112,7 @@ function wedgeGeometry(aspect) { const eye = observerEye(); if (!eye) return nul
     edges: new Float32Array([...eye, ...q[0], ...eye, ...q[1], ...eye, ...q[2], ...eye, ...q[3], ...q[0], ...q[1], ...q[1], ...q[2], ...q[2], ...q[3], ...q[3], ...q[0]]) }; }
 function resize() { const dpr = Math.min(window.devicePixelRatio || 1, 2); const r = canvas.getBoundingClientRect(); const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr)); if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; requestRender(); } }
 function render() { if (!gl || !PM) return; resize(); const W = canvas.width, H = canvas.height; gl.viewport(0, 0, W, H); gl.disable(gl.SCISSOR_TEST); gl.clearColor(BG[0], BG[1], BG[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); if (!assets.ready) return;
-  const cam = computeCamera(state.mode, W / H); lastCam = cam; drawScene(cam, { markers: state.mode !== 'observer', backdrop: state.mode === 'observer' });
+  const cam = computeCamera(state.mode, W / H); if(lastCam&&cam.vp.some((value,i)=>Math.abs(value-lastCam.vp[i])>1e-7))window.VistaImagineHover?.clear(); lastCam = cam; drawScene(cam, { markers: state.mode !== 'observer', backdrop: state.mode === 'observer' });
   const inset = insetContext(); $('inset-frame').classList.toggle('hidden', !inset.visible); if (inset.visible) drawInset(W, H, inset);
   updatePlanMarkers(cam); updateLabels(cam); updateMapCues(cam); aerialFollow(); }
 // Screen-size markers in Plan and City views: an eye where the observer stands, with a fan for the view direction, and a
@@ -2682,7 +2712,7 @@ function restoreProposalParts(parts) {
   state.parts=JSON.parse(JSON.stringify(parts));state.check.result=null;
   renderPartsList();refreshPanels();refreshLiveStudy();requestRender();writeHash();return true;
 }
-window.__explorer = { setImagineCityScene, imagineCityRenderState:()=>({active:!!imagineCityScene,versionId:imagineCityScene?.versionId,uploads:imagineCityUploads,bytes:imagineCityBytes}), getStartupPerformance:()=>JSON.parse(JSON.stringify(startupPerformance)), applyHeightReference, restoreProposalParts, getConeStudy:()=>({...coneStudy}), importOffset, requestSiteConfirmation, pavingSurfaces, facadeSurfaces, grassSurface, waterSurface, trafficRenderInfo:()=>({enabled:state.sceneStyle==='context'&&state.layers.roads,global:trafficTextures.global?{bounds:trafficTextures.global.bounds,size:trafficTextures.global.size,stats:trafficTextures.global.stats}:null,detail:trafficTextures.local?{bounds:trafficTextures.local.bounds,size:trafficTextures.local.size,stats:trafficTextures.local.stats}:null,deck:globalTrafficSurfaces?.stats}), moveObserver, streetscapeStats:()=>streetSurfaces?{...streetSurfaces.stats,global:globalTrafficSurfaces?.stats,network:assets.traffic?.stats}:null, clearStreetSurfaces, placeStreetObserver, refreshStreetChoices, streetRoadArrays, usableStreetPoint, coneCeilingResult, restoreConeStudy, refreshConeCeiling, studySentence, setHint, setAddressPin, loadAerial, aerial, updateCleared, clearanceGeometry: { footprintRecord, footprintIndex, projectedTriangleMeetsFootprint, indexedBuildingMeetsFootprints }, isReplaced, startNewStudy, captureScene, proposalShown, partFootprint, highestRoofAtXY, formatArea, planAnalysis, renderClauseCards, SCENE_STYLES, HS, applyFlowTool, flowGo, chooseMethod, changeMethod, flowBack, flowNext, stageComplete, toggleMultiBuilding, applyMultiSelection, replaceSingleBuilding, beginAim, aimDragTo, endAim, setSceneStyle, planAnalysis, refreshLiveStudy, resultLabel, serializeHash, openStudy, landZAt, beginBoundary, addBoundaryPoint, finishBoundary, cancelBoundary, rectangleSite, replaceSelectedBuilding, restoreBuildings, focusSite, focusLocation, planView, applyPick, isRemoved, state, assets, ready: readyPromise, placeSite, placeObserver, placeObserverAtOrigin, lookTowardProposal, setMode, setTool, setStep, aimAtProposal, resetToContext, inspectFrom, selectView, selectedCone, addPart, renderPartsList, setProposalMode, parseObj, installImport, cancelImport, runCheck, evaluationArea,
+window.__explorer = { setImagineCityScene, pickImagineBuildingAt, imagineCityRenderState:()=>({active:!!imagineCityScene,versionId:imagineCityScene?.versionId,uploads:imagineCityUploads,bytes:imagineCityBytes,pickRows:imaginePickIndex?.size||0,occlusionChunks:imagineOcclusionIndex?.size||0,pickBuildMs:imaginePickMetrics.buildMs,occlusionBuildMs:imaginePickMetrics.occlusionBuildMs,lastPickMs:imaginePickMetrics.lastPickMs}), getStartupPerformance:()=>JSON.parse(JSON.stringify(startupPerformance)), applyHeightReference, restoreProposalParts, getConeStudy:()=>({...coneStudy}), importOffset, requestSiteConfirmation, pavingSurfaces, facadeSurfaces, grassSurface, waterSurface, trafficRenderInfo:()=>({enabled:state.sceneStyle==='context'&&state.layers.roads,global:trafficTextures.global?{bounds:trafficTextures.global.bounds,size:trafficTextures.global.size,stats:trafficTextures.global.stats}:null,detail:trafficTextures.local?{bounds:trafficTextures.local.bounds,size:trafficTextures.local.size,stats:trafficTextures.local.stats}:null,deck:globalTrafficSurfaces?.stats}), moveObserver, streetscapeStats:()=>streetSurfaces?{...streetSurfaces.stats,global:globalTrafficSurfaces?.stats,network:assets.traffic?.stats}:null, clearStreetSurfaces, placeStreetObserver, refreshStreetChoices, streetRoadArrays, usableStreetPoint, coneCeilingResult, restoreConeStudy, refreshConeCeiling, studySentence, setHint, setAddressPin, loadAerial, aerial, updateCleared, clearanceGeometry: { footprintRecord, footprintIndex, projectedTriangleMeetsFootprint, indexedBuildingMeetsFootprints }, isReplaced, startNewStudy, captureScene, proposalShown, partFootprint, highestRoofAtXY, formatArea, planAnalysis, renderClauseCards, SCENE_STYLES, HS, applyFlowTool, flowGo, chooseMethod, changeMethod, flowBack, flowNext, stageComplete, toggleMultiBuilding, applyMultiSelection, replaceSingleBuilding, beginAim, aimDragTo, endAim, setSceneStyle, planAnalysis, refreshLiveStudy, resultLabel, serializeHash, openStudy, landZAt, beginBoundary, addBoundaryPoint, finishBoundary, cancelBoundary, rectangleSite, replaceSelectedBuilding, restoreBuildings, focusSite, focusLocation, planView, applyPick, isRemoved, state, assets, ready: readyPromise, placeSite, placeObserver, placeObserverAtOrigin, lookTowardProposal, setMode, setTool, setStep, aimAtProposal, resetToContext, inspectFrom, selectView, selectedCone, addPart, renderPartsList, setProposalMode, parseObj, installImport, cancelImport, runCheck, evaluationArea,
   terrainZAt, groundZAt, roofZAt, preferredRoofPoint, placeRoofObserver, placeRooftopAtXY, viewFromSelectedRoof, proposalBox, proposalParts, proposalCentre, observerEye, observerForward, pickRay, rayFromClient, applyHash, refreshPanels, technicalState, explainCheck, buildPdfReport,
   checkBody, setDisplayUnits, refreshImportInfo, viewFromHere, lookObserver, viewpointNavigationState, refreshViewpointNavigation, stepViewpoint,
   renderOnce: () => { needsRender = false; render(); return lastCam; }, camera: () => lastCam, canvas, gl,
