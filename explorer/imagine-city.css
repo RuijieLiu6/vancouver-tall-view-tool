@@ -1,4 +1,15 @@
 /* The city comparison shares Vista's existing viewport and visual system. */
+#btn-imagine[aria-expanded="true"]{
+  background:#a92d32;
+  border-color:#d44d53;
+  color:#fff;
+  box-shadow:0 0 0 2px rgba(212,77,83,.18),0 0 18px rgba(212,77,83,.48);
+}
+#btn-imagine[aria-expanded="true"]:hover{
+  background:#92272c;
+  border-color:#e3656b;
+  color:#fff;
+}
 body.imagine-city-open #panel > :not(#imagine-city-panel){display:none!important;}
 body.imagine-city-open #metrics,body.imagine-city-open #legend{display:none!important;}
 .imagine-city-panel[hidden]{display:none;}

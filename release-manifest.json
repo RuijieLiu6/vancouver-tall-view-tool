@@ -1,7 +1,7 @@
 {
   "format": "vancouver-static-pages/1",
   "file_count": 132,
-  "total_bytes": 144844839,
+  "total_bytes": 144845114,
   "files": {
     ".github/workflows/pages.yml": {
       "bytes": 591,
@@ -140,8 +140,8 @@
       "sha256": "2dbbeab9aae660adc6c68258a08846292dd223960f1a0b43c76230a20aa617cd"
     },
     "explorer/imagine-city.css": {
-      "bytes": 4400,
-      "sha256": "5b6fa2bcfab236ff86885d9a00edd70d9f712e49abc9cc8288e767238c418743"
+      "bytes": 4675,
+      "sha256": "7cca685df23bf2cd117e1ecc6cccc7d42fe7e7a6a718b0ed315c80e40cfade85"
     },
     "explorer/imagine-city.js": {
       "bytes": 26809,
