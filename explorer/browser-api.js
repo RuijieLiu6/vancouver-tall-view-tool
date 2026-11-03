@@ -11,6 +11,7 @@
   });
   const own = (body, key, fallback = null) => Object.hasOwn(body, key) ? body[key] : fallback;
   async function request(path, options = {}) {
+    options = { ...options, cache: 'no-store' };
     const name = String(path).replace(/^\//, '');
     const method = (options.method || 'GET').toUpperCase();
     if (!isStatic) return window.fetch(assetUrl(path), options);

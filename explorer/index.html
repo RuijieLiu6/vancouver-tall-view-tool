@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap">
 <script>if (location.protocol === 'file:') document.documentElement.classList.add('local-entry');
 // Keep the page hidden until explorer.css arrives (entry.js marks it), so unstyled icons never flash; first visits start dark under the intro.
-(function () { var q = new URLSearchParams(location.search), d = document.documentElement, seen = false; try { seen = localStorage.getItem('vancouver-view-lab-intro-seen/1') === '1'; } catch (e) {}
+(function () { var q = new URLSearchParams(location.search), d = document.documentElement, seen = window.__vistaIntroSeen === true;
   var testing = ['selftest', 'workflowtest', 'studytest', 'surfacetest', 'rooftest', 'flowtest', 'importselftest'].some(function (k) { return q.get(k) === '1'; });
   if (!testing && q.get('intro') !== '0' && (q.get('intro') === '1' || !seen)) d.classList.add('intro-pending');
   setTimeout(function () { d.classList.add('app-styled'); }, 4000); })();</script>
@@ -81,7 +81,7 @@
     <h1><span class="brand-mark" aria-hidden="true"><svg class="ico"><use href="#i-eye"/></svg></span><span class="brand-copy"><span class="brand-title">Vista</span><span class="brand-subtitle">Vancouver View Protection Tool</span></span></h1>
   </div>
   <div class="header-actions">
-    <button id="btn-imagine" class="btn" type="button" aria-haspopup="dialog" title="Explore citywide parcel heights and test skyline assumptions"><svg class="imagine-city-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V10h5v11M10 21V3h6v18M16 21v-7h4v7M12 7h2M12 11h2M12 15h2M7 14h1M7 17h1"/></svg>Imagine Vancouver</button>
+    <button id="btn-imagine" class="btn" type="button" aria-controls="imagine-city-panel" aria-expanded="false" title="Reimagine this city model beneath all view-cone study surfaces"><svg class="imagine-city-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V10h5v11M10 21V3h6v18M16 21v-7h4v7M12 7h2M12 11h2M12 15h2M7 14h1M7 17h1"/></svg>Imagine Vancouver</button>
     <button id="btn-sources" class="btn sources-open" type="button" aria-expanded="false" aria-controls="vista-sources" title="Read the height research methods, public sources and calculation limits"><svg class="sources-book-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v15M3 4.5c3-.8 6-.5 9 1.5 3-2 6-2.3 9-1.5v14c-3-.8-6-.5-9 1.5-3-2-6-2.3-9-1.5z"/></svg>Sources</button>
     <button id="btn-intro" class="btn intro-open" type="button" aria-haspopup="dialog">Help</button>
     <label class="style-picker">Style<select id="scene-style" aria-label="Scene style"><option value="collage">Plain</option><option value="night">Night</option><option value="context">Context</option></select></label>
@@ -451,6 +451,7 @@
         <button id="mode-observer" class="seg-btn" type="button" title="Look from the observer">Observer</button>
         <button id="mode-inspect" class="seg-btn" type="button" title="Orbit the proposal">Inspect</button>
         <button id="btn-plan" class="seg-btn" type="button" title="North-up orthographic plan · drag to pan">Plan</button>
+        <button id="mode-viewcone" class="seg-btn" type="button" title="Show the selected corridor in 3D and compare the proposal" aria-pressed="false" aria-controls="viewcone-panel">Viewcone</button>
       </div>
       <div class="seg tiny flow-managed" id="tools">
         <button id="tool-site" class="seg-btn active" type="button" title="Click terrain to set the site">Site point</button>
@@ -465,6 +466,7 @@
         <button id="cam-opposite" class="seg-btn" type="button" title="Opposite side">Opp.</button><button id="cam-top" class="seg-btn" type="button" title="From above">Top</button>
       </div>
     </div>
+    <section id="viewcone-panel" class="viewcone-panel hidden" aria-label="Viewcone study"></section>
     <div class="view-utilities">
       <button id="btn-focus" class="btn" type="button" title="Fit the current study site">Focus site</button>
       <button id="btn-zoom-in" class="btn" type="button" aria-label="Zoom in">+</button><button id="btn-zoom-out" class="btn" type="button" aria-label="Zoom out">−</button>
@@ -517,7 +519,7 @@
   <p id="site-confirm-description">Confirm this location as your study site.</p>
   <div class="row wrap"><button id="btn-confirm-site" class="btn primary" type="button">Place building here</button><button id="btn-cancel-site-placement" class="btn" type="button">Cancel</button></div>
 </dialog>
-<footer class="statusbar"><span class="statusbar-note">Teaching tool, not a protected-view assessment.</span><span id="context-style-note" class="hidden">Context: illustrative façades · mapped roads · illustrative widths, sidewalks and bridge levels.</span><span id="status-coverage">Coverage: —</span></footer>
+<footer class="statusbar"><span class="statusbar-note">Teaching tool, not a protected-view assessment.</span><span id="storage-status" title="Vista keeps new application data in temporary memory or project files.">Storage: temporary</span><span id="context-style-note" class="hidden">Context: illustrative façades · mapped roads · illustrative widths, sidewalks and bridge levels.</span><span id="status-coverage">Coverage: —</span></footer>
 
 <script>
   var entry = document.createElement('script');

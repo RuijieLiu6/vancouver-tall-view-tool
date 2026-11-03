@@ -1,0 +1,54 @@
+/* The city comparison shares Vista's existing viewport and visual system. */
+body.imagine-city-open #panel > :not(#imagine-city-panel){display:none!important;}
+body.imagine-city-open #metrics,body.imagine-city-open #legend{display:none!important;}
+.imagine-city-panel[hidden]{display:none;}
+.imagine-city-panel{color:var(--ink);padding-bottom:10px;}
+.imagine-city-head{margin:2px 0 18px;}
+.imagine-city-head h2{font-size:24px;font-weight:500;line-height:1.2;margin:0 0 10px;letter-spacing:-.025em;}
+.imagine-city-panel p{max-width:68ch;margin:9px 0;line-height:1.5;}
+.imagine-city-head p{color:var(--muted);}
+.imagine-city-panel .btn{min-height:44px;white-space:normal;}
+.imagine-city-head .btn{margin-top:5px;}
+.imagine-city-certainty{font-size:13px;font-weight:700;color:var(--warn-ink);}
+#imagine-city-limit{font-size:12px;color:var(--muted);margin-bottom:18px;}
+.imagine-city-scenarios{border:0;margin:0;padding:0 0 16px;min-width:0;}
+.imagine-city-scenarios legend{font-size:14px;font-weight:650;padding:0 0 8px;}
+.imagine-city-options{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;}
+.imagine-city-options .btn{padding:7px 5px;font-size:12px;line-height:1.2;}
+.imagine-city-options .btn[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink);}
+#imagine-city-scenario-note{font-size:12px;color:var(--muted);}
+.imagine-city-loading{display:flex;align-items:center;gap:9px;min-height:48px;font-size:12px;color:var(--ink);}
+.imagine-city-loading[hidden]{display:none;}
+.imagine-city-loading-mark{flex:0 0 14px;height:14px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:imagineCityLoading 1s linear infinite;}
+@keyframes imagineCityLoading{to{transform:rotate(360deg);}}
+@media(prefers-reduced-motion:reduce){.imagine-city-loading-mark{animation:none;border-color:var(--ink);}}
+#imagine-city-error{color:var(--warn-ink);font-size:12px;}
+.imagine-city-summary{border-top:1px solid var(--line);padding:2px 0 14px;font-size:12px;}
+.imagine-city-disclosure{border-top:1px solid var(--line);padding:0;margin:0;font-size:12px;}
+.imagine-city-disclosure > summary{font-size:14px;font-weight:600;min-height:46px;display:list-item;align-content:center;cursor:pointer;padding:12px 0;line-height:1.35;}
+.imagine-city-disclosure[open]{padding-bottom:16px;}
+.imagine-city-disclosure .imagine-city-disclosure{margin-top:10px;}
+.imagine-city-disclosure .imagine-city-disclosure > summary{font-size:12px;}
+.imagine-city-panel a{text-underline-offset:3px;color:var(--obs);overflow-wrap:anywhere;}
+.imagine-city-check{display:flex;gap:8px;align-items:start;min-height:44px;padding:8px 0;cursor:pointer;font-size:12px;}
+.imagine-city-check input{accent-color:var(--ink);flex:0 0 auto;margin-top:3px;}
+.imagine-city-form{margin:6px 0 12px;display:grid;gap:7px;}
+.imagine-city-field{display:grid;gap:6px;font-size:12px;}
+.imagine-city-field input{width:100%;min-height:42px;padding:8px 10px;box-sizing:border-box;color:var(--ink);border:1px solid var(--line);background:var(--panel);border-radius:5px;font:inherit;}
+.imagine-city-form .btn{justify-self:start;}
+#imagine-city-cone-list{padding-left:18px;line-height:1.8;}
+.imagine-city-selection{border-top:1px solid var(--line);padding:16px 0;}
+.imagine-city-selection h3{margin:0 0 8px;font-size:15px;}
+.imagine-city-selection h4{margin:12px 0 10px;font-size:13px;overflow-wrap:anywhere;}
+.imagine-city-selection p{font-size:12px;color:var(--muted);}
+.imagine-city-selection dl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);font-size:12px;gap:8px;margin:0;}
+.imagine-city-selection dt{color:var(--muted);}
+.imagine-city-selection dd{margin:0;text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;}
+.imagine-city-footer{border-top:1px solid var(--line);padding-top:16px;display:grid;gap:8px;}
+#imagine-city-memory{font-size:11px;color:var(--muted);margin-top:14px;}
+.imagine-city-panel :is(button,input,a,summary):focus-visible{outline:2px solid var(--obs);outline-offset:3px;}
+.imagine-city-panel input{caret-color:var(--ink);}
+.imagine-city-panel ::selection{background:var(--ink);color:var(--panel);}
+@media(max-width:860px){body.imagine-city-open #panel{padding-top:18px;} .imagine-city-head h2{font-size:24px;}}
+
+body.imagine-city-open #viewcone-panel,body.imagine-city-open #inset-frame,body.imagine-city-open #plan-markers{display:none!important;}

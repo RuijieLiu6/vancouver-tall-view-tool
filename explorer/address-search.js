@@ -163,7 +163,7 @@
         function finish(result) { if (settled || mine !== revision) return; settled = true; unschedule(deadline); deadline = null; controller = null; update(result); }
         deadline = schedule(() => { current.abort(); finish({ state: 'error', reason: 'timeout' }); }, timeout);
         try {
-          const response = await fetcher(searchUrl(query, true), { signal: current.signal });
+          const response = await fetcher(searchUrl(query, true), { cache:'no-store', signal: current.signal });
           if (!response.ok) throw new Error('HTTP ' + response.status);
           const data = await response.json();
           if (mine !== revision || settled) return;
@@ -235,7 +235,7 @@
     if (loading) return loading;
     if (Date.now() < retryAt) return Promise.resolve([]);
     const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 10000);
-    loading = root.fetch(cityUrl(), { signal: abort.signal }).then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    loading = root.fetch(cityUrl(), { cache:'no-store', signal: abort.signal }).then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then((rows) => { if (!Array.isArray(rows)) throw new Error('Invalid City address data'); records = cityRecords(rows); cityFailed = false; return records; })
       .catch(() => { cityFailed = true; retryAt = Date.now() + 30000; return []; })
       .finally(() => { clearTimeout(timer); loading = null; if (input.value.trim() && root.document.activeElement === input && !dismissed) paintSuggestions(); });
@@ -372,7 +372,7 @@
       const timer = setTimeout(() => activeController.abort(), 12000);
       let data;
       try {
-        const response = await root.fetch(searchUrl(query), { signal: activeController.signal });
+        const response = await root.fetch(searchUrl(query), { cache:'no-store', signal: activeController.signal });
         if (!response.ok) throw new Error(`Address service returned HTTP ${response.status}.`);
         data = await response.json();
       } finally { clearTimeout(timer); }

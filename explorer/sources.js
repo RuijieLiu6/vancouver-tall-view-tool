@@ -147,7 +147,7 @@
     const timer = root.setTimeout(() => controller.abort(), 12000);
     pending = (async () => {
       try {
-        const response = await root.fetch(catalogueUrl, { signal: controller.signal, credentials: 'same-origin' });
+        const response = await root.fetch(catalogueUrl, { cache:'no-store', signal: controller.signal, credentials: 'same-origin' });
         if (!response.ok) throw new Error('Source catalogue could not be retrieved.');
         if (Number(response.headers.get('content-length')) > 1000000) throw new Error('Source catalogue is unexpectedly large.');
         const raw = await response.text();

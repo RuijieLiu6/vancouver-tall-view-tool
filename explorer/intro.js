@@ -1,12 +1,11 @@
 /* Landing intro: an abstract, looping isometric storyboard of the four-step flow
- * (site pin → stacked blocks → rooftop eye and view wedge → report), shown once per browser.
+ * (site pin → stacked blocks → rooftop eye and view wedge → report), shown for each visit.
  * "How it works" reopens it. Skipped for self-test URLs and with ?intro=0; forced with ?intro=1.
  */
 (function () {
   'use strict';
   const dialog = document.getElementById('intro'), stage = document.getElementById('intro-stage');
   if (!dialog || !stage) return;
-  const KEY = 'vancouver-view-lab-intro-seen/1';
   const query = new URLSearchParams(location.search);
 
   // Isometric projection: plan x → down-right, plan y → down-left, z → up. Units are SVG pixels.
@@ -68,14 +67,14 @@
   if (Number.isFinite(frame)) { dialog.classList.add('frozen'); dialog.style.setProperty('--intro-delay', `-${Math.min(Math.max(frame, 0), 11.9)}s`); }
 
   function open() { if (dialog.open) return; try { dialog.showModal(); } catch (_) { dialog.setAttribute('open', ''); } dialog.classList.add('playing'); const t = document.getElementById('intro-title'); t?.focus({ preventScroll: true }); dialog.scrollTop = 0; }
-  function close() { dialog.classList.remove('playing'); try { localStorage.setItem(KEY, '1'); } catch (_) { /* storage blocked */ } if (dialog.open) dialog.close(); else dialog.removeAttribute('open'); }
+  function close() { dialog.classList.remove('playing'); window.__vistaIntroSeen = true; if (dialog.open) dialog.close(); else dialog.removeAttribute('open'); }
   document.getElementById('intro-start')?.addEventListener('click', close);
-  dialog.addEventListener('cancel', () => { try { localStorage.setItem(KEY, '1'); } catch (_) { /* storage blocked */ } dialog.classList.remove('playing'); });
+  dialog.addEventListener('cancel', () => { window.__vistaIntroSeen = true; dialog.classList.remove('playing'); });
   dialog.addEventListener('click', (e) => { if (e.target === dialog) close(); });
   document.getElementById('btn-intro')?.addEventListener('click', open);
 
   const testing = ['selftest', 'workflowtest', 'studytest', 'surfacetest', 'rooftest', 'flowtest'].some(k => query.get(k) === '1');
-  let seen = false; try { seen = localStorage.getItem(KEY) === '1'; } catch (_) { /* storage blocked */ }
+  const seen = window.__vistaIntroSeen === true;
   // Open only once the app stylesheet has loaded, so the intro never flashes unstyled over the loading map.
   function whenStyled(fn) { const link = [...document.querySelectorAll('link[rel="stylesheet"]')].find(l => /explorer\.css/.test(l.href));
     if (!link || link.sheet) { fn(); return; } link.addEventListener('load', fn, { once: true }); link.addEventListener('error', fn, { once: true }); }

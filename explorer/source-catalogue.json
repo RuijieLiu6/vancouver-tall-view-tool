@@ -1,6 +1,6 @@
 {
   "schema": "vista-public-source-methods/1",
-  "updated": "2026-11-02",
+  "updated": "2026-11-03",
   "title": "Sources & methods",
   "intro": "Public records provide several routes to reconstructing a view envelope without requesting new City data. This page separates available evidence, a calculated historical example, and methods that still need processing. None establishes a verified citywide height entitlement.",
   "methods": [
@@ -16,8 +16,14 @@
       "yields": "Available: a worked local fit from the 2022 888 W Broadway sheet below. Another public sheet for 828 Cambie contains five QE 3.2.3 points.",
       "limits": "Historical site evidence. Unnamed datums, source rounding, omitted corridors and later amendments prevent automatic current or citywide use. No verified height is applied from these sheets.",
       "sources": [
-        {"title": "888 W Broadway — embedded City sheet, printed p25", "url": "https://rezoning.vancouver.ca/applications/888-w-broadway-2/application-booklet.pdf"},
-        {"title": "828 Cambie — City height sheet, section 01.07", "url": "https://rezoning.vancouver.ca/applications/118-150-robson-st-and-828-cambie-st/application-booklet.pdf"}
+        {
+          "title": "888 W Broadway — embedded City sheet, printed p25",
+          "url": "https://rezoning.vancouver.ca/applications/888-w-broadway-2/application-booklet.pdf"
+        },
+        {
+          "title": "828 Cambie — City height sheet, section 01.07",
+          "url": "https://rezoning.vancouver.ca/applications/118-150-robson-st-and-828-cambie-st/application-booklet.pdf"
+        }
       ]
     },
     {
@@ -32,10 +38,22 @@
       "yields": "New located reference: Clinton Park view 28 is tied to 65.7 m geodetic at NAD83 UTM10N E496222, N5457613 (February 2026 report, Appendix A p8). Cambie 9.1 references The Stack roof; 9.2 references 485 W 8th Avenue with a relocated origin.",
       "limits": "A single reference plus an observer does not uniquely define a plane. The report does not identify a named vertical datum or complete cross-slope convention. These are reconstruction constraints, not uniform ceilings. The February motion referred the separate Trout Lake amendments back to staff.",
       "sources": [
-        {"title": "February 2026 technical changes — Appendix A", "url": "https://council.vancouver.ca/20260204/documents/cfsc2.pdf"},
-        {"title": "February 2026 minutes — adopted changes and Trout Lake referral", "url": "https://council.vancouver.ca/20260204/documents/cfsc20260204min.pdf"},
-        {"title": "Current Public Views Guidelines — February 2026", "url": "https://guidelines.vancouver.ca/guidelines-public-views.pdf"},
-        {"title": "December 2025 amendments — H and J2 reference constraints", "url": "https://council.vancouver.ca/20251209/documents/phea1rr.pdf"}
+        {
+          "title": "February 2026 technical changes — Appendix A",
+          "url": "https://council.vancouver.ca/20260204/documents/cfsc2.pdf"
+        },
+        {
+          "title": "February 2026 minutes — adopted changes and Trout Lake referral",
+          "url": "https://council.vancouver.ca/20260204/documents/cfsc20260204min.pdf"
+        },
+        {
+          "title": "Current Public Views Guidelines — February 2026",
+          "url": "https://guidelines.vancouver.ca/guidelines-public-views.pdf"
+        },
+        {
+          "title": "December 2025 amendments — H and J2 reference constraints",
+          "url": "https://council.vancouver.ca/20251209/documents/phea1rr.pdf"
+        }
       ]
     },
     {
@@ -50,8 +68,14 @@
       "yields": "Public FOI 2024-113 includes 2018 dataset-update material; indexed release 1 p81 identifies the QE observer elevation as 124.60 m and a 2017 drawing reference.",
       "limits": "Historical evidence. The full releases were not read in this research session; no complete current plane or named vertical datum was recovered. This route is documented, not an implemented height source.",
       "sources": [
-        {"title": "FOI 2024-113 — release 1", "url": "https://vancouver.ca/files/cov/2024-113-release1.pdf"},
-        {"title": "FOI 2024-113 — release 2", "url": "https://vancouver.ca/files/cov/2024-113-release2.pdf"}
+        {
+          "title": "FOI 2024-113 — release 1",
+          "url": "https://vancouver.ca/files/cov/2024-113-release1.pdf"
+        },
+        {
+          "title": "FOI 2024-113 — release 2",
+          "url": "https://vancouver.ca/files/cov/2024-113-release2.pdf"
+        }
       ]
     },
     {
@@ -66,8 +90,14 @@
       "yields": "Available source: September 2022 LAS, approximately 49 points/m², with documented NAD83(CSRS) horizontal reference and CGVD28GVRD vertical datum. Processing this source is not yet integrated into Vista.",
       "limits": "Existing surfaces are dated measurements, not permitted heights or approved building grades. Tiles can be large. The separate 2013 elevation pilot has unknown surface type and is not used as ground; display-cache imagery is not numeric elevation.",
       "sources": [
-        {"title": "2022 classified LiDAR and tile downloads", "url": "https://opendata.vancouver.ca/explore/dataset/lidar-2022/"},
-        {"title": "2022 LiDAR — machine-readable metadata", "url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/lidar-2022"}
+        {
+          "title": "2022 classified LiDAR and tile downloads",
+          "url": "https://opendata.vancouver.ca/explore/dataset/lidar-2022/"
+        },
+        {
+          "title": "2022 LiDAR — machine-readable metadata",
+          "url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/lidar-2022"
+        }
       ]
     },
     {
@@ -77,14 +107,25 @@
       "steps": [
         "Transform source coordinates into the model's documented frame and compare known locations.",
         "Intersect every parcel component and hole with all applicable view polygons.",
-        "Evaluate available surfaces at clipped vertices and retain unresolved overlapping corridors as unknown."
+        "Evaluate available surfaces at clipped vertices and retain unresolved overlapping corridors as unknown.",
+        "For platform blocks, clip each rotated footprint against every supplied surface in the suggestion, find the lowest ceiling at clipped vertices, reserve 0.1 m clearance, and scale stacked heights together. Adjust is always optional.",
+        "Remember a calculated suggestion for the same confirmed location, ground reference, footprint, stack proportions and surface sources. Recalculate when these inputs change; private entered surfaces stay in session memory."
       ],
-      "yields": "Implemented in Vista: geographic conversion, parcel matching and full-boundary affine envelope calculations. The public view layer supplies applicability polygons and observer attributes, not a 3D lower surface.",
-      "limits": "The model's XY frame is a local geographic conversion, not EPSG:26910. Approximate NAD83/WGS84 alignment remains Study. The 2015 building outlines are historical and contain no height values.",
+      "yields": "Implemented in Vista: geographic conversion, parcel matching and full-boundary affine envelope calculations. The public view layer supplies applicability polygons and observer attributes, not a 3D lower surface. Build now offers Adjust / Dismiss and an exact block-height undo. The Viewcone action reduces the blocks below its selected study surface.",
+      "limits": "The model's XY frame is a local geographic conversion, not EPSG:26910. Approximate NAD83/WGS84 alignment remains Study. The 2015 building outlines are historical and contain no height values. The default blue surface is an adjustable illustration through the approximate modelled observer, not official vertical control. Missing corridor surfaces stay explicit. Public study calculations are saved in the local project data file, bounded to 250 records and 1 MB. The published site reads packaged records and keeps new calculations in temporary memory. Vista does not create browser application databases or save new settings in localStorage; browser-managed asset caching and active rendering memory are separate. This is not a precomputed citywide regulatory-height database or an account-synced record. Imported models are not automatically scaled.",
       "sources": [
-        {"title": "Property parcel polygons", "url": "https://opendata.vancouver.ca/explore/dataset/property-parcel-polygons/"},
-        {"title": "City ViewCone service — fields and geometry", "url": "https://services3.arcgis.com/qrcTTRTwUoS8N47o/arcgis/rest/services/ViewCone/FeatureServer/0"},
-        {"title": "2015 building footprints", "url": "https://opendata.vancouver.ca/explore/dataset/building-footprints-2015/"}
+        {
+          "title": "Property parcel polygons",
+          "url": "https://opendata.vancouver.ca/explore/dataset/property-parcel-polygons/"
+        },
+        {
+          "title": "City ViewCone service — fields and geometry",
+          "url": "https://services3.arcgis.com/qrcTTRTwUoS8N47o/arcgis/rest/services/ViewCone/FeatureServer/0"
+        },
+        {
+          "title": "2015 building footprints",
+          "url": "https://opendata.vancouver.ca/explore/dataset/building-footprints-2015/"
+        }
       ]
     },
     {
@@ -99,8 +140,14 @@
       "yields": "NRCan GPS·H supports documented ellipsoidal/orthometric conversions and specific CGVD28/CGVD2013 transformations. It is an available processing route, not an automatic conversion already performed by Vista.",
       "limits": "GPS·H cannot identify an unnamed datum, and its standard CGVD28 grids must not silently replace the City's CGVD28GVRD realization. Vista leaves source Z unchanged; its approximate SRTM/EGM96 context is not an approved grade reference.",
       "sources": [
-        {"title": "NRCan GPS·H — supported height transformations", "url": "https://webapp.csrs-scrs.nrcan-rncan.gc.ca/geod/tools-outils/gpsh.php"},
-        {"title": "City Model Submission Standards — horizontal alignment", "url": "https://vancouver.ca/files/cov/model-submission-standards.pdf"}
+        {
+          "title": "NRCan GPS·H — supported height transformations",
+          "url": "https://webapp.csrs-scrs.nrcan-rncan.gc.ca/geod/tools-outils/gpsh.php"
+        },
+        {
+          "title": "City Model Submission Standards — horizontal alignment",
+          "url": "https://vancouver.ca/files/cov/model-submission-standards.pdf"
+        }
       ]
     },
     {
@@ -115,32 +162,100 @@
       "yields": "Available rules include the Downtown ODP height maps and Central Waterfront ODP subarea provisions. Vista has sourced starting references for covered rules; it does not assume missing regulations mean unrestricted height.",
       "limits": "Railway-grade-relative, above-grade and geodetic heights are different measurements. Setbacks, separation, daylight, density, heritage and flight restrictions can further constrain an envelope. Discretionary increases are not automatic entitlements.",
       "sources": [
-        {"title": "Downtown ODP — June 2026, section 4 and height maps", "url": "https://bylaws.vancouver.ca/ODP/odp-downtown.pdf"},
-        {"title": "Central Waterfront ODP — February 2026", "url": "https://bylaws.vancouver.ca/ODP/odp-central-waterfront.pdf"},
-        {"title": "Building Height Technical Design Supplement", "url": "https://guidelines.vancouver.ca/bulletins/bulletin-building-height.pdf"}
+        {
+          "title": "Downtown ODP — June 2026, section 4 and height maps",
+          "url": "https://bylaws.vancouver.ca/ODP/odp-downtown.pdf"
+        },
+        {
+          "title": "Central Waterfront ODP — February 2026",
+          "url": "https://bylaws.vancouver.ca/ODP/odp-central-waterfront.pdf"
+        },
+        {
+          "title": "Building Height Technical Design Supplement",
+          "url": "https://guidelines.vancouver.ca/bulletins/bulletin-building-height.pdf"
+        }
+      ]
+    },
+    {
+      "id": "shared-city-massing",
+      "title": "Reimagine heights on the same city model",
+      "summary": "Imagine uses the normal Vista terrain, streets, source buildings and Plain / Night / Context renderer. It changes a reversible height scenario rather than opening a separate parcel city.",
+      "steps": [
+        "Precompute each original building footprint from its actual mesh triangles. Intersect the whole footprint with zoning polygons and every mapped view corridor; retain holes, concavities and boundary contacts.",
+        "Keep height references, unresolved zoning and explicit assumptions separate. Match every result to its original asset, building ID and geometry revision.",
+        "Evaluate each available sloping surface at all vertices of the clipped footprint. The lowest ceiling controls; reserve 0.1 m clearance and scale connected tower/podium assemblies together.",
+        "Compare Existing, Height references and With view cones. The default generated surfaces slope from approximate modelled observer eyes toward a fixed model (0, 0) reference; their height is adjustable.",
+        "Read a selected building’s controlling corridor, ceiling, clearance, zoning sources and assumptions. Export CSV to keep the scenario. Heights and GPU display attributes are reused in bounded page memory."
+      ],
+      "yields": "61,407 source building objects, 25,451 exact footprint/corridor intersections, and 223 connected source assemblies. The main model positions and study proposal stay intact. All 24 mapped corridors can be overlaid together.",
+      "limits": "This is a height study on existing building footprints, not a complete legal parcel envelope or development entitlement. Sourced basic zoning references have use and grade conditions. The optional missing-height fallback is an explicit scenario assumption. FSR, tower spacing, floorplates, setbacks, heritage, aviation, infrastructure, shadow protection and building-code feasibility are disclosed but not fully calculated. Generated blue surfaces remain Study/unverified, not City-issued ceiling geometry. New data uses project files and temporary page memory, without new browser application databases.",
+      "sources": [
+        {
+          "title": "Zoning and Development By-law",
+          "url": "https://vancouver.ca/home-property-development/zoning-and-development-bylaw.aspx"
+        },
+        {
+          "title": "Public Views Guidelines",
+          "url": "https://guidelines.vancouver.ca/guidelines-public-views.pdf"
+        },
+        {
+          "title": "Building Height Technical Design Supplement",
+          "url": "https://guidelines.vancouver.ca/bulletins/bulletin-building-height.pdf"
+        },
+        {
+          "title": "City-wide Design Guidelines",
+          "url": "https://vancouver.ca/home-property-development/city-wide-design-guidelines.aspx"
+        }
       ]
     }
   ],
   "workflow": [
-    {"title": "Locate", "body": "Match parcel, proposal and corridor boundaries in one documented horizontal frame."},
-    {"title": "Reconstruct", "body": "Use dated public ceiling points or adopted reference constraints. State every assumption and check independent points."},
-    {"title": "Intersect", "body": "Clip every applicable lower surface to the whole site. The lowest resolved surface controls each location; unknown overlaps stay unknown."},
-    {"title": "Report", "body": "Record the controlling view, coordinates, source, dates, datum alignment and clearance. Study examples remain distinct from Preliminary reconstructions and independently Verified assessments."}
+    {
+      "title": "Locate",
+      "body": "Match parcel, proposal and corridor boundaries in one documented horizontal frame."
+    },
+    {
+      "title": "Reconstruct",
+      "body": "Use dated public ceiling points or adopted reference constraints. State every assumption and check independent points."
+    },
+    {
+      "title": "Intersect",
+      "body": "Clip every applicable lower surface to the whole site. The lowest resolved surface controls each location; unknown overlaps stay unknown."
+    },
+    {
+      "title": "Report",
+      "body": "Record the controlling view, coordinates, source, dates, datum alignment and clearance. Study examples remain distinct from Preliminary reconstructions and independently Verified assessments."
+    }
   ],
   "workedExample": {
     "title": "Calculated example: a historical local ceiling",
     "body": "The 9 November 2022 888 W Broadway sheet contains four QE 3.2.1 ceiling points. Using E, F and G defines this candidate plane in Vista's local XY frame; H is an independent check. This is an arithmetic reconstruction, not a current permission to build.",
     "formula": "z = 134.2757 − 0.0009038211 × (X + 174.8619131) + 0.0039123831 × (Y + 2191.7978280)",
     "inputs": [
-      {"label": "E — latitude, longitude; source ceiling", "value": "49.262878, −123.123108; 134.2757 m"},
-      {"label": "F — latitude, longitude; source ceiling", "value": "49.263214, −123.122711; 134.3950 m"},
-      {"label": "G — latitude, longitude; source ceiling", "value": "49.262871, −123.122726; 134.2476 m"},
-      {"label": "H — reserved check", "value": "49.263226, −123.123283; 134.4373 m"}
+      {
+        "label": "E — latitude, longitude; source ceiling",
+        "value": "49.262878, −123.123108; 134.2757 m"
+      },
+      {
+        "label": "F — latitude, longitude; source ceiling",
+        "value": "49.263214, −123.122711; 134.3950 m"
+      },
+      {
+        "label": "G — latitude, longitude; source ceiling",
+        "value": "49.262871, −123.122726; 134.2476 m"
+      },
+      {
+        "label": "H — reserved check",
+        "value": "49.263226, −123.123283; 134.4373 m"
+      }
     ],
     "result": "At H the plane predicts 134.437733 m: 0.000433 m above the published value. Across the four-point convex hull its lowest value is 134.2476 m at G. A small fit residual demonstrates numerical consistency only, not survey accuracy.",
     "limits": "Study only. Six-decimal source coordinates, unknown named vertical datum, historical applicability and site conditions remain unresolved. The sheet separately includes a more restrictive flight-path constraint and omits other views conditionally. Do not extrapolate this plane citywide, subtract Vista ground, or treat 134.2476 m as a permitted building height. This example does not change the model.",
     "sources": [
-      {"title": "888 W Broadway — source sheet, printed p25", "url": "https://rezoning.vancouver.ca/applications/888-w-broadway-2/application-booklet.pdf"}
+      {
+        "title": "888 W Broadway — source sheet, printed p25",
+        "url": "https://rezoning.vancouver.ca/applications/888-w-broadway-2/application-booklet.pdf"
+      }
     ]
   }
 }

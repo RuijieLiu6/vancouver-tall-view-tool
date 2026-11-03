@@ -1017,6 +1017,32 @@ body[data-scene-style="context"] {--bg:#e8edf0;--panel:#f8faf9;--ink:#21323d;--m
 /* Observer workbench: one place for viewpoint stepping, recentering and controls. */
 .observer-controls{position:absolute;top:56px;left:10px;right:84px;z-index:5;display:flex;align-items:flex-start;flex-wrap:wrap;gap:8px;pointer-events:none;}
 .observer-controls > *{pointer-events:auto;}
+/* Viewcone is an independent study overlay; camera controls keep their place. */
+.viewcone-panel{position:absolute;left:10px;bottom:76px;width:300px;max-width:calc(100% - 100px);max-height:calc(100% - 160px);overflow:auto;z-index:6;background:var(--panel,#fffdf7);color:var(--ink);border:1px solid var(--line);border-radius:2px;box-shadow:0 5px 18px #172e2420;font-size:13px;line-height:1.45;}
+.viewcone-controls>summary{padding:10px 12px;font-weight:600;cursor:pointer;min-height:42px;}
+.viewcone-body{padding:0 12px 12px;display:grid;gap:10px;}
+.viewcone-body p{margin:0;}
+.viewcone-field{display:grid;gap:4px;font-size:12px;font-weight:500;}
+.viewcone-field select,.viewcone-field input{width:100%;min-height:38px;font:inherit;color:var(--ink);background:var(--panel,#fffdf7);border:1px solid var(--line);padding:6px 8px;border-radius:2px;}
+.viewcone-actions{display:flex;gap:8px;}
+.viewcone-actions .btn{font-size:12px;min-height:36px;padding:7px 10px;}
+.viewcone-legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;}
+.viewcone-legend span{display:inline-flex;align-items:center;gap:5px;}
+.viewcone-legend i{width:11px;height:11px;display:inline-block;}
+.viewcone-key-blue{background:#2688dc;border:1px solid #1477bd;}
+.viewcone-key-red{background:#ea2334;border:1px solid #c21c2b;}
+.viewcone-status{font-weight:500;}
+.viewcone-note{font-size:12px;color:var(--muted);}
+.viewcone-panel a{color:var(--accent-ink);text-underline-offset:3px;}
+.viewcone-panel :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.viewport:has(#mode-viewcone.active) .metrics{display:none;}
+.vp-toolbar #modes{max-width:100%;flex-wrap:wrap;}
+@media(max-width:860px){
+  .viewport:has(#mode-viewcone.active) .vp-toolbar{left:10px;right:58px;top:58px;}
+  .viewcone-panel{left:10px;right:10px;bottom:10px;width:auto;max-width:none;max-height:45%;}
+  .viewport:has(#mode-viewcone.active) .view-caption{display:none;}
+  .viewport:has(#mode-viewcone.active) #inset-frame{bottom:66px;}
+}
 .observer-controls .viewpoint-navigation{position:static;max-width:100%;margin:0;box-shadow:0 2px 8px #172e2418;}
 .observer-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .observer-controls #btn-face{position:static;min-height:44px;margin:0;font-size:13px;}
@@ -1077,3 +1103,35 @@ body[data-scene-style="night"] .observer-keyboard kbd{background:#202a3a;border-
 #geographic-location :is(button,summary) { min-height:44px; }
 #geographic-location .ceiling-values { font-variant-numeric:tabular-nums; }
 #geographic-location :is(button,summary,input,select):focus-visible { outline:2px solid var(--obs); outline-offset:3px; }
+
+/* The overlay supplies its own blue/red key and leaves room for touch controls. */
+.viewport:has(#mode-viewcone.active) .legend{display:none;}
+.viewport:has(#mode-viewcone.active) .label.cone{background:#1969ae;color:#fff;}
+.viewcone-panel :is(summary,button,input,select){min-height:44px;}
+.viewcone-method>summary{cursor:pointer;align-content:center;}
+.viewcone-method .btn{margin-top:8px;}
+.viewcone-note,.viewcone-status{overflow-wrap:anywhere;}
+@media(max-width:860px){
+  .viewport:has(#mode-viewcone.active) .vp-toolbar{left:10px;right:58px;top:58px;}
+  .viewport:has(#mode-viewcone.active) #modes .seg-btn{min-height:36px;}
+}
+.viewport:has(#mode-viewcone.active) .live-feedback{display:none;}
+.viewcone-controls>summary{position:sticky;top:0;z-index:1;background:var(--panel,#fffdf7);}
+
+/* A reversible height decision comes before the detailed regulation reader. */
+.view-height-prompt{margin:14px 0 18px;padding:16px 0;border-block:1px solid var(--line);color:var(--ink);}
+.view-height-prompt h3{margin:0 0 8px;font-size:16px;font-weight:600;}
+.view-height-prompt p{margin:8px 0;overflow-wrap:anywhere;}
+.view-height-value{font-size:18px;line-height:1.35;font-weight:600;font-variant-numeric:tabular-nums;}
+.view-height-prompt .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.view-height-prompt .btn,.viewcone-height-action .btn{min-height:44px;white-space:normal;}
+.view-height-prompt :is(button,summary):focus-visible,.viewcone-height-action button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+.view-height-prompt .small{font-size:13px;line-height:1.5;}
+.viewcone-height-action{padding:10px 0;border-block:1px solid var(--line);display:grid;gap:8px;}
+.viewcone-height-action p{margin:0;font-size:12px;line-height:1.45;overflow-wrap:anywhere;}
+.viewcone-height-action .btn{width:100%;text-align:center;}
+.viewcone-height-action .btn:disabled{opacity:.55;cursor:default;}
+@media(max-width:860px){
+  /* The step panel owns the phone surface while open; leave its footer usable. */
+  .layout:has(#panel:not(.collapsed)) #viewcone-panel{display:none;}
+}

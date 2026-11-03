@@ -1,7 +1,7 @@
 {
   "format": "vancouver-static-pages/1",
-  "file_count": 118,
-  "total_bytes": 131755534,
+  "file_count": 132,
+  "total_bytes": 144844839,
   "files": {
     ".github/workflows/pages.yml": {
       "bytes": 591,
@@ -12,8 +12,8 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "README.md": {
-      "bytes": 12306,
-      "sha256": "951271a7dd24b4eac954c28bc65a0b7dc503df2e9145f0721c7a3780f7d4979f"
+      "bytes": 14288,
+      "sha256": "3043d2a068b19654424fac4bef9fde0988a00665c69168b2bc8e963118cfea99"
     },
     "data/context.json": {
       "bytes": 7679,
@@ -40,16 +40,16 @@
       "sha256": "935953f809619aed16321659323fb92619ceca36503d9c0419881eefe9d13cd0"
     },
     "explorer/address-search.js": {
-      "bytes": 30308,
-      "sha256": "3cfc5aa8b04311e7bdc977fb93ca5ded0ca410277b9a2799c151527861e49c14"
+      "bytes": 30362,
+      "sha256": "a4da2e65ded3a0d16d4500c5ee44f3f68b0d2f270fedcb92c66d1e17ab6e431a"
     },
     "explorer/aerial-context.js": {
       "bytes": 14654,
       "sha256": "c2d571581c5e9f81f8e460e631956ed17f96b131c056649f96504399dc34445f"
     },
     "explorer/browser-api.js": {
-      "bytes": 3108,
-      "sha256": "0652d3691055b243dac358a15aff3ed8d62c4b0b56b4654225bf2c910a368add"
+      "bytes": 3157,
+      "sha256": "0d647c969d68b6fd5b0a8ada917c3f879fc7c024a996442b24b2285d812796d8"
     },
     "explorer/browser-check.js": {
       "bytes": 18022,
@@ -80,20 +80,20 @@
       "sha256": "683df27cd7c13cec0676a99b086dff60cd67cf6f6a2192d1e1f3d57175fcf20c"
     },
     "explorer/entry.js": {
-      "bytes": 5361,
-      "sha256": "669b3bb312b5dbe11656e742c8c809b00d4dae9ad0d65bac8d0500092360e4d7"
+      "bytes": 5536,
+      "sha256": "cba67d6a7cb400489c303da69c429a1a6913afb12f94766cb16d091ec62d3376"
     },
     "explorer/envelope-selftest.js": {
       "bytes": 10544,
       "sha256": "75baa28c2e899bbd4db51643ebac4925ddf5ec3b6c4c81dd8e5f993958b31cad"
     },
     "explorer/explorer.css": {
-      "bytes": 96675,
-      "sha256": "51e78e1a9732256987436c9abceff54da4c0bb9a3720d885a2435918e8674cfc"
+      "bytes": 100759,
+      "sha256": "4925d44bdf0872b83dec2383f35a163ec5888cdb252cfab087756bde11f90843"
     },
     "explorer/explorer.js": {
-      "bytes": 309551,
-      "sha256": "eb1a193523ca42eb856e5bd3b33edb148d998d72a6a572959b2b43127128584b"
+      "bytes": 319451,
+      "sha256": "0297d23a2ef67d0a3006ae9e370bbff4869083ecf1d1106e174c5cf287a54da1"
     },
     "explorer/facade-bounds.js": {
       "bytes": 10426,
@@ -127,6 +127,26 @@
       "bytes": 18204,
       "sha256": "8750443c87f655e3075340e1d28ae0664fb0c3824e03bf7f6f42ee96e9d4cb89"
     },
+    "explorer/imagine-city-engine.js": {
+      "bytes": 16518,
+      "sha256": "819b935140bc83984303e431fe6c4bae09ef428c7d9aaf8f5fc2255948795af3"
+    },
+    "explorer/imagine-city-render.js": {
+      "bytes": 1807,
+      "sha256": "2493798f35384b33a975e67d2d8f198bcab8e52623c4389f70f12f48849bf6c9"
+    },
+    "explorer/imagine-city-selftest.js": {
+      "bytes": 10421,
+      "sha256": "2dbbeab9aae660adc6c68258a08846292dd223960f1a0b43c76230a20aa617cd"
+    },
+    "explorer/imagine-city.css": {
+      "bytes": 4400,
+      "sha256": "5b6fa2bcfab236ff86885d9a00edd70d9f712e49abc9cc8288e767238c418743"
+    },
+    "explorer/imagine-city.js": {
+      "bytes": 26809,
+      "sha256": "3212a3f9fd2e2a4b851a2b92e7fe4c684d1c7c11fd5492385d8e93eb475b7469"
+    },
     "explorer/imagine-data.js": {
       "bytes": 6800,
       "sha256": "8141eb8a7d813fd41b026f8f29ead4e501bb58b9f612375207969b099e3e535b"
@@ -148,8 +168,8 @@
       "sha256": "739949e04053280f7a21eea4f34b6233ae81caf1933226362c61ff43ec103413"
     },
     "explorer/imagine.js": {
-      "bytes": 70602,
-      "sha256": "137fdedbc377b003b6e9780eaafe4e7cdc9200b0b17e777fa65e302418f1bf5d"
+      "bytes": 71622,
+      "sha256": "5bd1e06498d2a4a59b51eb56b282097c2086af1c7a460f28cbf98809f1eb4a14"
     },
     "explorer/import-parcels-worker.js": {
       "bytes": 1941,
@@ -160,16 +180,16 @@
       "sha256": "42fd41cd1c4f64091a5885758a350d42bf53d71486724eb7bc6b6a9fa2226692"
     },
     "explorer/index.html": {
-      "bytes": 57355,
-      "sha256": "8de839a1db90a26f14d70db8e8cc5a23c0fd1eb629d0f530476f6b7ef4f81ad3"
+      "bytes": 57758,
+      "sha256": "07bc64a7b4978dfa42d374a205ddccd734b6429296c3df7311b6dba5bdf35751"
     },
     "explorer/inset-camera.js": {
       "bytes": 3122,
       "sha256": "68d97507184db78b84492522df83e44166f8b89db259eba0738bd7aaa5c480f1"
     },
     "explorer/intro.js": {
-      "bytes": 7562,
-      "sha256": "52fcb55c4b6303650e8e39c33cb56bcb4abec8a266c72178b3122521dd636238"
+      "bytes": 7366,
+      "sha256": "c48f6afa896523f36efa23be03049c748e891a2b77baf38e8a391c9e0af97275"
     },
     "explorer/observer-navigation.js": {
       "bytes": 1298,
@@ -178,6 +198,10 @@
     "explorer/pdf.js": {
       "bytes": 11601,
       "sha256": "65d157b51141e31f269d642ab2c4d671f293ee02800e6599c8ff99ca325e0164"
+    },
+    "explorer/project-store.js": {
+      "bytes": 4266,
+      "sha256": "ed1919430a244c482edbd269855f6afb58615ba30ba0da44326d58b145b94930"
     },
     "explorer/proposal-geometry.js": {
       "bytes": 6508,
@@ -208,16 +232,24 @@
       "sha256": "36d2627acf7e0e5ae7b4288e8d25a97196da2da471d52471a05501733922ee2d"
     },
     "explorer/source-catalogue.json": {
-      "bytes": 13194,
-      "sha256": "8cf3a74162967a7ac6862e77a65103cabd49059faa1cd5fc09f5c3806c125a44"
+      "bytes": 18110,
+      "sha256": "d5b12519cb52b391c23974769b19faedb20f789e7515dec0fdf48c44e20c4044"
     },
     "explorer/sources.css": {
       "bytes": 5264,
       "sha256": "d74e9e40f5475a4565cfffd4c00fb0dd78ff57764ceee52af984a0558146cadc"
     },
     "explorer/sources.js": {
-      "bytes": 11996,
-      "sha256": "ccf7a23e248282c19c5f742fcd338df0f0a367b3adc146f2949ec52b1d86a242"
+      "bytes": 12014,
+      "sha256": "6eab30ff8bca1f6cc4296a6c786daac37578298ee098ab4c74027b8f71303086"
+    },
+    "explorer/storage-policy.js": {
+      "bytes": 8778,
+      "sha256": "003a1d9a3d9b0f5865de908d3c93894e07c9329035c4143b3abc4e7e08e5049f"
+    },
+    "explorer/storage-selftest.js": {
+      "bytes": 1324,
+      "sha256": "6e4708c968f876844e793b080e734bf4ca5e6b41fb62f45aacf857421e19db60"
     },
     "explorer/street-geometry.js": {
       "bytes": 3904,
@@ -323,9 +355,25 @@
       "bytes": 25973,
       "sha256": "eb8e8f5f54c199bc37db9de90c2f7e0d03acbe08df5d08f2df14c065610ee248"
     },
+    "explorer/view-height-suggestion-ui.js": {
+      "bytes": 20835,
+      "sha256": "208feb453e55100855db7dbc2a5199299523f429bf90a06b772540cbd4596810"
+    },
+    "explorer/view-height-suggestion.js": {
+      "bytes": 19304,
+      "sha256": "38557e8e7f8f3359a88aca5fb8bdd27c9ac3b22f11a817c9191fda7ac586f074"
+    },
     "explorer/view-impact.js": {
       "bytes": 3416,
       "sha256": "f9374d443e9f28f088d7d010b912a6ce581471add1a97fc44e1097044a59b061"
+    },
+    "explorer/viewcone-geometry.js": {
+      "bytes": 23670,
+      "sha256": "17b922217c05f70068ce3fb63de8051c1b5fe856e3d069a43bec88e8a86ef1f0"
+    },
+    "explorer/viewcone-ui.js": {
+      "bytes": 26124,
+      "sha256": "69a2a74a110a4e6f0f0b4a8cb2715deefed443b3453e8a5c05414caa662e3c5d"
     },
     "explorer/viewpoint-selftest.js": {
       "bytes": 7476,
@@ -362,6 +410,10 @@
     "generated/height_policy.json": {
       "bytes": 1636010,
       "sha256": "85f7ddf730524f3df1b7f5a3fafbe24e8f3e938dc5b76aa735d410a4ebccd7fa"
+    },
+    "generated/imagine_city.json": {
+      "bytes": 12897003,
+      "sha256": "b421660455d34b409e195b26cca55c5597b7b7457a84c24bd6d3a86627be53a6"
     },
     "generated/imagine_facts.json": {
       "bytes": 5571847,
@@ -438,6 +490,10 @@
     "generated/unified_water.bin": {
       "bytes": 275088,
       "sha256": "a7395ea08048891de69ae2e75529772ec6dabf29372e0a538cdeca03cf775255"
+    },
+    "generated/view_height_suggestions.json": {
+      "bytes": 5641,
+      "sha256": "1813bd8cd88a0d5af694267d0bb3dcd8864de01eca6179124063e7f3d84d427d"
     },
     "index.html": {
       "bytes": 367,

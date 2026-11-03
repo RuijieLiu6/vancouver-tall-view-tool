@@ -127,10 +127,18 @@ function showError(msg) { errorStrip.textContent = msg; errorStrip.classList.rem
 if (!gl) { showError('WebGL2 is not available in this browser, so the context model cannot be drawn. Try a current Chrome, Firefox, Safari or Edge with hardware acceleration enabled.'); $('loading').classList.add('hidden'); }
 const VS = `#version 300 es
 precision highp float; layout(location=0) in vec3 aPos; layout(location=1) in vec4 aContext;
-layout(location=2) in vec4 aFacadeLimits; layout(location=3) in float aFacadeAngle;
-uniform mat4 uVP; uniform vec3 uOffset; out vec3 vWorld; flat out vec4 vContext;
+layout(location=2) in vec4 aFacadeLimits; layout(location=3) in float aFacadeAngle; layout(location=4) in vec2 aImagine;
+uniform mat4 uVP; uniform vec3 uOffset; uniform float uImagineCity; out vec3 vWorld; flat out vec4 vContext;
 flat out vec4 vFacadeLimits; flat out float vFacadeAngle;
-void main(){ vWorld = aPos + uOffset; vContext=aContext; vFacadeLimits=aFacadeLimits;vFacadeAngle=aFacadeAngle; gl_Position = uVP * vec4(aPos + uOffset, 1.0); }`;
+void main(){ vWorld = aPos + uOffset; vContext=aContext; vFacadeLimits=aFacadeLimits;vFacadeAngle=aFacadeAngle;
+  if(uImagineCity>0.5){
+    vWorld.z=aImagine.x+(aPos.z-aImagine.x)*aImagine.y+uOffset.z;
+    vContext.x=aImagine.x+(aContext.x-aImagine.x)*aImagine.y;
+    vContext.y=aImagine.x+(aContext.y-aImagine.x)*aImagine.y;
+    vFacadeLimits.z=aImagine.x+(aFacadeLimits.z-aImagine.x)*aImagine.y;
+    vFacadeLimits.w=aImagine.x+(aFacadeLimits.w-aImagine.x)*aImagine.y;
+  }
+  gl_Position = uVP * vec4(vWorld, 1.0); }`;
 const FS_MESH = `#version 300 es
 precision highp float;
 in vec3 vWorld; flat in vec4 vContext; flat in vec4 vFacadeLimits; flat in float vFacadeAngle;
@@ -452,10 +460,16 @@ void main(){
 const FS_LINE = `#version 300 es
 precision highp float; in vec3 vWorld; uniform vec4 uColor; uniform vec3 uCamPos; uniform vec3 uFog; uniform float uFogFar; out vec4 outColor;
 void main(){ float f = clamp(distance(vWorld, uCamPos) / uFogFar, 0.0, 1.0); f = f * f * 0.5; outColor = vec4(mix(uColor.rgb, uFog, f), uColor.a); }`;
+// Unlit view surface: a quiet transparent centre with a luminous grazing edge.
+// Uses the actual clipped geometry, independent of the Context facade shader.
+const FS_VIEWCONE = `#version 300 es
+precision highp float; in vec3 vWorld; uniform vec4 uColor; uniform vec3 uCamPos; out vec4 outColor;
+void main(){ vec3 n=normalize(cross(dFdx(vWorld),dFdy(vWorld))); vec3 v=normalize(uCamPos-vWorld);
+  float rim=pow(1.0-abs(dot(n,v)),2.0); outColor=vec4(mix(uColor.rgb,vec3(0.3,0.86,1.0),rim*0.55),uColor.a*(0.65+rim*1.25)); }`;
 function compile(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error('shader: ' + gl.getShaderInfoLog(s)); return s; }
 function program(fs) { const p = gl.createProgram(); gl.attachShader(p, compile(gl.VERTEX_SHADER, VS)); gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
-  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('link: ' + gl.getProgramInfoLog(p)); const u = {}; for (const n of ['uVP', 'uOffset', 'uColor', 'uCamPos', 'uFog', 'uFogFar', 'uLightMix', 'uStudyActive', 'uStudyCeiling', 'uStudyArea', 'uSceneStyle', 'uSurface', 'uAerialTex', 'uAerialOn', 'uAerialMap', 'uTrafficTex', 'uTrafficDetailTex', 'uTrafficMap', 'uTrafficDetailMap', 'uTrafficOn', 'uWaterNormal', 'uWaterTextureOn', 'uGrassTex', 'uGrassTextureOn', 'uFacadeMineral', 'uFacadeBrick', 'uFacadeWhiteBrick', 'uFacadeTextureOn', 'uAsphaltTex', 'uPavingTex', 'uPavingTextureOn', 'uShadowTex', 'uShadowVP', 'uShadowOn', 'uShadowTexel']) u[n] = gl.getUniformLocation(p, n); return { p, u }; }
-let PM = null, PL = null; if (gl) { try { PM = program(FS_MESH); PL = program(FS_LINE); } catch (e) { showError(String(e)); } }
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('link: ' + gl.getProgramInfoLog(p)); const u = {}; for (const n of ['uVP', 'uOffset', 'uImagineCity', 'uColor', 'uCamPos', 'uFog', 'uFogFar', 'uLightMix', 'uStudyActive', 'uStudyCeiling', 'uStudyArea', 'uSceneStyle', 'uSurface', 'uAerialTex', 'uAerialOn', 'uAerialMap', 'uTrafficTex', 'uTrafficDetailTex', 'uTrafficMap', 'uTrafficDetailMap', 'uTrafficOn', 'uWaterNormal', 'uWaterTextureOn', 'uGrassTex', 'uGrassTextureOn', 'uFacadeMineral', 'uFacadeBrick', 'uFacadeWhiteBrick', 'uFacadeTextureOn', 'uAsphaltTex', 'uPavingTex', 'uPavingTextureOn', 'uShadowTex', 'uShadowVP', 'uShadowOn', 'uShadowTexel']) u[n] = gl.getUniformLocation(p, n); return { p, u }; }
+let PM = null, PL = null, PV = null; if (gl) { try { PM = program(FS_MESH); PL = program(FS_LINE); PV = program(FS_VIEWCONE); } catch (e) { showError(String(e)); } }
 function makeMesh(pos, idx) { const vao = gl.createVertexArray(); let vb=null, ib=null;
   try { gl.bindVertexArray(vao); vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0); if (idx) { ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW); }
@@ -469,7 +483,7 @@ async function prepareBuildingMaterials(key, catalogue) {
   startupPerformance.facades.push({key,elapsedMs:performance.now()-began,workerMs:bounded.workerMs});
   gl.deleteVertexArray(mesh.vao);if(mesh.vb)gl.deleteBuffer(mesh.vb);if(mesh.ib)gl.deleteBuffer(mesh.ib);
   mesh=makeMesh(bounded.pos,bounded.idx);assets.meshes[key]=mesh;
-  mesh.renderIndex=bounded.idx;mesh.facadeStats=bounded.stats;
+  mesh.renderIndex=bounded.idx;mesh.vertexCount=bounded.pos.length/3;mesh.facadeStats=bounded.stats;
   assets.materials ||= {};assets.materials[key]=classified;
   const data=bounded.contextData;
   gl.bindVertexArray(mesh.vao);
@@ -503,8 +517,8 @@ function prepareContextShadow(cam){
   initContextShadow(); if(!contextShadow.framebuffer) return;
   const distance=V.len(V.sub(cam.eye,cam.target)), span=Math.round(clamp(distance*0.8,650,6000)/50)*50;
   const centre=[Math.round(cam.target[0]/25)*25,Math.round(cam.target[1]/25)*25,0];
-  const P=proposalShown()?proposalBox():null;
-  const key=JSON.stringify([centre,span,state.removed,state.cleared,state.showExisting,P?.box,state.parts,state.imported?.name]);
+  const P=!imagineCityOpen()&&proposalShown()?proposalBox():null;
+  const key=JSON.stringify([imagineCityScene?.versionId||0,imagineCityOpen(),centre,span,state.removed,state.cleared,state.showExisting,P?.box,state.parts,state.imported?.name]);
   if(contextShadow.key===key && contextShadow.imported===state.imported) return;
   const sun=V.norm([-0.45,-0.35,0.82]), lightEye=V.add(centre,V.scale(sun,11000));
   const vp=mul(ortho(-span,span,-span,span,1,23000),lookAt(lightEye,centre,[0,0,1]));
@@ -751,8 +765,8 @@ function pickRay(o, d) {
   let tT = rayMesh(o, d, assets.raw.terrain, 0, assets.raw.terrain.idx.length), tW = rayMesh(o, d, assets.raw.water, 0, assets.raw.water.idx.length);
   if (assets.raw.ext_terrain) tT = Math.min(tT, rayMesh(o, d, assets.raw.ext_terrain, 0, assets.raw.ext_terrain.idx.length)); if (assets.raw.ext_water) tW = Math.min(tW, rayMesh(o, d, assets.raw.ext_water, 0, assets.raw.ext_water.idx.length));
   let tB = Infinity, hitB = -1, ext = false; const B = assets.bboxes, cols = assets.index.columns;
-  for (let i = 0; i < cols.index_offset.length; i++) { if (isRemoved(i, false) && !state.showExisting) continue; const tb = rayAABB(o, d, B, i * 6); if (tb < 0 || tb > tB) continue; const t = rayMesh(o, d, assets.raw.buildings, cols.index_offset[i], cols.index_count[i]); if (t < tB) { tB = t; hitB = i; } }
-  if (assets.extIndex) { const EB = assets.extBboxes, ec = assets.extIndex.columns; for (let i = 0; i < ec.index_offset.length; i++) { if (isRemoved(i, true) && !state.showExisting) continue; const tb = rayAABB(o, d, EB, i * 6); if (tb < 0 || tb > tB) continue; const t = rayMesh(o, d, assets.raw.ext_buildings, ec.index_offset[i], ec.index_count[i]); if (t < tB) { tB = t; hitB = i; ext = true; } } }
+  for (let i = 0; i < cols.index_offset.length; i++) { if (!imagineCityOpen() && isRemoved(i, false) && !state.showExisting) continue; const city=imagineCityScene?.assets.buildings,base=city?.bases[i],scale=city?.scales[i],bounds=city?ImagineCityRender.transformedBounds(cols.bbox[i],base,scale):null; if(city&&scale<=0)continue;const tb = rayAABB(o, d, bounds||B, bounds?0:i*6); if (tb < 0 || tb > tB) continue; const inverse=city?ImagineCityRender.inverseRay(o,d,base,scale):null;const t = rayMesh(inverse?.o||o, inverse?.d||d, assets.raw.buildings, cols.index_offset[i], cols.index_count[i]); if (t < tB) { tB = t; hitB = i; } }
+  if (assets.extIndex) { const EB = assets.extBboxes, ec = assets.extIndex.columns; for (let i = 0; i < ec.index_offset.length; i++) { if (!imagineCityOpen() && isRemoved(i, true) && !state.showExisting) continue;const city=imagineCityScene?.assets.ext_buildings,base=city?.bases[i],scale=city?.scales[i],bounds=city?ImagineCityRender.transformedBounds(ec.bbox[i],base,scale):null;if(city&&scale<=0)continue; const tb = rayAABB(o, d, bounds||EB, bounds?0:i*6); if (tb < 0 || tb > tB) continue; const inverse=city?ImagineCityRender.inverseRay(o,d,base,scale):null;const t = rayMesh(inverse?.o||o, inverse?.d||d, assets.raw.ext_buildings, ec.index_offset[i], ec.index_count[i]); if (t < tB) { tB = t; hitB = i; ext = true; } } }
   const best = Math.min(tT, tW, tB); if (!isFinite(best)) return { type: 'none' }; const p = V.add(o, V.scale(d, best));
   if (best === tB) return { type: 'building', index: hitB, ext, point: p, t: best }; if (best === tW || waterZAt(p[0],p[1]) !== null) return { type: 'water', point: p, t: best }; return { type: 'terrain', point: p, t: best };
 }
@@ -831,15 +845,47 @@ function setCommon(prog, cam) { gl.useProgram(prog.p);
     const entries=[['mineral','uFacadeMineral',6],['brick','uFacadeBrick',7],['whiteBrick','uFacadeWhiteBrick',8]];
     for(const [key,uniform,unit] of entries){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,facadeSurfaces[key].texture);gl.uniform1i(prog.u[uniform],unit);}
     gl.uniform3fv(prog.u.uFacadeTextureOn,entries.map(([key])=>facadeSurfaces[key].loaded?1:0));gl.activeTexture(gl.TEXTURE0);
-  } if(prog.u.uTrafficOn){const on=state.sceneStyle==='context'&&state.layers.roads&&trafficTextures.global&&trafficTextures.local;gl.uniform1f(prog.u.uTrafficOn,on?1:0);if(on){for(const [unit,tex,name,mapName] of [[2,trafficTextures.global,'uTrafficTex','uTrafficMap'],[3,trafficTextures.local,'uTrafficDetailTex','uTrafficDetailMap']]){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex.texture);gl.uniform1i(prog.u[name],unit);gl.uniform4fv(prog.u[mapName],tex.map);}gl.activeTexture(gl.TEXTURE0);}} if (prog.u.uAerialOn) { const on = state.layers.aerial && aerial.tex; gl.uniform1f(prog.u.uAerialOn, on ? 1 : 0); if (on) { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, aerial.tex); gl.uniform1i(prog.u.uAerialTex, 0); gl.uniform4fv(prog.u.uAerialMap, aerial.map); } } if(prog.u.uSceneStyle) gl.uniform1f(prog.u.uSceneStyle,SCENE_STYLES[state.sceneStyle].shader); if(prog.u.uSurface) gl.uniform1f(prog.u.uSurface,0); if (prog.u.uStudyActive) gl.uniform1f(prog.u.uStudyActive, 0); gl.uniformMatrix4fv(prog.u.uVP, false, new Float32Array(cam.vp)); gl.uniform3fv(prog.u.uCamPos, cam.eye); gl.uniform3fv(prog.u.uFog, BG); gl.uniform1f(prog.u.uFogFar, cam.fogFar); if (prog.u.uLightMix) gl.uniform1f(prog.u.uLightMix, 1.0); gl.uniform3fv(prog.u.uOffset, [0, 0, 0]);
+  } if(prog.u.uTrafficOn){const on=state.sceneStyle==='context'&&state.layers.roads&&trafficTextures.global&&trafficTextures.local;gl.uniform1f(prog.u.uTrafficOn,on?1:0);if(on){for(const [unit,tex,name,mapName] of [[2,trafficTextures.global,'uTrafficTex','uTrafficMap'],[3,trafficTextures.local,'uTrafficDetailTex','uTrafficDetailMap']]){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex.texture);gl.uniform1i(prog.u[name],unit);gl.uniform4fv(prog.u[mapName],tex.map);}gl.activeTexture(gl.TEXTURE0);}} if (prog.u.uAerialOn) { const on = state.layers.aerial && aerial.tex; gl.uniform1f(prog.u.uAerialOn, on ? 1 : 0); if (on) { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, aerial.tex); gl.uniform1i(prog.u.uAerialTex, 0); gl.uniform4fv(prog.u.uAerialMap, aerial.map); } } if(prog.u.uSceneStyle) gl.uniform1f(prog.u.uSceneStyle,SCENE_STYLES[state.sceneStyle].shader); if(prog.u.uImagineCity) gl.uniform1f(prog.u.uImagineCity,0); if(prog.u.uSurface) gl.uniform1f(prog.u.uSurface,0); if (prog.u.uStudyActive) gl.uniform1f(prog.u.uStudyActive, 0); gl.uniformMatrix4fv(prog.u.uVP, false, new Float32Array(cam.vp)); gl.uniform3fv(prog.u.uCamPos, cam.eye); gl.uniform3fv(prog.u.uFog, BG); gl.uniform1f(prog.u.uFogFar, cam.fogFar); if (prog.u.uLightMix) gl.uniform1f(prog.u.uLightMix, 1.0); gl.uniform3fv(prog.u.uOffset, [0, 0, 0]);
   if(prog.u.uShadowOn){const on=state.sceneStyle==='context' && contextShadow.tex && contextShadow.vp;gl.uniform1f(prog.u.uShadowOn,on?1:0);if(on){gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,contextShadow.tex);gl.uniform1i(prog.u.uShadowTex,1);gl.uniformMatrix4fv(prog.u.uShadowVP,false,new Float32Array(contextShadow.vp));gl.uniform1f(prog.u.uShadowTexel,1/contextShadow.size);gl.activeTexture(gl.TEXTURE0);}}
 }
-function drawStatic(prog, key, color, offset) { if(prog.u.uSurface) gl.uniform1f(prog.u.uSurface,({buildings:1,ext_buildings:1,terrain:2,ext_terrain:2,parks:3,ext_parks:3,water:4,ext_water:4,backdrop:6})[key] || 0); const m = assets.meshes[key]; if (!m) return; gl.uniform4fv(prog.u.uColor, color); gl.uniform3fv(prog.u.uOffset, offset || [0, 0, 0]); gl.bindVertexArray(m.vao); if (m.indexed && /^(ext_)?buildings$/.test(key) && (state.removed.length || state.cleared.length) && !state.showExisting) {
+let imagineCityScene=null,imagineCityUploads=0,imagineCityBytes=0;
+function imagineCityOpen(){return document.body.classList.contains('imagine-city-open');}
+function setImagineCityScene(scene){
+  if(scene){
+    if(imagineCityScene?.assets===scene.assets&&imagineCityScene?.dataset===scene.dataset){imagineCityScene=scene;window.VistaViewcone?.refresh();requestRender();return true;}
+    if(!window.ImagineCityEngine.matchesManifest(scene.dataset,assets.unified))throw new Error('Imagine references belong to another city model. Rebuild the prepared data.');
+    for(const key of ['buildings','ext_buildings']){
+      const data=scene.dataset?.assets?.[key],result=scene.assets?.[key],catalogue=(key==='buildings'?assets.index:assets.extIndex),mesh=assets.meshes[key];
+      if(!catalogue)continue;
+      if(!data||!result||!mesh?.renderIndex||data.count!==catalogue.count||data.osmIds.length!==catalogue.columns.osm_id.length||data.osmIds.some((v,i)=>v!==catalogue.columns.osm_id[i]))throw new Error('Imagine data does not match the active city model.');
+    }
+    const pending=[];
+    for(const key of ['buildings','ext_buildings']){
+      const mesh=assets.meshes[key],catalogue=key==='buildings'?assets.index:assets.extIndex;if(!mesh||!catalogue)continue;
+      const values=window.ImagineCityRender.buildAttributes(catalogue,mesh.renderIndex,mesh.vertexCount,scene.assets[key]);
+      pending.push({mesh,values});
+    }
+    // Reuse a single small attribute buffer per asset for every scenario. The
+    // original position/material buffers are shared with the normal city view.
+    imagineCityBytes=0;
+    try{for(const {mesh,values} of pending){
+      mesh.imagineBuffer ||= gl.createBuffer();if(!mesh.imagineBuffer)throw new Error('Imagine display memory is unavailable.');
+      gl.bindVertexArray(mesh.vao);gl.bindBuffer(gl.ARRAY_BUFFER,mesh.imagineBuffer);gl.bufferData(gl.ARRAY_BUFFER,values,gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(4);gl.vertexAttribPointer(4,2,gl.FLOAT,false,0,0);imagineCityBytes+=values.byteLength;
+    }}finally{gl.bindVertexArray(null);}
+    imagineCityUploads++;imagineCityScene=scene;
+  }else{
+    imagineCityScene=null;imagineCityBytes=0;
+    for(const key of ['buildings','ext_buildings']){const mesh=assets.meshes[key];if(!mesh?.imagineBuffer)continue;gl.bindVertexArray(mesh.vao);gl.disableVertexAttribArray(4);gl.deleteBuffer(mesh.imagineBuffer);mesh.imagineBuffer=null;}gl.bindVertexArray(null);
+  }
+  contextShadow.key=null;panelToggleLabel();window.VistaViewcone?.refresh();requestRender();return true;
+}
+function drawStatic(prog, key, color, offset) { if(prog.u.uSurface) gl.uniform1f(prog.u.uSurface,({buildings:1,ext_buildings:1,terrain:2,ext_terrain:2,parks:3,ext_parks:3,water:4,ext_water:4,backdrop:6})[key] || 0); const m = assets.meshes[key]; if (!m) return;const cityBuilding=!!imagineCityScene&&/^(ext_)?buildings$/.test(key);if(prog.u.uImagineCity)gl.uniform1f(prog.u.uImagineCity,cityBuilding?1:0); gl.uniform4fv(prog.u.uColor, color); gl.uniform3fv(prog.u.uOffset, offset || [0, 0, 0]); gl.bindVertexArray(m.vao); if (m.indexed && /^(ext_)?buildings$/.test(key) && !imagineCityOpen() && (state.removed.length || state.cleared.length) && !state.showExisting) {
     const ext = key === 'ext_buildings', cols = (ext ? assets.extIndex : assets.index).columns;
     const hidden = [...new Set([...state.removed, ...state.cleared].filter(r => r.ext === ext).map(r => r.index))].sort((a,b) => cols.index_offset[a] - cols.index_offset[b]); let start = 0;
     for (const i of hidden) { const end = cols.index_offset[i]; if (end > start) gl.drawElements(gl.TRIANGLES, end - start, gl.UNSIGNED_INT, start * 4); start = end + cols.index_count[i]; }
     if (start < m.count) gl.drawElements(gl.TRIANGLES, m.count - start, gl.UNSIGNED_INT, start * 4);
-  } else if (m.indexed) gl.drawElements(gl.TRIANGLES, m.count, gl.UNSIGNED_INT, 0); else gl.drawArrays(gl.LINES, 0, m.count); gl.bindVertexArray(null); }
+  } else if (m.indexed) gl.drawElements(gl.TRIANGLES, m.count, gl.UNSIGNED_INT, 0); else gl.drawArrays(gl.LINES, 0, m.count); gl.bindVertexArray(null);if(prog.u.uImagineCity)gl.uniform1f(prog.u.uImagineCity,0); }
 const CONE_TOP = 260;
 function coneGeometry(c) { // vertical boundary walls from the apex to the far vertices + outline at the ground and the top
   const pts = c.polygon_model_xy; const n = pts.length; const ax = c.origin_model_xy[0], ay = c.origin_model_xy[1]; let ai = 0; for (let i = 0; i < n; i++) if (Math.abs(pts[i][0] - ax) < 0.01 && Math.abs(pts[i][1] - ay) < 0.01) ai = i;
@@ -931,8 +977,58 @@ function drawStreetSurfaces(cam,o){
   gl.bindVertexArray(null);gl.disable(gl.POLYGON_OFFSET_FILL);
 }
 
+let viewconeGpu = null;
+function viewconeMeshes(scene) {
+  if (viewconeGpu?.scene === scene) return viewconeGpu.meshes;
+  if (viewconeGpu) for (const mesh of Object.values(viewconeGpu.meshes)) {
+    gl.deleteVertexArray(mesh.vao); gl.deleteBuffer(mesh.vb); if (mesh.ib) gl.deleteBuffer(mesh.ib);
+  }
+  const meshes = {};
+  for (const key of ['surface','walls','edges','intrusion','footprints','baseFootprints','footprintConnectors']) {
+    const pos = scene[key]; if (pos?.length) meshes[key] = makeMesh(pos instanceof Float32Array ? pos : new Float32Array(pos),null);
+  }
+  viewconeGpu = {scene,meshes}; return meshes;
+}
+function drawViewconeOverlay(cam, scene) {
+  if (!scene?.enabled || !PV) return;
+  const meshes = viewconeMeshes(scene);
+  const draw = (program, key, mode, color) => { const mesh=meshes[key]; if(!mesh)return;
+    gl.uniform4fv(program.u.uColor,color);gl.bindVertexArray(mesh.vao);gl.drawArrays(mode,0,mesh.count);gl.bindVertexArray(null); };
+  // Actual proposal skin and clipping caps are opaque and depth tested. Terrain
+  // and neighbouring buildings still occlude them; there is no red bounding box.
+  gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.depthMask(true);gl.disable(gl.BLEND);
+  setCommon(PM,cam);gl.uniform1f(PM.u.uLightMix,0.25);gl.uniform1f(PM.u.uFogFar,1000000);
+  gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(-3,-3);
+  draw(PM,'intrusion',gl.TRIANGLES,[0.96,0.08,0.11,1]);gl.disable(gl.POLYGON_OFFSET_FILL);
+  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
+  const city=scene.kind==='imagine-city';
+  setCommon(PV,cam);draw(PV,'surface',gl.TRIANGLES,[0.02,0.46,0.94,city?0.075:0.22]);draw(PV,'walls',gl.TRIANGLES,[0.02,0.53,1,city?0.018:0.065]);
+  // Camera-facing edge ribbons give a soft glow at any zoom. WebGL line widths
+  // are commonly restricted to one pixel, so the halo is ordinary triangles.
+  setCommon(PL,cam);gl.uniform1f(PL.u.uFogFar,1000000);
+  const edges=scene.edges || [], forward=V.norm(V.sub(cam.target,cam.eye));
+  gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+  for (const [pixels,alpha] of (city?[[4,0.025],[1.5,0.10]]:[[9,0.035],[5,0.07],[2,0.22]])) {
+    const ribbons=[];
+    for(let i=0;i<edges.length;i+=6){const a=Array.from(edges.slice(i,i+3)),b=Array.from(edges.slice(i+3,i+6)),axis=V.sub(b,a);let side=V.cross(axis,forward);if(V.len(side)<1e-9)continue;
+      const mid=V.scale(V.add(a,b),0.5),scale=cam.half ? cam.half*2/canvas.height : 2*Math.max(1,V.len(V.sub(cam.eye,mid)))*Math.tan((cam.fovy||Math.PI/4)/2)/canvas.height;
+      side=V.scale(V.norm(side),pixels*scale);const p=V.add(a,side),q=V.sub(a,side),r=V.add(b,side),s=V.sub(b,side);ribbons.push(...p,...q,...r,...r,...q,...s);
+    }
+    if(ribbons.length)dynDraw(PL,gl.TRIANGLES,new Float32Array(ribbons),null,[0.03,0.53,1,alpha]);
+  }
+  gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  draw(PL,'edges',gl.LINES,[0.12,0.69,1,city?0.38:0.95]);
+  draw(PL,'baseFootprints',gl.LINES,[0.08,0.44,0.93,0.65]);draw(PL,'footprintConnectors',gl.LINES,[0.08,0.44,0.93,0.18]);
+  // A faint projected trace remains readable through roofs in Plan as well as
+  // City views. Only this labelled footprint aid ignores depth, never red skin.
+  gl.disable(gl.DEPTH_TEST);draw(PL,'footprints',gl.LINES,[0.03,0.39,0.86,0.32]);gl.enable(gl.DEPTH_TEST);
+  gl.depthMask(true);gl.disable(gl.BLEND);
+}
 function drawScene(cam, opts) {
-  const o = Object.assign({ lines: true, markers: true, wedge: true, cones: true, backdrop: false }, opts || {});
+  const o = Object.assign({ lines: true, markers: true, wedge: true, cones: true, backdrop: false, viewcone: true }, opts || {});
+  const city=imagineCityOpen();if(city){o.markers=false;o.wedge=false;o.cones=false;}
+  const viewconeActive = city || o.viewcone && !!window.VistaViewcone?.enabled;
+  const viewcone = !city && viewconeActive && o.cones && !o.plan ? window.VistaViewcone?.getScene() : null;
   const observerView = state.mode === 'observer' && !o.plan;
   if(!o.plan){ prepareStreetSurfaces(cam); prepareContextShadow(cam); drawContextSky(cam); }
   gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.BLEND); gl.depthMask(true); setCommon(PM, cam);
@@ -941,41 +1037,43 @@ function drawScene(cam, opts) {
   drawStatic(PM, 'ext_buildings', state.layers.sources ? C.extBuildings : C.buildings);
   drawStatic(PM, 'terrain', C.terrain); drawStatic(PM, 'water', C.water, [0, 0, 0.05]); drawStatic(PM, 'parks', C.parks, assets.unified ? null : [0, 0, 0.15]); drawStatic(PM, 'buildings', C.buildings);
   drawStreetSurfaces(cam,o);
-  if (state.selected !== null && assets.ready && (!isRemoved(state.selected, !!state.selectedExt) || state.showExisting)) { const cols = (state.selectedExt ? assets.extIndex : assets.index).columns; gl.uniform1f(PM.u.uSurface, 7); gl.uniform4fv(PM.u.uColor, C.buildingSel); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-2, -2);
+  if (!city && state.selected !== null && assets.ready && (!isRemoved(state.selected, !!state.selectedExt) || state.showExisting)) { const cols = (state.selectedExt ? assets.extIndex : assets.index).columns; gl.uniform1f(PM.u.uSurface, 7); gl.uniform4fv(PM.u.uColor, C.buildingSel); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-2, -2);
     gl.bindVertexArray(assets.meshes[state.selectedExt ? 'ext_buildings' : 'buildings'].vao); gl.drawElements(gl.TRIANGLES, cols.index_count[state.selected], gl.UNSIGNED_INT, cols.index_offset[state.selected] * 4); gl.bindVertexArray(null); gl.disable(gl.POLYGON_OFFSET_FILL); }
-  if (state.multiSel.length && assets.ready) { gl.uniform1f(PM.u.uSurface, 7); gl.uniform4fv(PM.u.uColor, C.buildingSel); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-2, -2);
+  if (!city && state.multiSel.length && assets.ready) { gl.uniform1f(PM.u.uSurface, 7); gl.uniform4fv(PM.u.uColor, C.buildingSel); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-2, -2);
     for (const q of state.multiSel) { if (isRemoved(q.index, q.ext) && !state.showExisting) continue; const cols = (q.ext ? assets.extIndex : assets.index).columns; gl.bindVertexArray(assets.meshes[q.ext ? 'ext_buildings' : 'buildings'].vao); gl.drawElements(gl.TRIANGLES, cols.index_count[q.index], gl.UNSIGNED_INT, cols.index_offset[q.index] * 4); }
     gl.bindVertexArray(null); gl.disable(gl.POLYGON_OFFSET_FILL); }
-  const P = proposalShown() ? proposalBox() : null;
-  if (P) { gl.uniform1f(PM.u.uSurface,5); const a = evaluationArea(); if (!state.check.unknown && a) { gl.uniform1f(PM.u.uStudyActive, 1); gl.uniform1f(PM.u.uStudyCeiling, state.check.bz); gl.uniform4fv(PM.u.uStudyArea, [a.x_min,a.y_min,a.x_max,a.y_max]); } if (state.pmode === 'import' && state.imported) { const off = importOffset(); gl.uniform4fv(PM.u.uColor, C.proposal); gl.uniform3fv(PM.u.uOffset, off); for (const mesh of state.imported.drawMeshes) { gl.bindVertexArray(mesh.vao); gl.drawElements(gl.TRIANGLES, mesh.count, gl.UNSIGNED_INT, 0); } gl.bindVertexArray(null); gl.uniform3fv(PM.u.uOffset, [0, 0, 0]); }
+  const P = !city && proposalShown() ? proposalBox() : null;
+  if (P) { gl.uniform1f(PM.u.uSurface,5); const a = evaluationArea(); if (!viewconeActive && !state.check.unknown && a) { gl.uniform1f(PM.u.uStudyActive, 1); gl.uniform1f(PM.u.uStudyCeiling, state.check.bz); gl.uniform4fv(PM.u.uStudyArea, [a.x_min,a.y_min,a.x_max,a.y_max]); } if (state.pmode === 'import' && state.imported) { const off = importOffset(); gl.uniform4fv(PM.u.uColor, C.proposal); gl.uniform3fv(PM.u.uOffset, off); for (const mesh of state.imported.drawMeshes) { gl.bindVertexArray(mesh.vao); gl.drawElements(gl.TRIANGLES, mesh.count, gl.UNSIGNED_INT, 0); } gl.bindVertexArray(null); gl.uniform3fv(PM.u.uOffset, [0, 0, 0]); }
     else for (const part of P.parts) { dynDraw(PM, gl.TRIANGLES, part.pos, part.idx, C.proposal); } gl.uniform1f(PM.u.uStudyActive, 0); }
   const eye = observerEye();
   if (eye && o.markers) { const s = o.markerScale || 1; const ob = state.observer;
     dynDraw(PM, gl.TRIANGLES, ...Object.values(boxMesh([ob.x - 0.3 * s, ob.y - 0.3 * s, ob.z, ob.x + 0.3 * s, ob.y + 0.3 * s, eye[2]])), C.observer);
     dynDraw(PM, gl.TRIANGLES, ...Object.values(boxMesh([eye[0] - 0.5 * s, eye[1] - 0.5 * s, eye[2] - 0.2 * s, eye[0] + 0.5 * s, eye[1] + 0.5 * s, eye[2] + 0.5 * s])), C.observer); }
-  const selCone = selectedCone();
+  const selCone = viewcone?.cone || selectedCone();
   if (selCone && selCone.origin_inside_model_extent && o.markers) { const [ox, oy] = selCone.origin_model_xy; const gz = terrainZAt(ox, oy); if (gz !== null) dynDraw(PM, gl.TRIANGLES, ...Object.values(boxMesh([ox - 1.2, oy - 1.2, gz, ox + 1.2, oy + 1.2, gz + 3])), C.origin); }
   // Context carriageways already carry their material mask; omit duplicate road centre polylines.
   setCommon(PL, cam);
   if (o.lines && !observerView) { if (state.layers.roads && state.sceneStyle!=='context') drawStatic(PL, assets.meshes.street_network ? 'street_network' : 'roads', C.roads, assets.unified ? null : [0, 0, 0.5]); drawStatic(PL, 'shoreline', C.shoreline, [0, 0, 0.3]); if (state.layers.roads && state.sceneStyle!=='context' && !assets.meshes.street_network && assets.meshes.ext_roads) drawStatic(PL, 'ext_roads', C.extRoads); if (state.layers.extent && assets.extentLines) dynDraw(PL, gl.LINES, assets.extentLines, null, C.extent); if (state.layers.extent && assets.extExtentLines) dynDraw(PL, gl.LINES, assets.extExtentLines, null, C.extExtent); }
-  if (!observerView) { drawStudyBoundary(cam); drawImportedParcels(); }
+  if (!observerView && !city) { drawStudyBoundary(cam); drawImportedParcels(); }
   if (P) { drawProposalEdges(P.parts); if (state.site && !observerView) { const sx = state.site.x, sy = state.site.y, sz = state.site.z + 0.5, k = 4; dynDraw(PL, gl.LINES, new Float32Array([sx - k, sy, sz, sx + k, sy, sz, sx, sy - k, sz, sx, sy + k, sz]), null, C.siteEdge); } }
   else if (state.site && !observerView) { const sx = state.site.x, sy = state.site.y, sz = state.site.z + 0.5, k = 6; dynDraw(PL, gl.LINES, new Float32Array([sx - k, sy, sz, sx + k, sy, sz, sx, sy - k, sz, sx, sy + k, sz]), null, C.siteEdge); }
   if (!observerView && eye && o.markers) { const tgt = proposalCentre(); const far = tgt ? tgt : V.add(eye, V.scale(observerForward(), 60)); dynDraw(PL, gl.LINES, new Float32Array([...eye, ...far]), null, C.ray);
     if (state.mode !== 'observer') dynDraw(PL, gl.LINES, new Float32Array([eye[0], eye[1], eye[2], eye[0], eye[1], eye[2] + 40]), null, C.observer); }
-  if (!observerView && o.cones && assets.cones && assets.cones.available) for (const c of assets.cones.cones) { if (c === selCone) { const g = coneGeometry(c); dynDraw(PL, gl.LINES, g.ground, null, C.coneEdgeSel); if (state.mode !== 'observer') dynDraw(PL, gl.LINES, g.top, null, C.coneEdgeSel); } else if (state.showAllCones) dynDraw(PL, gl.LINES, coneGeometry(c).ground, null, C.coneEdge); }
+  if (!viewcone?.enabled && !observerView && o.cones && assets.cones && assets.cones.available) for (const c of assets.cones.cones) { if (c === selCone) { const g = coneGeometry(c); dynDraw(PL, gl.LINES, g.ground, null, C.coneEdgeSel); if (state.mode !== 'observer') dynDraw(PL, gl.LINES, g.top, null, C.coneEdgeSel); } else if (state.showAllCones) dynDraw(PL, gl.LINES, coneGeometry(c).ground, null, C.coneEdge); }
   if (!observerView && selCone && selCone.origin_inside_model_extent && o.markers) { const [ox, oy] = selCone.origin_model_xy; const gz = terrainZAt(ox, oy) || 0; dynDraw(PL, gl.LINES, new Float32Array([ox, oy, gz, ox, oy, gz + 70]), null, C.origin); }
   // transparent geometry last
   gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); gl.useProgram(PM.p); gl.uniform1f(PM.u.uLightMix, 0.0);
   // Filled plan-corridor walls obscure silhouettes in close and eye-level views.
-  if (o.cones && selCone && state.mode === 'overview' && !o.plan) { const g = coneGeometry(selCone); dynDraw(PM, gl.TRIANGLES, g.wall, g.wallIdx, C.coneSel); }
+  if (!viewcone?.enabled && o.cones && selCone && state.mode === 'overview' && !o.plan) { const g = coneGeometry(selCone); dynDraw(PM, gl.TRIANGLES, g.wall, g.wallIdx, C.coneSel); }
   const area = evaluationArea();
-  if (!observerView && area && !state.check.unknown && Number.isFinite(state.check.bz)) { const z = state.check.bz; const m = 4;
+  if (!viewconeActive && !observerView && area && !state.check.unknown && Number.isFinite(state.check.bz)) { const z = state.check.bz; const m = 4;
     dynDraw(PM, gl.TRIANGLES, new Float32Array([area.x_min - m, area.y_min - m, z, area.x_max + m, area.y_min - m, z, area.x_max + m, area.y_max + m, z, area.x_min - m, area.y_max + m, z]), new Uint32Array([0, 1, 2, 0, 2, 3]), C.plane);
     setCommon(PL, cam); dynDraw(PL, gl.LINES, new Float32Array([area.x_min - m, area.y_min - m, z, area.x_max + m, area.y_min - m, z, area.x_max + m, area.y_min - m, z, area.x_max + m, area.y_max + m, z, area.x_max + m, area.y_max + m, z, area.x_min - m, area.y_max + m, z, area.x_min - m, area.y_max + m, z, area.x_min - m, area.y_min - m, z]), null, C.planeEdge); gl.useProgram(PM.p); }
-  if (eye && o.wedge && state.wedge && state.mode !== 'observer') { const w = wedgeGeometry(cam.aspect); if (w) { gl.useProgram(PM.p); dynDraw(PM, gl.TRIANGLES, w.pos, w.idx, C.wedge); setCommon(PL, cam); dynDraw(PL, gl.LINES, w.edges, null, C.wedgeEdge); } }
-  if (!observerView && o.cones) drawConeCeiling(cam);
+  if (!viewcone?.enabled && eye && o.wedge && state.wedge && state.mode !== 'observer') { const w = wedgeGeometry(cam.aspect); if (w) { gl.useProgram(PM.p); dynDraw(PM, gl.TRIANGLES, w.pos, w.idx, C.wedge); setCommon(PL, cam); dynDraw(PL, gl.LINES, w.edges, null, C.wedgeEdge); } }
+  if (!viewcone?.enabled && !observerView && o.cones) drawConeCeiling(cam);
   gl.depthMask(true); gl.disable(gl.BLEND);
+  if (viewcone?.enabled) drawViewconeOverlay(cam,viewcone);
+  if (city && imagineCityScene?.showCones && imagineCityScene.overlay) drawViewconeOverlay(cam,imagineCityScene.overlay);
 }
 function wedgeGeometry(aspect) { const eye = observerEye(); if (!eye) return null; const f = observerForward(); const tgt = proposalCentre(); const L = tgt ? V.len(V.sub(tgt, eye)) * 1.1 : 120;
   let r = V.cross(f, [0, 0, 1]); if (V.len(r) < 1e-6) r = [1, 0, 0]; r = V.norm(r); const u = V.norm(V.cross(r, f)); const vf = state.fov * Math.PI / 180; const hh = L * Math.tan(vf / 2), hw = hh * (aspect || 1.6);
@@ -1066,24 +1164,24 @@ function drawInset(W, H, context) { const dpr = canvas.width / canvas.getBoundin
 }
 const labelsEl = $('labels'); const labelNodes = new Map();
 function labelNode(key, cls) { let n = labelNodes.get(key); if (!n) { n = document.createElement('div'); n.className = 'label ' + (cls || ''); labelsEl.appendChild(n); labelNodes.set(key, n); } n.className = 'label ' + (cls || ''); return n; }
-function updateLabels(cam) { const rect = canvas.getBoundingClientRect(); const items = [];
+function updateLabels(cam) { const rect = canvas.getBoundingClientRect(); const items = [],city=imagineCityOpen();
   const boundary = state.drawing || state.boundary;
-  if (boundary.length > 1 && state.mode !== 'observer') {
+  if (!city && boundary.length > 1 && state.mode !== 'observer') {
     for (let i = 0; i < boundary.length - (state.drawing ? 1 : 0); i++) { const a = boundary[i], b = boundary[(i+1)%boundary.length], mid = [(a[0]+b[0])/2, (a[1]+b[1])/2]; items.push({ key: 'edge'+i, text: fmt(Math.hypot(b[0]-a[0], b[1]-a[1]),1)+' m', p: [...mid, (terrainZAt(...mid) || 0)+2], cls: 'site-edge' }); }
     if (boundary.length >= 3 && !SiteGeometry.validate(boundary)) { const m = SiteGeometry.metrics(boundary); items.push({key: 'site-area', text: formatArea(m.area)+' · study area', p: [...m.centre, (terrainZAt(...m.centre)||0)+2], cls:'site'}); }
   }
   if (state.layers.labels && state.mode !== 'observer') { for (const l of assets.labels) items.push({ key: 'L' + l.text, text: l.text, p: [l.x, l.y, l.z + 40], cls: '' }); if (assets.extLabels) for (const l of assets.extLabels) items.push({ key: 'X' + l.text, text: l.text, p: [l.x, l.y, l.z + 40], cls: 'ext' }); }
-  const P = proposalShown() ? proposalBox() : null; if (P) { // height tag beside the silhouette, not on it: upper-right of the projected bounding box, with a leader
+  const P = !city && proposalShown() ? proposalBox() : null; if (P) { // height tag beside the silhouette, not on it: upper-right of the projected bounding box, with a leader
     const b = P.box; let sx = -Infinity, sy = Infinity, ok = false;
     for (const x of [b[0], b[3]]) for (const y of [b[1], b[4]]) for (const z of [b[2], b[5]]) { const q = project(cam.vp, [x, y, z]); if (q[3] > 0) { ok = true; sx = Math.max(sx, q[0]); if (z === b[5]) sy = Math.min(sy, q[1]); } }
     if (ok && !planMarkers.proposal) items.push({ key: 'proposal', text: `${fmt(P.top-P.base)} m tall`, screen: [sx, sy], cls: 'proposal dim' }); }
-  const eye = observerEye(); if (eye && state.mode !== 'observer' && !planMarkers.observer) items.push({ key: 'observer', text: (state.observerSource === 'origin' ? `Observer at ${state.viewpoint} origin (open data) · eye z ${fmt(eye[2])} m` : state.observerSource === 'rooftop' ? `Rooftop observer (height unverified) · eye z ${fmt(eye[2])} m` : `Exploratory observer · eye z ${fmt(eye[2])} m`), p: [eye[0], eye[1], eye[2] + 45], cls: 'observer' });
-  const sc = selectedCone(); if (sc && state.mode !== 'observer') { const pts = sc.polygon_model_xy; const far = pts.reduce((a, q) => a[0] + q[0] > 0 ? a : a, pts[0]); const mid = pts.reduce((a, q) => [a[0] + q[0] / pts.length, a[1] + q[1] / pts.length], [0, 0]);
-    items.push({ key: 'cone', text: `View ${sc.view_number} — ${sc.name}: plan cone (City open data; heights unknown)`, p: [mid[0], mid[1], CONE_TOP + 5], cls: 'cone' });
+  const eye = city ? null : observerEye(); if (eye && state.mode !== 'observer' && !planMarkers.observer) items.push({ key: 'observer', text: (state.observerSource === 'origin' ? `Observer at ${state.viewpoint} origin (open data) · eye z ${fmt(eye[2])} m` : state.observerSource === 'rooftop' ? `Rooftop observer (height unverified) · eye z ${fmt(eye[2])} m` : `Exploratory observer · eye z ${fmt(eye[2])} m`), p: [eye[0], eye[1], eye[2] + 45], cls: 'observer' });
+  const vc = city ? null : window.VistaViewcone?.getScene(), sc = city ? null : vc?.cone || selectedCone(); if (sc && state.mode !== 'observer') { const pts = sc.polygon_model_xy; const mid = pts.reduce((a, q) => [a[0] + q[0] / pts.length, a[1] + q[1] / pts.length], [0, 0]);
+    items.push({ key: 'cone', text: vc?.enabled ? `View ${sc.view_number} — ${sc.name} · ${vc.certainty}` : `View ${sc.view_number} — ${sc.name}: plan cone (City open data; heights unknown)`, p: [mid[0], mid[1], vc?.plane ? vc.plane.a*mid[0]+vc.plane.b*mid[1]+vc.plane.c+5 : CONE_TOP + 5], cls: 'cone' });
     if (sc.origin_inside_model_extent && state.observerSource !== 'origin') items.push({ key: 'origin', text: `Origin ${sc.view_number} (open-data apex; by-law authoritative)`, p: [sc.origin_model_xy[0], sc.origin_model_xy[1], (terrainZAt(sc.origin_model_xy[0], sc.origin_model_xy[1]) || 0) + 75], cls: 'origin' }); }
   // zoomed out, the proposal marker carries the label; the ceiling tag would sit on top of it
-  const area = evaluationArea(); if (area && !state.check.unknown && Number.isFinite(state.check.bz) && state.mode !== 'observer' && !planMarkers.proposal) items.push({ key: 'plane', text: `Study ceiling · ${fmt(state.check.bz-(P?.base || 0))} m above base`, p: [area.x_max, area.y_min, state.check.bz + 2], cls: 'plane' });
-  const cr=window.VistaEnvelope?.getResult(); if(coneStudy.show && cr?.coordinateCompatible && cr.limitingPoint && state.mode !== 'observer') items.push({key:'cone-ceiling',text:`${cr.certainty.label} envelope · view ${cr.limitingView} · ${fmt(cr.ceilingElevationM)} m (${coneStudy.datumName})${cr.mathematicalStatus==='partial'?' · incomplete':''}`,p:[...cr.limitingPoint.xy,cr.ceilingElevationM-coneStudy.datumOffsetM+2],cls:'plane'});
+  const area = evaluationArea(); if (!city && !vc?.enabled && area && !state.check.unknown && Number.isFinite(state.check.bz) && state.mode !== 'observer' && !planMarkers.proposal) items.push({ key: 'plane', text: `Study ceiling · ${fmt(state.check.bz-(P?.base || 0))} m above base`, p: [area.x_max, area.y_min, state.check.bz + 2], cls: 'plane' });
+  const cr=window.VistaEnvelope?.getResult(); if(!city && !vc?.enabled && coneStudy.show && cr?.coordinateCompatible && cr.limitingPoint && state.mode !== 'observer') items.push({key:'cone-ceiling',text:`${cr.certainty.label} envelope · view ${cr.limitingView} · ${fmt(cr.ceilingElevationM)} m (${coneStudy.datumName})${cr.mathematicalStatus==='partial'?' · incomplete':''}`,p:[...cr.limitingPoint.xy,cr.ceilingElevationM-coneStudy.datumOffsetM+2],cls:'plane'});
   if(state.sceneStyle==='context' && state.layers.roads && state.mode!=='observer') for(const label of streetSurfaces?.labels||[]) items.push({key:'street-name-'+label.name,text:label.name,p:label.p,cls:'street'});
   const seen = new Set(), placed = []; items.sort((a,b)=>Number(!a.cls || a.cls==='ext')-Number(!b.cls || b.cls==='ext'));
   for (const it of items) { const q = it.screen ? [it.screen[0], it.screen[1], 0, 1] : project(cam.vp, it.p); const n = labelNode(it.key, it.cls); seen.add(it.key); if (q[3] <= 0 || q[0] < -1.05 || q[0] > 1.05 || q[1] < -1.05 || q[1] > 1.05) { n.style.display = 'none'; continue; }
@@ -1096,7 +1194,7 @@ function updateLabels(cam) { const rect = canvas.getBoundingClientRect(); const 
 // ------------------------------------------------------------------ interaction
 let drag = null; const pointers = new Map();
 canvas.addEventListener('pointerdown', (e) => { try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* synthetic pointer */ } pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (pointers.size === 1 && e.button === 0 && state.tool === 'aim' && state.mode !== 'observer' && assets.ready && beginAim(e.clientX, e.clientY)) { drag = { x0: e.clientX, y0: e.clientY, button: 0, aim: true, moved: false }; requestRender(); return; }
+  if (pointers.size === 1 && e.button === 0 && !imagineCityOpen() && state.tool === 'aim' && state.mode !== 'observer' && assets.ready && beginAim(e.clientX, e.clientY)) { drag = { x0: e.clientX, y0: e.clientY, button: 0, aim: true, moved: false }; requestRender(); return; }
   if (pointers.size === 1) drag = { x0: e.clientX, y0: e.clientY, button: e.button, shift: e.shiftKey, moved: false }; else drag = null; });
 canvas.addEventListener('pointermove', (e) => { if (!pointers.has(e.pointerId)) return; const prev = pointers.get(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (drag && drag.aim) { if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 6) drag.moved = true; if (drag.moved) aimDragTo(e.clientX, e.clientY); return; }
@@ -1117,6 +1215,7 @@ function handleClick(cx, cy, button) { if (!assets.ready || !lastCam || button !
   if (state.mode === 'observer') { setHint('In the observer view, drag to look around and use the wheel to change the field of view. Switch to the city overview to move the site or the observer.'); return; }
   const ray = rayFromClient(cx, cy, lastCam); if (!ray) return; applyPick(pickRay(ray.o, ray.d)); }
 function applyPick(hit) {
+  if(imagineCityOpen()){if(hit.type==='building')window.VistaImagineCity?.selectBuilding({asset:hit.ext?'ext_buildings':'buildings',index:hit.index});return;}
   if (state.tool === 'street') { if (hit.type === 'terrain' || hit.type === 'building') placeStreetObserver(hit.point[0],hit.point[1]); else setHint('Choose a mapped street over land. Water and missing model terrain cannot anchor a street viewpoint.'); return; }
   if (state.tool === 'boundary') { if (hit.type === 'terrain' || hit.type === 'building') addBoundaryPoint(hit.point[0], hit.point[1]); else setHint('Choose a point over modelled land. Water and missing terrain cannot anchor a study boundary.'); return; }
   if (hit.type === 'none') { setHint(state.tool === 'rooftop' ? 'No modelled roof under the cursor. Zoom in and choose a visible building roof.' : 'Nothing under the cursor. The placement surface is the active terrain; the outline on the ground marks the model coverage.'); return; }
@@ -1309,7 +1408,7 @@ function setMode(mode, quiet=false) {
 function setTool(t) { if (t !== 'boundary' && state.drawing) { state.drawing = null; refreshStudyUI(); } state.tool = t; for (const k of ['site', 'observer', 'rooftop', 'identify', 'boundary']) $('tool-' + k)?.classList.toggle('active', k === t); if (t === 'rooftop') planView(); else if (state.mode === 'observer') setMode('overview');
   setHint(t === 'boundary' ? 'Click the corners of your study area. Finish boundary or press Enter; Esc cancels.' : t === 'site' ? 'Click open ground for a site point, or select a building for a replacement study.' : t === 'observer' ? 'Ground observer: click open terrain (Plan helps). Or pick a view and stand at its origin.' : t === 'rooftop' ? 'Rooftop observer: click a visible roof from above. The modelled height is unverified.' : 'Identify: click a building or the ground.'); }
 // the caption under the view always says what a click or drag does right now (mode × active tool)
-function refreshCaption() { const cap = $('view-caption'); if (!cap) return; const m = state.mode, t = state.tool, red = !state.check.unknown && state.check.result?.overall_result === 'INTERSECTS' && proposalShown() ? ' Red marks the part above your study ceiling, not a City limit.' : '';
+function refreshCaption() { const cap = $('view-caption'); if (!cap) return; const m = state.mode, t = state.tool, red = !window.VistaViewcone?.enabled && !state.check.unknown && state.check.result?.overall_result === 'INTERSECTS' && proposalShown() ? ' Red marks the part above your study ceiling, not a City limit.' : '';
   const free = state.flow.stage === 'view' || !!selectedCone() || !!state.observer || m === 'inspect';
   const enter = state.flow.methods.view === 'cone' ? ' Choose “View from here” to enter the selected viewpoint.' : '';
   if (m === 'observer') { cap.textContent = `${state.observerSource === 'origin' ? 'Protected viewpoint ' + state.viewpoint + ' · ' + (selectedCone()?.name || '') : state.observerSource === 'rooftop' ? 'From a rooftop (height approximate)' : state.observerSource === 'street' ? 'From the street (modelled)' : 'From the ground'}, eye ${fmt(state.eyeH)} m up · ↑/↓ forward/back · ←/→ sidestep · Shift faster · drag to look.${red}`; return; }
@@ -2244,7 +2343,7 @@ function refreshPanels() { window.VistaHeights?.refresh(); refreshConeCeiling();
     $('cleared-text').textContent = state.clearanceWarning || (!state.clearOverlaps ? 'Buildings your proposal overlaps are kept. Tick the box to treat them as demolished.' : `${state.cleared.length} existing building${state.cleared.length === 1 ? '' : 's'} under your proposal ${state.cleared.length === 1 ? 'is' : 'are'} shown as demolished to make room. This is a study assumption, not an approval.`); }
   const bi = $('building-info'); if (state.selected !== null && assets.ready) { const c = (state.selectedExt ? assets.extIndex : assets.index).columns, i = state.selected, b = c.bbox[i]; bi.textContent = `${state.selectedExt ? 'Extension building (current OSM, © OpenStreetMap contributors)' : 'Existing building (supplied model)'} osm_id ${c.osm_id[i]} · ${c.osm_type[i] || '—'} · height_m ${c.height_m[i] === null ? '—' : c.height_m[i]} (${HS[c.height_source[i]]}) · ≈ ${fmt(b[3] - b[0], 0)} × ${fmt(b[4] - b[1], 0)} m · top z ${fmt(b[5])} m. Model bounding dimensions; not a parcel survey.`; bi.classList.remove('hidden'); }
   else bi.classList.add('hidden');
-  refreshBuildingViewInfo(); refreshImportedParcels(); refreshLiveStudy(); $('step-status').textContent = stepStatus(); refreshFlowUI(); refreshCaption(); scheduleRefit();
+  refreshBuildingViewInfo(); refreshImportedParcels(); refreshLiveStudy(); $('step-status').textContent = stepStatus(); refreshFlowUI(); refreshCaption(); window.VistaViewcone?.refresh(); window.VistaHeightSuggestion?.refresh(); scheduleRefit();
   $('tech-json').textContent = JSON.stringify(technicalState(), null, 1); if (state.flow.stage === 'output') { renderReport(); window.__report?.renderBuilder(); } }
 function technicalState() { const m = assets.manifest; const P = proposalBox(); const c = selectedCone();
   return { schema: 'vancouver-site-study/1', name: state.studyName, resume_hash: serializeHash(), saved_at: new Date().toISOString(), imported_geometry_included: false, label: 'VISUAL EXPLORATION AND TEACHING ONLY — NOT A PROTECTED-VIEW ASSESSMENT', regulatory_applicability: 'NOT ASSESSED', coordinates: assets.unified ? 'model XY metres, Z up; rebuilt SRTM ground, building bases shifted vertically (see context_rebuild)' : 'model metres, Z up, untransformed (see source.display_transform)',
@@ -2397,7 +2496,7 @@ const EXAMPLES = [
 ];
 function openExample(key) { const ex = EXAMPLES.find((e) => e.key === key) || EXAMPLES[0];
   if (state.site && !confirm(`Open the ${ex.name} example? It replaces your current study. To keep yours, cancel and use Study file › Save study first.`)) return;
-  try { localStorage.setItem('vancouver-view-lab-intro-seen/1', '1'); } catch (_) { /* storage blocked */ } location.assign(location.pathname + '?intro=0&example=' + ex.key + ex.hash); }
+  window.__vistaIntroSeen = true; location.assign(location.pathname + '?intro=0&example=' + ex.key + ex.hash); }
 document.querySelectorAll('[data-open-example]').forEach((b) => b.addEventListener('click', () => openExample(b.dataset.openExample)));
 { const ex = EXAMPLES.find((e) => e.key === new URLSearchParams(location.search).get('example'));
   if (ex && $('example-banner')) { $('example-banner-text').innerHTML = `<b>Real tower · ${ex.name}</b> · ${ex.address} · ${ex.facts}. The modelled tower is replaced by one block of its published height; the footprint is approximate. Explore any step, or use <b>Output › Start a new study</b> for your own.`; $('example-banner').classList.remove('hidden'); } }
@@ -2410,13 +2509,13 @@ canvas.addEventListener('keydown', (e) => { if (!assets.ready || e.ctrlKey || e.
     else if (state.mode === 'plan') { const o = state.cams.overview, d = o.dist * 0.04 * f; o.target[0] += dx * d; o.target[1] -= dy * d; }
     else { const o = state.mode === 'inspect' ? state.cams.inspect : state.cams.overview; o.az -= dx * 0.07 * f; o.el = clamp(o.el - dy * 0.04 * f, 0.03, 1.55); } }
   else if (k === '+' || k === '=') zoomBy(-0.15); else if (k === '-' || k === '_') zoomBy(0.15);
-  else if (k === 'Enter' && state.drawing) finishBoundary();
-  else if (k === 'Enter' || k === ' ') { const cx = r.left + r.width / 2, cy = r.top + r.height / 2; if (state.tool === 'aim' && state.mode !== 'observer') { if (beginAim(cx, cy)) endAim(false); } else handleClick(cx, cy, 0); }
+  else if (k === 'Enter' && state.drawing && !imagineCityOpen()) finishBoundary();
+  else if (k === 'Enter' || k === ' ') { const cx = r.left + r.width / 2, cy = r.top + r.height / 2; if (!imagineCityOpen() && state.tool === 'aim' && state.mode !== 'observer') { if (beginAim(cx, cy)) endAim(false); } else handleClick(cx, cy, 0); }
   else used = false;
   if (used) { e.preventDefault(); e.stopPropagation(); requestRender(); } });
 // Viewpoint action buttons keep focus after selection; arrows still walk unless a text/form control owns them.
 document.addEventListener('keydown',e=>{
-  if(e.target===canvas||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||state.mode!=='observer'||!state.observer||!(/^Arrow(Up|Down|Left|Right)$/.test(e.key)||/^[ijkl]$/i.test(e.key)))return;
+  if(imagineCityOpen()||e.target===canvas||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||state.mode!=='observer'||!state.observer||!(/^Arrow(Up|Down|Left|Right)$/.test(e.key)||/^[ijkl]$/i.test(e.key)))return;
   if(e.target.isContentEditable||e.target.closest('input,select,textarea,[role="dialog"],dialog')||document.querySelector('dialog[open]'))return;
   e.preventDefault();if(e.key.startsWith('Arrow'))moveObserver(e.key,(e.repeat?0.2:1)*(e.shiftKey?4:1));else lookObserver(e.key,e.shiftKey?4:1);canvas.focus({preventScroll:true});
 });
@@ -2452,10 +2551,12 @@ $('btn-download-state').addEventListener('click', () => { const blob = new Blob(
 $('btn-download-image').addEventListener('click', () => { render(); const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = `site_explorer_${state.mode}.png`; a.click(); });
 // on phones the step panel folds away; its toggle names the current step so it reads as the way back
 function panelToggleLabel() { const t = $('btn-panel-toggle'), open = !$('panel').classList.contains('collapsed'), i = FLOW.indexOf(state.flow.stage);
+  if(imagineCityOpen()){t.textContent=open?'Hide Imagine':'Show Imagine';t.classList.toggle('attn',!open);return;}
   t.textContent = open ? 'Hide steps' : `Steps · ${state.flow.stage === 'output' ? 'Output' : (i + 1) + ' ' + FLOW_NAMES[state.flow.stage]}`; t.classList.toggle('attn', !open); }
 new MutationObserver(panelToggleLabel).observe($('panel'), { attributes: true, attributeFilter: ['class'] });
 $('btn-panel-toggle').addEventListener('click', () => { const p = $('panel'); p.classList.toggle('collapsed'); $('btn-panel-toggle').setAttribute('aria-expanded', String(!p.classList.contains('collapsed'))); setTimeout(() => { resize(); requestRender(); }, 50); });
 window.addEventListener('resize', () => { resize(); requestRender(); });
+for(const name of ['vista-imagine-city-opened','vista-imagine-city-closed'])document.addEventListener(name,()=>{resize();panelToggleLabel();window.VistaViewcone?.refresh();requestRender();});
 const floatBtn = document.createElement('button'); floatBtn.className = 'btn hidden'; floatBtn.id = 'btn-overview-float'; floatBtn.textContent = '‹ City overview'; floatBtn.style.cssText = 'position:absolute;right:10px;top:10px;'; $('viewport').appendChild(floatBtn); floatBtn.addEventListener('click', () => setMode('overview'));
 
 
@@ -2477,7 +2578,7 @@ $('chk-existing').addEventListener('change', e => { state.showExisting=e.target.
 $('btn-fit-site').addEventListener('click', focusSite); $('btn-focus').addEventListener('click', focusSite);
 $('btn-zoom-in').addEventListener('click', () => zoomBy(-0.35)); $('btn-zoom-out').addEventListener('click', () => zoomBy(0.35));
 for (const key of Object.keys(state.layers)) $('layer-'+key).addEventListener('change',e=>{ state.layers[key]=e.target.checked; if (key === 'aerial') { aerial.error = null; aerial.tried = null; refreshAerialStatus(); aerialFollow(); } requestRender(); writeHash(); });
-window.addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (state.drawing && e.key==='Enter' && !/BUTTON|CANVAS/.test(e.target.tagName)) { e.preventDefault(); finishBoundary(); } if (state.drawing && e.key==='Escape') { e.preventDefault(); cancelBoundary(); } });
+window.addEventListener('keydown', e => { if (imagineCityOpen() || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (state.drawing && e.key==='Enter' && !/BUTTON|CANVAS/.test(e.target.tagName)) { e.preventDefault(); finishBoundary(); } if (state.drawing && e.key==='Escape') { e.preventDefault(); cancelBoundary(); } });
 if (matchMedia('(max-width: 860px)').matches) { $('panel').classList.add('collapsed'); $('btn-panel-toggle').setAttribute('aria-expanded','false'); }
 
 
@@ -2497,15 +2598,10 @@ $('file-study').addEventListener('change',async e=>{const f=e.target.files[0]; i
 $('place-select').addEventListener('change',e=>{ if(e.target.value==='') return; const place=assets.places[+e.target.value]; if(!place) return; state.cams.overview.target=[place.x,place.y,place.z]; state.cams.overview.dist=1800; planView(); applyFlowTool(); revealMap(); setHint('Viewing '+place.text+'. '+(state.drawing ? 'Keep clicking to add boundary corners.' : 'Now click open ground and confirm the location, or draw a boundary.')); });
 
 // ------------------------------------------------------------------ boot
-function frame() { if (needsRender && !document.getElementById('vista-imagine')?.open) { needsRender = false; try { render(); } catch (e) { showError('Render error: ' + (e && e.message || e)); } } requestAnimationFrame(frame); }
+function frame() { if (needsRender) { needsRender = false; try { render(); } catch (e) { showError('Render error: ' + (e && e.message || e)); } } requestAnimationFrame(frame); }
 const readyPromise = (async () => { if (!gl || !PM) throw new Error('WebGL2 unavailable');
-  // A direct Imagine visit needs its stored parcel map, not the downtown scene.
-  if(new URLSearchParams(location.search).get('imagine')==='1') {
-    $('loading-text').textContent='The 3D context loads when you return from Imagine.';
-    await new Promise(resolve=>document.addEventListener('vista-imagine-closed',resolve,{once:true}));
-  }
   try { await loadAssets(); } catch (e) { $('loading').classList.add('hidden'); showError('Could not load the context model: ' + (e && e.message || e)); throw e; }
-  const e = assets.manifest.extent_m.scene_bbox; state.cams.overview.target = [(e[0] + e[3]) / 2, (e[1] + e[4]) / 2, 20]; renderClauseCards(); applyHash(); refreshPanels(); requestRender(); if(!document.getElementById('vista-imagine')?.open)render(); return true; })();
+  const e = assets.manifest.extent_m.scene_bbox; state.cams.overview.target = [(e[0] + e[3]) / 2, (e[1] + e[4]) / 2, 20]; renderClauseCards(); applyHash(); refreshPanels(); requestRender(); render(); return true; })();
 requestAnimationFrame(frame);
 
 
@@ -2555,7 +2651,9 @@ function captureScene(spec) {
     canvas.width = s.width; canvas.height = s.height; gl.viewport(0, 0, s.width, s.height); gl.disable(gl.SCISSOR_TEST);
     gl.clearColor(BG[0], BG[1], BG[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     const cam = computeCamera(s.mode, s.width / s.height);
-    drawScene(cam, { markers: s.markers, wedge: s.wedge, cones: s.cones, backdrop: s.backdrop });
+    // Report captures keep their own declared evidence and scalar experiment;
+    // the independent viewport-only cone must not leak into their screenshots.
+    drawScene(cam, { markers: s.markers, wedge: s.wedge, cones: s.cones, backdrop: s.backdrop, viewcone: false });
     const url = canvas.toDataURL('image/jpeg', s.quality), vp = cam.vp;
     const toImage = (p) => { const q = project(vp, [p[0], p[1], p[2] ?? 0]); return q[3] > 0 ? [(q[0] + 1) / 2, (1 - q[1]) / 2] : null; };
     return { url, toImage, half: cam.half || null, aspect: s.width / s.height, eye: cam.eye };
@@ -2578,7 +2676,13 @@ function applyHeightReference(heightM) {
   state.parts.forEach((p,i)=>{p.h=heights[i];});state.check.result=null;
   renderPartsList();refreshPanels();refreshLiveStudy();requestRender();writeHash();return true;
 }
-window.__explorer = { getStartupPerformance:()=>JSON.parse(JSON.stringify(startupPerformance)), applyHeightReference, getConeStudy:()=>({...coneStudy}), importOffset, requestSiteConfirmation, pavingSurfaces, facadeSurfaces, grassSurface, waterSurface, trafficRenderInfo:()=>({enabled:state.sceneStyle==='context'&&state.layers.roads,global:trafficTextures.global?{bounds:trafficTextures.global.bounds,size:trafficTextures.global.size,stats:trafficTextures.global.stats}:null,detail:trafficTextures.local?{bounds:trafficTextures.local.bounds,size:trafficTextures.local.size,stats:trafficTextures.local.stats}:null,deck:globalTrafficSurfaces?.stats}), moveObserver, streetscapeStats:()=>streetSurfaces?{...streetSurfaces.stats,global:globalTrafficSurfaces?.stats,network:assets.traffic?.stats}:null, clearStreetSurfaces, placeStreetObserver, refreshStreetChoices, streetRoadArrays, usableStreetPoint, coneCeilingResult, restoreConeStudy, refreshConeCeiling, studySentence, setHint, setAddressPin, loadAerial, aerial, updateCleared, clearanceGeometry: { footprintRecord, footprintIndex, projectedTriangleMeetsFootprint, indexedBuildingMeetsFootprints }, isReplaced, startNewStudy, captureScene, proposalShown, partFootprint, highestRoofAtXY, formatArea, planAnalysis, renderClauseCards, SCENE_STYLES, HS, applyFlowTool, flowGo, chooseMethod, changeMethod, flowBack, flowNext, stageComplete, toggleMultiBuilding, applyMultiSelection, replaceSingleBuilding, beginAim, aimDragTo, endAim, setSceneStyle, planAnalysis, refreshLiveStudy, resultLabel, serializeHash, openStudy, landZAt, beginBoundary, addBoundaryPoint, finishBoundary, cancelBoundary, rectangleSite, replaceSelectedBuilding, restoreBuildings, focusSite, focusLocation, planView, applyPick, isRemoved, state, assets, ready: readyPromise, placeSite, placeObserver, placeObserverAtOrigin, lookTowardProposal, setMode, setTool, setStep, aimAtProposal, resetToContext, inspectFrom, selectView, selectedCone, addPart, renderPartsList, setProposalMode, parseObj, installImport, cancelImport, runCheck, evaluationArea,
+function restoreProposalParts(parts) {
+  if(state.pmode!=='boxes'||!state.site||!Array.isArray(parts)||!parts.length||parts.length>1000)return false;
+  if(parts.some(p=>!p||typeof p.name!=='string'||p.name.length>500||![p.h,p.w,p.d,p.dx,p.dy,p.rotation??0].every(Number.isFinite)||p.h<0.1||p.h>2000||p.w<=0||p.d<=0))return false;
+  state.parts=JSON.parse(JSON.stringify(parts));state.check.result=null;
+  renderPartsList();refreshPanels();refreshLiveStudy();requestRender();writeHash();return true;
+}
+window.__explorer = { setImagineCityScene, imagineCityRenderState:()=>({active:!!imagineCityScene,versionId:imagineCityScene?.versionId,uploads:imagineCityUploads,bytes:imagineCityBytes}), getStartupPerformance:()=>JSON.parse(JSON.stringify(startupPerformance)), applyHeightReference, restoreProposalParts, getConeStudy:()=>({...coneStudy}), importOffset, requestSiteConfirmation, pavingSurfaces, facadeSurfaces, grassSurface, waterSurface, trafficRenderInfo:()=>({enabled:state.sceneStyle==='context'&&state.layers.roads,global:trafficTextures.global?{bounds:trafficTextures.global.bounds,size:trafficTextures.global.size,stats:trafficTextures.global.stats}:null,detail:trafficTextures.local?{bounds:trafficTextures.local.bounds,size:trafficTextures.local.size,stats:trafficTextures.local.stats}:null,deck:globalTrafficSurfaces?.stats}), moveObserver, streetscapeStats:()=>streetSurfaces?{...streetSurfaces.stats,global:globalTrafficSurfaces?.stats,network:assets.traffic?.stats}:null, clearStreetSurfaces, placeStreetObserver, refreshStreetChoices, streetRoadArrays, usableStreetPoint, coneCeilingResult, restoreConeStudy, refreshConeCeiling, studySentence, setHint, setAddressPin, loadAerial, aerial, updateCleared, clearanceGeometry: { footprintRecord, footprintIndex, projectedTriangleMeetsFootprint, indexedBuildingMeetsFootprints }, isReplaced, startNewStudy, captureScene, proposalShown, partFootprint, highestRoofAtXY, formatArea, planAnalysis, renderClauseCards, SCENE_STYLES, HS, applyFlowTool, flowGo, chooseMethod, changeMethod, flowBack, flowNext, stageComplete, toggleMultiBuilding, applyMultiSelection, replaceSingleBuilding, beginAim, aimDragTo, endAim, setSceneStyle, planAnalysis, refreshLiveStudy, resultLabel, serializeHash, openStudy, landZAt, beginBoundary, addBoundaryPoint, finishBoundary, cancelBoundary, rectangleSite, replaceSelectedBuilding, restoreBuildings, focusSite, focusLocation, planView, applyPick, isRemoved, state, assets, ready: readyPromise, placeSite, placeObserver, placeObserverAtOrigin, lookTowardProposal, setMode, setTool, setStep, aimAtProposal, resetToContext, inspectFrom, selectView, selectedCone, addPart, renderPartsList, setProposalMode, parseObj, installImport, cancelImport, runCheck, evaluationArea,
   terrainZAt, groundZAt, roofZAt, preferredRoofPoint, placeRoofObserver, placeRooftopAtXY, viewFromSelectedRoof, proposalBox, proposalParts, proposalCentre, observerEye, observerForward, pickRay, rayFromClient, applyHash, refreshPanels, technicalState, explainCheck, buildPdfReport,
   checkBody, setDisplayUnits, refreshImportInfo, viewFromHere, lookObserver, viewpointNavigationState, refreshViewpointNavigation, stepViewpoint,
   renderOnce: () => { needsRender = false; render(); return lastCam; }, camera: () => lastCam, canvas, gl,
