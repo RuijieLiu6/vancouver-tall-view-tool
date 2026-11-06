@@ -77,11 +77,13 @@
   <p><a id="local-app-link" href="http://127.0.0.1:8765/">Open the running app</a><br><code>http://127.0.0.1:8765/</code></p>
 </section>
 <header class="app-header">
-  <div class="title-block">
-    <h1><span class="brand-mark" aria-hidden="true"><svg class="ico"><use href="#i-eye"/></svg></span><span class="brand-copy"><span class="brand-title">Vista</span><span class="brand-subtitle">Vancouver View Protection Tool</span></span></h1>
-  </div>
+  <nav class="app-modes" aria-label="Vista modes">
+    <div class="title-block">
+      <h1><button id="btn-vista" class="vista-mode" type="button" aria-label="Vista" aria-pressed="true" title="Show Vista’s top-down city overview"><span class="brand-mark" aria-hidden="true"><svg class="ico"><use href="#i-eye"/></svg></span><span class="brand-copy"><span class="brand-title">Vista</span><span class="brand-subtitle">Vancouver View Protection Tool</span></span></button></h1>
+    </div>
+    <button id="btn-imagine" class="btn" type="button" aria-controls="imagine-city-panel" aria-expanded="false" aria-pressed="false" title="Reimagine this city model beneath all view-cone study surfaces"><svg class="imagine-city-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V10h5v11M10 21V3h6v18M16 21v-7h4v7M12 7h2M12 11h2M12 15h2M7 14h1M7 17h1"/></svg>Imagine Vancouver</button>
+  </nav>
   <div class="header-actions">
-    <button id="btn-imagine" class="btn" type="button" aria-controls="imagine-city-panel" aria-expanded="false" title="Reimagine this city model beneath all view-cone study surfaces"><svg class="imagine-city-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V10h5v11M10 21V3h6v18M16 21v-7h4v7M12 7h2M12 11h2M12 15h2M7 14h1M7 17h1"/></svg>Imagine Vancouver</button>
     <button id="btn-sources" class="btn sources-open" type="button" aria-expanded="false" aria-controls="vista-sources" title="Read the height research methods, public sources and calculation limits"><svg class="sources-book-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v15M3 4.5c3-.8 6-.5 9 1.5 3-2 6-2.3 9-1.5v14c-3-.8-6-.5-9 1.5-3-2-6-2.3-9-1.5z"/></svg>Sources</button>
     <button id="btn-intro" class="btn intro-open" type="button" aria-haspopup="dialog">Help</button>
     <label class="style-picker">Style<select id="scene-style" aria-label="Scene style"><option value="collage">Plain</option><option value="night">Night</option><option value="context">Context</option></select></label>
@@ -104,7 +106,25 @@
 
     <!-- 1 · SITE -->
     <section class="flow-stage" data-stage="site" aria-labelledby="stage-site-title">
-      <header class="stage-head"><h2 id="stage-site-title">Select a site</h2><p class="stage-active" data-active-for="site"></p></header>
+      <header class="stage-head"><h2 id="stage-site-title">Site</h2><p class="stage-active" data-active-for="site"></p></header>
+      <div id="site-tool-selector" class="site-tool-selector" hidden>
+        <button id="btn-select-site-tool" class="site-tool-disclosure" type="button" aria-expanded="false" aria-controls="site-tool-palette"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg><span>Select a site</span><svg class="site-tool-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <span id="site-tool-current" class="site-tool-current" aria-live="polite"></span>
+      </div>
+      <div id="site-tool-palette" class="site-tool-palette" hidden>
+        <div class="site-tool-grid" role="group" aria-label="Select a site tool">
+          <button class="site-tool" type="button" data-site-tool="place" aria-pressed="false" aria-controls="site-point-tools" title="Place a site on the map"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg><span>Place on map</span></button>
+          <button class="site-tool" type="button" data-site-tool="neighbourhood" aria-pressed="false" aria-controls="site-find"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 3v16M15 5v16"/></svg><span>Neighbourhood</span></button>
+          <button class="site-tool" type="button" data-site-tool="address" aria-pressed="false" aria-controls="address-search-form"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span>Search address</span></button>
+        </div>
+        <details class="site-more-tools"><summary>More site tools</summary>
+          <div class="site-tool-grid" role="group" aria-label="More site tools">
+            <button class="site-tool" type="button" data-site-tool="boundary" aria-pressed="false" aria-controls="site-point-tools"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14-1 1 15-15 1z"/><rect x="3" y="3" width="4" height="4"/><rect x="17" y="2" width="4" height="4"/><rect x="18" y="17" width="4" height="4"/><rect x="3" y="18" width="4" height="4"/></svg><span>Draw boundary</span></button>
+            <button class="site-tool" type="button" data-site-tool="replace" aria-pressed="false" aria-controls="site-replace-tools" title="Switching to this method clears the current site"><svg class="ico" aria-hidden="true"><use href="#i-replace"/></svg><span>Replace building</span></button>
+            <button class="site-tool" type="button" data-site-tool="multi" aria-pressed="false" aria-controls="site-multi-tools" title="Switching to this method clears the current site"><svg class="ico" aria-hidden="true"><use href="#i-multi"/></svg><span>Select multiple</span></button>
+          </div>
+        </details>
+      </div>
       <div class="method-switch hidden" data-switch-for="site" role="group" aria-label="Other ways to do this step"></div>
       <div class="method-chooser" data-chooser="site">
         <p class="chooser-q">How do you want to choose where your building goes?</p>
@@ -117,7 +137,7 @@
         <button class="btn link method-keep hidden" type="button" data-keep="site"></button>
       </div>
 
-      <div class="method-body hidden" data-stage="site" data-method="point">
+      <div id="site-point-tools" class="method-body hidden" data-stage="site" data-method="point">
         <section class="site-step" id="site-find" aria-labelledby="site-step-1">
           <h3 id="site-step-1"><span class="site-step-n">1</span>Find an area <span class="site-step-opt">(optional)</span><span class="site-step-done">Area located</span><button id="btn-site-find-open" class="btn link site-step-open" type="button" aria-controls="site-find" aria-expanded="false">Change area</button></h3>
           <div class="site-alt" data-alt-step="find" data-alt="neighbourhood">
@@ -161,7 +181,7 @@
         </section>
       </div>
 
-      <div class="method-body hidden" data-stage="site" data-method="replace">
+      <div id="site-replace-tools" class="method-body hidden" data-stage="site" data-method="replace">
         <p class="method-howto"><b>Click an existing building</b> in the plan, check its details, then choose <b>Replace this building</b>. Picking another building and replacing it swaps the choice.</p>
         <p id="building-info" class="data muted small hidden"></p>
         <details id="building-view-details" class="small hidden"><summary>View-cone height &amp; calculation</summary><p id="building-view-info" role="status" aria-live="polite"></p><p>This precomputed study covers the existing model’s building footprint. It is separate from parcel zoning heights in Imagine Vancouver.</p><p><a href="https://guidelines.vancouver.ca/bulletins/bulletin-building-height.pdf" target="_blank" rel="noopener">City height guidance · view cones, §10</a></p></details>
@@ -169,7 +189,7 @@
         <div class="inline-proceed hidden" data-proceed-for="replace" role="status"><span class="ip-check" aria-hidden="true">✓</span><span class="ip-text">Building replaced</span><button class="btn primary" type="button" data-proceed>Proceed to Build ›</button></div>
       </div>
 
-      <div class="method-body hidden" data-stage="site" data-method="multi">
+      <div id="site-multi-tools" class="method-body hidden" data-stage="site" data-method="multi">
         <p class="method-howto"><b>Click buildings</b> in the plan to add or remove them from your group, then choose <b>Use as site</b>. Their combined outline becomes the study boundary.</p>
         <ul id="multi-list" class="multi-list" aria-label="Buildings selected for replacement"></ul>
         <div class="row wrap"><button id="btn-multi-apply" class="btn primary" type="button" disabled>Use as site</button><button id="btn-multi-clear" class="btn" type="button" disabled>Clear selection</button></div>
@@ -429,22 +449,8 @@
       <div id="pm-site" class="pm-proposal pm-site nm nm-prop hidden"><i class="ring"></i><i class="ring r2"></i><span class="nm-dot big"><svg class="ico"><use href="#i-pin"/></svg></span><span class="pm-label">Your site</span></div>
       <div id="pm-observer" class="pm-observer hidden"><svg class="pm-fan" viewBox="-70 -70 140 140"><path id="pm-fan-path"/></svg><i class="ring nm-eye-ring"></i><i class="ring r2 nm-eye-ring"></i><span class="pm-eye"><svg class="ico"><use href="#i-eye"/></svg></span><span class="pm-label" id="pm-observer-label">You</span></div>
     </div>
-    <div id="observer-controls" class="observer-controls hidden" aria-label="Observer controls">
-    <nav id="viewpoint-navigation" class="viewpoint-navigation hidden" aria-label="Viewpoint navigation">
-      <button id="btn-viewpoint-prev" class="btn" type="button" aria-label="Previous viewpoint" aria-describedby="viewpoint-position">← Previous</button>
-      <span id="viewpoint-position" role="status" aria-live="polite" aria-atomic="true"></span>
-      <button id="btn-viewpoint-next" class="btn" type="button" aria-label="Next viewpoint" aria-describedby="viewpoint-position">Next →</button>
-    </nav>
-      <div class="observer-actions">
-        <button id="btn-face" class="btn face-btn hidden" type="button" title="Turn to face your building again">Face my building</button>
-        <details class="observer-keyboard"><summary>Move &amp; look</summary><div>
-          <p><b>Move</b> <kbd>↑</kbd> <kbd>↓</kbd> forward / back<br><kbd>←</kbd> <kbd>→</kbd> sidestep · hold <kbd>Shift</kbd> for faster steps.</p>
-          <p><b>Look</b> Drag the view, or use <kbd>I</kbd> up, <kbd>J</kbd> left, <kbd>K</kbd> down, <kbd>L</kbd> right.</p>
-          <p>Movement follows modelled ground and stops at buildings, water and roof edges.</p>
-        </div></details>
-        <span class="observer-shortcuts">Arrows move · drag to look</span>
-      </div>
-    </div>
+    <div class="viewport-hud">
+      <div id="viewport-hud-main" class="viewport-hud-main">
     <div class="vp-toolbar">
       <div class="seg tiny" id="modes">
         <button id="mode-overview" class="seg-btn active" type="button" title="Orbit the city">City</button>
@@ -466,13 +472,22 @@
         <button id="cam-opposite" class="seg-btn" type="button" title="Opposite side">Opp.</button><button id="cam-top" class="seg-btn" type="button" title="From above">Top</button>
       </div>
     </div>
-    <section id="viewcone-panel" class="viewcone-panel hidden" aria-label="Viewcone study"></section>
-    <div class="view-utilities">
-      <button id="btn-focus" class="btn" type="button" title="Fit the current study site">Focus site</button>
-      <button id="btn-zoom-in" class="btn" type="button" aria-label="Zoom in">+</button><button id="btn-zoom-out" class="btn" type="button" aria-label="Zoom out">−</button>
-      <details class="layer-menu"><summary>Layers</summary><label><input id="layer-labels" type="checkbox" checked> Place labels</label><label><input id="layer-roads" type="checkbox" checked> Roads / street surfaces</label><label><input id="layer-sources" type="checkbox"> Distinguish data sources</label><label><input id="layer-extent" type="checkbox"> Coverage outlines</label><label><input id="layer-aerial" type="checkbox"> Aerial photo texture <em>(experimental)</em></label><p>Context adds continuous asphalt roads and pale paving. Road widths, sidewalks and bridge levels are illustrative; pedestrian-only routes are not traffic lanes. Heights remain approximate.</p></details>
+    <div id="observer-controls" class="observer-controls hidden" aria-label="Observer controls">
+    <nav id="viewpoint-navigation" class="viewpoint-navigation hidden" aria-label="Viewpoint navigation">
+      <button id="btn-viewpoint-prev" class="btn" type="button" aria-label="Previous viewpoint" aria-describedby="viewpoint-position">← Previous</button>
+      <span id="viewpoint-position" role="status" aria-live="polite" aria-atomic="true"></span>
+      <button id="btn-viewpoint-next" class="btn" type="button" aria-label="Next viewpoint" aria-describedby="viewpoint-position">Next →</button>
+    </nav>
+      <div class="observer-actions">
+        <button id="btn-face" class="btn face-btn hidden" type="button" title="Turn to face your building again">Face my building</button>
+        <details class="observer-keyboard"><summary>Move &amp; look</summary><div>
+          <p><b>Move</b> <kbd>↑</kbd> <kbd>↓</kbd> forward / back<br><kbd>←</kbd> <kbd>→</kbd> sidestep · hold <kbd>Shift</kbd> for faster steps.</p>
+          <p><b>Look</b> Drag the view, or use <kbd>I</kbd> up, <kbd>J</kbd> left, <kbd>K</kbd> down, <kbd>L</kbd> right.</p>
+          <p>Movement follows modelled ground and stops at buildings, water and roof edges.</p>
+        </div></details>
+        <span class="observer-shortcuts">Arrows move · drag to look</span>
+      </div>
     </div>
-    <div id="live-feedback" class="live-feedback hidden" role="status"></div>
     <dl id="metrics" class="metrics hidden" aria-label="Study at a glance">
       <div><dt>Height</dt><dd id="m-height">–</dd></div>
       <div><dt>Site</dt><dd id="m-site">–</dd></div>
@@ -494,15 +509,29 @@
     </div>
     <div id="scene-status" class="scene-status">Study scene</div>
     <p id="aerial-note" class="aerial-note hidden" role="status"></p>
-    <div id="view-caption" class="view-caption"></div>
-    <div id="map-scale" class="map-scale hidden"><span id="scale-label"></span><i id="scale-line"></i><small>plan distance</small></div>
-    <div id="north-cue" class="north-cue" aria-label="North">N <span>↑</span></div>
-    <div id="draw-floating-actions" class="draw-floating-actions hidden"><button id="btn-finish-map" class="btn primary" type="button">Finish boundary</button><button id="btn-cancel-map" class="btn" type="button">Cancel</button></div>
     <div id="draw-prompt" class="draw-prompt hidden" role="status">Click corners · Enter to finish · Esc to cancel</div>
+      </div>
+      <div class="viewport-hud-side">
+    <div id="north-cue" class="north-cue" aria-label="North">N <span>↑</span></div>
+    <div class="view-utilities">
+      <button id="btn-focus" class="btn" type="button" title="Fit the current study site">Focus site</button>
+      <button id="btn-zoom-in" class="btn" type="button" aria-label="Zoom in">+</button><button id="btn-zoom-out" class="btn" type="button" aria-label="Zoom out">−</button>
+      <details class="layer-menu"><summary>Layers</summary><label><input id="layer-labels" type="checkbox" checked> Place labels</label><label><input id="layer-roads" type="checkbox" checked> Roads / street surfaces</label><label><input id="layer-sources" type="checkbox"> Distinguish data sources</label><label><input id="layer-extent" type="checkbox"> Coverage outlines</label><label><input id="layer-aerial" type="checkbox"> Aerial photo texture <em>(experimental)</em></label><p>Context adds continuous asphalt roads and pale paving. Road widths, sidewalks and bridge levels are illustrative; pedestrian-only routes are not traffic lanes. Heights remain approximate.</p></details>
+    </div>
+      </div>
+    </div>
+    <section id="viewcone-panel" class="viewcone-panel hidden" aria-label="Viewcone study"></section>
+    <div id="map-scale" class="map-scale hidden"><span id="scale-label"></span><i id="scale-line"></i><small>plan distance</small></div>
+    <div id="draw-floating-actions" class="draw-floating-actions hidden"><button id="btn-finish-map" class="btn primary" type="button">Finish boundary</button><button id="btn-cancel-map" class="btn" type="button">Cancel</button></div>
+    <div class="viewport-bottom">
+    <button id="btn-viewport-build" class="btn primary viewport-proceed" type="button" hidden disabled>Proceed to Build ›</button>
+    <div id="live-feedback" class="live-feedback hidden" role="status"></div>
+    <div id="view-caption" class="view-caption"></div>
     <div id="legend" class="legend">
       <span><i class="sw sw-city"></i>Existing</span><span><i class="sw sw-terrain"></i>Terrain</span><span><i class="sw sw-water"></i>Water</span>
       <span><i class="sw sw-proposal"></i>Proposal</span><span><i class="sw sw-observer"></i>Observer · ray</span><span><i class="sw sw-wedge"></i>Viewing angle</span>
       <span><i class="sw sw-cone"></i>View cone</span><span><i class="sw sw-plane"></i>Study ceiling</span><span><i class="sw sw-site"></i>Study boundary</span>
+    </div>
     </div>
     <div id="inset-frame" class="inset-frame hidden" role="img" aria-label="Location map, north up">
       <span id="inset-legend" class="inset-legend"><b id="inset-eye-key"><i class="lg-eye"></i><em id="inset-eye-label">viewpoint</em></b><b id="inset-prop-key"><i class="lg-prop"></i><em id="inset-prop-label">proposal</em></b><b class="inset-north">N ↑</b></span>

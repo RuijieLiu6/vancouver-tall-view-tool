@@ -178,18 +178,23 @@
     },
     {
       "id": "shared-city-massing",
-      "title": "Reimagine heights on the same city model",
-      "summary": "Imagine uses the normal Vista terrain, streets, source buildings and Plain / Night / Context renderer. It changes a reversible height scenario rather than opening a separate parcel city.",
+      "title": "Compare the effect of study view protection",
+      "summary": "Compare one hypothetical Vancouver skyline with and without study view limits. The same model, camera and Plain / Night / Context rendering remain available; surrounding context stays unchanged.",
       "steps": [
-        "Precompute each original building footprint from its actual mesh triangles. Intersect the whole footprint with zoning polygons and every mapped view corridor; retain holes, concavities and boundary contacts.",
-        "Keep height references, unresolved zoning and explicit assumptions separate. Match every result to its original asset, building ID and geometry revision.",
-        "Evaluate each available sloping surface at all vertices of the clipped footprint. The lowest ceiling controls; reserve 0.1 m clearance and scale connected tower/podium assemblies together.",
-        "Compare Existing, Height references and With view cones. The default generated surfaces slope from approximate modelled observer eyes toward a fixed model (0, 0) reference; their height is adjustable.",
-        "Read a selected building’s controlling corridor, ceiling, clearance, zoning sources and assumptions. Export CSV to keep the scenario. Heights and GPU display attributes are reused in bounded page memory."
+        "Precompute occupied building footprints from actual source mesh triangles. Use the public City boundary in the same model coordinate frame; whole footprints outside Vancouver or of uncertain jurisdiction remain at source heights, including the North Shore.",
+        "Use one common comparison set in both states: Vancouver building assemblies intersecting mapped view corridors, passing a footprint design screen. Keep other surroundings unchanged. The screen requires at least 300 m² occupied area and a 12 m oriented minimum width; it is an explicit design assumption, not a regulation. Test the dominant occupied-volume member and substantive tall members so a broad podium cannot turn a narrow tower into a needle.",
+        "Use the same sourced basic heights, optional missing-height assumption and 4–6 m design minimum in both states. Apply each active sloping study surface at every clipped footprint vertex only in With study view limits. Scale connected assemblies together; preserve source geometry for excluded context.",
+        "Report the height reduction against the actual Without view limits result, including its design minimum. Source-part counts are labelled building parts; they are not legal lot or tower counts. A minimum can still conflict with a lower study surface, which remains identified.",
+        "Choose a location-first viewpoint to stand at its approximate modelled eye. Observer hides the blue volumes and draws only that selected frame: mapped polygon angular sides, active unverified study-plane lower edge, and a display-only upper edge 15° above it at a fixed 3 km cross-section. This is a reconstructed study frame, not an official protection rectangle. The SRTM mountains remain context. Choosing a viewpoint enters it immediately; while in Observer, top-right View Previous and View Next cycle available catalogue entries and wrap at either end.",
+        "View Original sits directly below the two comparison choices and restores source model heights. Hover for displayed height and its controlling rule or preservation reason. Click for comparison heights and source details. Assumptions and CSV export are available under Assumptions & methods. Data and results use project files and bounded temporary page memory, with no new browser application database."
       ],
-      "yields": "61,407 source building objects, 25,451 exact footprint/corridor intersections, and 223 connected source assemblies. The main model positions and study proposal stay intact. All 24 mapped corridors can be overlaid together.",
-      "limits": "This is a height study on existing building footprints, not a complete legal parcel envelope or development entitlement. Sourced basic zoning references have use and grade conditions. The optional missing-height fallback is an explicit scenario assumption. FSR, tower spacing, floorplates, setbacks, heritage, aviation, infrastructure, shadow protection and building-code feasibility are disclosed but not fully calculated. Generated blue surfaces remain Study/unverified, not City-issued ceiling geometry. New data uses project files and temporary page memory, without new browser application databases.",
+      "yields": "61,407 source building parts: 3,591 in the common comparison set; 57,816 retain original context heights. These include 3,963 parts outside Vancouver, 38,415 outside mapped view corridors, and 15,438 small or narrow footprint parts. Counts include connected assembly membership. All 24 mapped corridors remain available.",
+      "limits": "This compares study view effects on existing building footprints. It is not a complete legal parcel envelope, a forecast or a development entitlement. Numeric basic zoning references have use and grade conditions; missing-height fallback, footprint screen, display frame and minimum height are assumptions. Minimum conflicts can leave imagined buildings above study allowances. FSR, spacing, setbacks, heritage, aviation, shadow protection and Building By-law feasibility are not fully resolved. Default generated view surfaces and model ground are unverified.",
       "sources": [
+        {
+          "title": "City of Vancouver boundary — public geographic scope",
+          "url": "https://opendata.vancouver.ca/explore/dataset/city-boundary/"
+        },
         {
           "title": "Zoning and Development By-law",
           "url": "https://vancouver.ca/home-property-development/zoning-and-development-bylaw.aspx"

@@ -42,9 +42,11 @@
       const actions = append(prompt, 'div', '', 'actions');
       button(actions, 'view-height-adjust', 'btn primary', 'Adjust', () => apply('site'));
       button(actions, 'view-height-dismiss', 'btn', 'Dismiss', dismiss);
-      append(prompt, 'p', 'view-height-warning', 'small');
-      append(prompt, 'p', 'view-height-scope', 'small muted');
-      append(prompt, 'p', 'view-height-cache', 'small muted');
+      const explanation = append(prompt, 'details', 'view-height-explanation', 'tool-method-guide');
+      append(explanation, 'summary', '', '', 'Calculation & sources');
+      append(explanation, 'p', 'view-height-warning', 'small');
+      append(explanation, 'p', 'view-height-scope', 'small muted');
+      append(explanation, 'p', 'view-height-cache', 'small muted');
       status(prompt, 'view-height-status');
       button(prompt, 'view-height-undo', 'btn hidden', 'Undo height adjustment', restore);
       header.insertAdjacentElement('afterend', prompt);

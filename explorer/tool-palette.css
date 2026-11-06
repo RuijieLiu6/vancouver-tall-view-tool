@@ -1,0 +1,75 @@
+/* The original site flow remains the fallback until the replacement is bound. */
+.tool-palette-ready .site-tool-selector { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.site-tool-disclosure, .site-tool {
+  min-height: 44px; border: 1px solid var(--line); border-radius: 2px;
+  background: var(--panel); color: var(--ink); cursor: pointer; font: inherit;
+}
+.site-tool-disclosure { display: inline-flex; flex: 1; align-items: center; gap: 9px; padding: 8px 10px; text-align: left; font-weight: 600; }
+.site-tool-chevron { margin-left: auto; }
+.site-tool-disclosure[aria-expanded="true"] .site-tool-chevron { transform: rotate(180deg); }
+.site-tool-current { max-width: 105px; font-size: 12px; color: var(--muted); }
+.site-tool-palette { padding: 3px 0 10px; border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+.site-tool-palette[hidden] { display: none; }
+.site-tool-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.site-tool { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 7px; min-width: 0; padding: 12px 4px 9px; font-size: 13px; line-height: 1.3; text-align: center; }
+.site-tool span { max-width: 100%; overflow-wrap: anywhere; }
+.site-tool .ico { width: 25px; height: 25px; stroke-width: 1.5; }
+.site-tool:hover, .site-tool-disclosure:hover { background: var(--soft); border-color: var(--ink); }
+.site-tool[aria-pressed="true"] { color: var(--ink); background: var(--soft); border-color: var(--ink); box-shadow: inset 0 -3px 0 var(--accent); font-weight: 600; }
+.site-tool:focus-visible, .site-tool-disclosure:focus-visible, .address-tool-shortcut:focus-visible,
+.tool-method-guide summary:focus-visible, .site-tool-palette summary:focus-visible { outline: 2px solid var(--obs); outline-offset: 3px; }
+.site-more-tools { margin-top: 5px; }
+.site-more-tools > summary, .site-tool-examples > summary, .tool-method-guide > summary { display: list-item; min-height: 44px; box-sizing: border-box; padding: 13px 5px 9px; cursor: pointer; font-size: 12px; color: var(--muted); }
+.site-tool-examples .example-link { margin: 0 0 5px; }
+.site-tool-examples .example-link button { min-height: 44px; }
+.tool-palette-ready .address-tool-shortcut { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-width: 44px; height: 44px; padding: 9px; }
+.imagine-city-open .address-tool-shortcut { display: none; }
+/* Retire only the legacy Site chooser, never a status, alert or parcel action. */
+.tool-palette-ready .flow-stage[data-stage="site"] > .method-chooser,
+.tool-palette-ready .flow-stage[data-stage="site"] > .method-switch,
+.tool-palette-ready .flow-stage[data-stage="site"] .stage-active { display: none !important; }
+.tool-palette-ready #site-point-tools,
+.tool-palette-ready #site-replace-tools,
+.tool-palette-ready #site-multi-tools { display: none !important; }
+.tool-palette-ready [data-site-tool="place"] #site-point-tools,
+.tool-palette-ready [data-site-tool="address"] #site-point-tools,
+.tool-palette-ready [data-site-tool="neighbourhood"] #site-point-tools,
+.tool-palette-ready [data-site-tool="boundary"] #site-point-tools,
+.tool-palette-ready [data-site-tool="replace"] #site-replace-tools,
+.tool-palette-ready [data-site-tool="multi"] #site-multi-tools { display: block !important; }
+.tool-palette-ready #site-point-tools .site-step { display: none; border: 0; border-radius: 0; background: none; padding: 0; margin: 0; }
+.tool-palette-ready #site-point-tools .site-step::before,
+.tool-palette-ready #site-point-tools .site-step::after,
+.tool-palette-ready #site-point-tools .site-step > h3,
+.tool-palette-ready #site-point-tools .site-or,
+.tool-palette-ready #site-point-tools .site-alt-k { display: none; }
+.tool-palette-ready #site-point-tools .site-alt { display: none; padding: 0; opacity: 1; filter: none; transition: none; }
+.tool-palette-ready [data-site-tool="address"] #site-find,
+.tool-palette-ready [data-site-tool="neighbourhood"] #site-find,
+.tool-palette-ready [data-site-tool="place"] #site-point-tools .site-step:has([data-alt="spot"]),
+.tool-palette-ready [data-site-tool="boundary"] #site-point-tools .site-step:has([data-alt="boundary"]) { display: block; }
+.tool-palette-ready [data-site-tool="address"] #site-find [data-alt="address"],
+.tool-palette-ready [data-site-tool="neighbourhood"] #site-find [data-alt="neighbourhood"],
+.tool-palette-ready [data-site-tool="place"] #site-point-tools [data-alt="spot"],
+.tool-palette-ready [data-site-tool="boundary"] #site-point-tools [data-alt="boundary"] { display: block; }
+.tool-palette-ready #site-point-tools .site-alt h4 { margin: 0 0 8px; font-size: 12px; }
+.tool-palette-ready .flow-stage[data-stage="site"] .btn { min-height: 44px; }
+.tool-palette-ready #site-point-tools input, .tool-palette-ready #site-point-tools select,
+.tool-palette-ready #site-point-tools .btn { min-height: 44px; }
+.tool-palette-ready #site-point-tools .address-search-form { align-items: stretch; }
+/* Build and View use their original live buttons, with descriptions in a disclosure. */
+.tool-palette-ready .tool-methods-compact > .chooser-q { display: none; }
+.tool-palette-ready .tool-methods-compact .method-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.tool-palette-ready .tool-methods-compact .method-card { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 78px; gap: 6px; padding: 10px 6px; text-align: center; }
+.tool-palette-ready .tool-methods-compact .method-card .ico { width: 25px; height: 25px; padding: 0; background: none; border-radius: 0; }
+.tool-palette-ready .tool-methods-compact .method-card b { font-size: 13px; align-self: auto; }
+.tool-palette-ready .tool-methods-compact .method-card > span { display: none; }
+.tool-method-guide p { font-size: 12px; margin: 0 0 8px; color: var(--muted); }
+.tool-method-guide p b { color: var(--ink); font-weight: 600; }
+@media (max-width: 380px) { .site-tool-current { max-width: 85px; } .site-tool { font-size: 12px; } }
+.tool-palette-ready .view-height-prompt h3{font-size:15px;margin:0 0 8px;}
+.tool-palette-ready .view-height-prompt .view-height-value{font-size:16px;line-height:1.4;margin:6px 0;font-weight:600;}
+.tool-palette-ready .view-height-prompt>.small{font-size:13px;}
+.tool-palette-ready .view-height-prompt .actions{display:flex;gap:8px;}
+.tool-palette-ready .view-height-prompt .btn{min-height:44px;}
+.tool-palette-ready #hint[data-tool-guide="true"]{display:none;}

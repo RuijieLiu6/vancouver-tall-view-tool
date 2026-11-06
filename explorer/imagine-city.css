@@ -1,22 +1,50 @@
 /* The city comparison shares Vista's existing viewport and visual system. */
-#btn-imagine[aria-expanded="true"]{
-  background:#a92d32;
-  border-color:#d44d53;
-  color:#fff;
-  box-shadow:0 0 0 2px rgba(212,77,83,.18),0 0 18px rgba(212,77,83,.48);
-}
-#btn-imagine[aria-expanded="true"]:hover{
-  background:#92272c;
-  border-color:#e3656b;
-  color:#fff;
-}
-.imagine-city-hover{position:absolute;z-index:12;pointer-events:none;max-width:230px;padding:10px 12px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:2px;box-shadow:0 3px 12px rgba(0,0,0,.16);line-height:1.4;}
+body .app-modes #btn-imagine[aria-pressed="true"]{background:#8eeaf4;border-color:#43d7ed;color:#062632;box-shadow:0 0 0 2px #43d7ed33,0 0 18px #19b6d366;}
+body .app-modes #btn-imagine[aria-pressed="true"]:hover{background:#c0f7ff;border-color:#67e2f5;color:#062632;}
+.imagine-city-hover{position:absolute;z-index:12;pointer-events:none;max-width:290px;padding:10px 12px;background:rgba(255,255,255,.25);color:var(--ink);border:1px solid var(--line);border-radius:2px;box-shadow:0 3px 12px rgba(0,0,0,.12);line-height:1.4;text-shadow:0 0 3px var(--panel),0 1px 2px var(--panel);}
+body[data-scene-style="night"] .imagine-city-hover{background:rgba(7,7,7,.25);}
 .imagine-city-hover[hidden]{display:none;}
 .imagine-city-hover strong,.imagine-city-hover span,.imagine-city-hover small{display:block;}
 .imagine-city-hover strong{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;}
 .imagine-city-hover span{font-size:12px;margin:2px 0 5px;}
-.imagine-city-hover small{font-size:11px;color:var(--muted);}
+.imagine-city-hover .imagine-city-hover-policy{font-size:12px;font-weight:600;margin:5px 0;max-width:38ch;}
+.imagine-city-hover small{font-size:11px;color:var(--ink);}
+.imagine-city-viewpoints{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px 0;margin:0 0 18px;}
+.imagine-city-viewpoints h3{font-size:15px;margin:0 0 12px;}
+.imagine-city-viewpoints select{width:100%;min-height:44px;padding:8px;color:var(--ink);background:var(--panel);font:inherit;}
+.imagine-city-viewpoint-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.imagine-city-view-navigation{position:absolute;top:10px;right:10px;z-index:8;display:flex;gap:6px;max-width:calc(100% - 20px);}
+.imagine-city-view-navigation[hidden]{display:none;}
+.imagine-city-view-navigation .btn{display:flex;align-items:center;gap:7px;min-height:44px;padding:8px 10px;font-size:13px;white-space:nowrap;background:var(--panel);color:var(--ink);border:1px solid var(--line);}
+.imagine-city-view-navigation .btn:hover{border-color:var(--obs);}
+.imagine-city-view-navigation .btn:focus-visible{outline:2px solid var(--obs);outline-offset:3px;}
+.imagine-view-arrow{display:flex;width:18px;height:18px;flex:none;}
+.imagine-view-arrow svg{width:100%;height:100%;}
+@media(max-width:1100px){.imagine-city-view-navigation{top:62px;}body.imagine-city-open .viewport:has(#mode-observer.active) .view-utilities{top:120px;}}
+@media(max-width:860px){.imagine-city-view-navigation{top:112px;}body.imagine-city-open .viewport:has(#mode-observer.active) .view-utilities{top:170px;}}
+#imagine-city-viewpoint-status{font-size:12px;color:var(--muted);}
+.imagine-city-viewpoint-markers{position:absolute;inset:0;z-index:7;pointer-events:none;}
+.imagine-city-viewpoint-markers[hidden],.imagine-city-origin[hidden]{display:none;}
+.imagine-city-origin{position:absolute;transform:translate(-50%,-100%);pointer-events:auto;min-height:44px;width:max-content;max-width:210px;padding:6px 9px;font:inherit;font-size:12px;line-height:1.25;text-align:left;color:#153c52;background:#eff8fd;border:1px solid #306078;border-radius:3px;cursor:pointer;white-space:normal;}
+.imagine-city-origin::after{content:'';position:absolute;left:calc(50% + var(--origin-offset,0px));bottom:-5px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:#153c52;}
+.imagine-view-location{font-size:inherit;font-weight:700;}
+.imagine-view-number{font-size:11px;font-weight:400;}
+.imagine-city-origin .imagine-view-location,.imagine-city-origin .imagine-view-number,#imagine-city-viewpoint-status .imagine-view-location,#imagine-city-viewpoint-status .imagine-view-instructions{display:block;}
+.imagine-city-origin .imagine-view-number{margin-top:3px;}
+#imagine-city-viewpoint-status .imagine-view-number{display:block;margin:2px 0 7px;}
+#imagine-city-cone-list .imagine-view-number{margin-left:6px;}
+#imagine-city-cone-list li{margin-bottom:10px;}
+#imagine-city-cone-list li > span:first-of-type{display:block;}
+body.imagine-city-open #view-caption .imagine-view-location{font-size:14px;}
+body.imagine-city-open #view-caption .imagine-view-number{margin-left:7px;}
+body.imagine-city-open #view-caption .imagine-view-instructions{display:block;margin-top:2px;}
+body.imagine-city-open .viewport:has(#mode-observer.active) #view-caption{display:block;}
+#imagine-city-frame-method{color:var(--muted);font-size:12px;}
+.imagine-city-origin:hover{background:#d7ecf7;}
+.imagine-city-origin:focus-visible{outline:3px solid var(--obs);outline-offset:3px;}
+.imagine-city-conflict,#imagine-city-minimum-conflicts{color:var(--warn-ink);font-size:12px;font-weight:500;}
 body.imagine-city-open #panel > :not(#imagine-city-panel){display:none!important;}
+body.imagine-city-open #observer-controls,body.imagine-city-open #viewpoint-navigation,body.imagine-city-open #inspect-shortcuts{display:none!important;}
 body.imagine-city-open #metrics,body.imagine-city-open #legend{display:none!important;}
 .imagine-city-panel[hidden]{display:none;}
 .imagine-city-panel{color:var(--ink);padding-bottom:10px;}
@@ -30,10 +58,15 @@ body.imagine-city-open #metrics,body.imagine-city-open #legend{display:none!impo
 #imagine-city-limit{font-size:12px;color:var(--muted);margin-bottom:18px;}
 .imagine-city-scenarios{border:0;margin:0;padding:0 0 16px;min-width:0;}
 .imagine-city-scenarios legend{font-size:14px;font-weight:650;padding:0 0 8px;}
-.imagine-city-options{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;}
+.imagine-city-options{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
 .imagine-city-options .btn{padding:7px 5px;font-size:12px;line-height:1.2;}
 .imagine-city-options .btn[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink);}
+.imagine-city-options .btn[aria-pressed="true"]:is(:hover,:focus-visible){background:var(--ink);color:var(--panel);border-color:var(--ink);}
+#imagine-city-existing{display:block;width:100%;margin-top:7px;}
+#imagine-city-existing[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink);}
 #imagine-city-scenario-note{font-size:12px;color:var(--muted);}
+#imagine-city-scope{font-size:12px;color:var(--ink);}
+#imagine-city-methods > .btn{margin:8px 0;}
 .imagine-city-loading{display:flex;align-items:center;gap:9px;min-height:48px;font-size:12px;color:var(--ink);}
 .imagine-city-loading[hidden]{display:none;}
 .imagine-city-loading-mark{flex:0 0 14px;height:14px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:imagineCityLoading 1s linear infinite;}
@@ -66,6 +99,26 @@ body.imagine-city-open #metrics,body.imagine-city-open #legend{display:none!impo
 .imagine-city-panel :is(button,input,a,summary):focus-visible{outline:2px solid var(--obs);outline-offset:3px;}
 .imagine-city-panel input{caret-color:var(--ink);}
 .imagine-city-panel ::selection{background:var(--ink);color:var(--panel);}
-@media(max-width:860px){body.imagine-city-open #panel{padding-top:18px;} .imagine-city-head h2{font-size:24px;}}
+@media(max-width:860px){body.imagine-city-open #panel{padding-top:18px;z-index:13;} .imagine-city-head h2{font-size:24px;}}
 
 body.imagine-city-open #viewcone-panel,body.imagine-city-open #inset-frame,body.imagine-city-open #plan-markers{display:none!important;}
+
+/* Imagine has its own contrasting frame, independent of Plain / Night / Context. */
+body.imagine-city-open{--bg:#041017;--panel:#081b24;--soft:#102b36;--line:#598590;--ink:#e9fbff;--muted:#a2c6d0;--obs:#67e2f5;--accent:#43d7ed;--accent-ink:#67e2f5;--warn-bg:#283027;--warn-ink:#ffe0af;color-scheme:dark;background:var(--bg);color:var(--ink);scrollbar-color:var(--line) var(--panel);}
+body.imagine-city-open :is(.app-header,.panel,.statusbar){background:var(--panel);border-color:var(--line);color:var(--ink);}
+body.imagine-city-open .app-header h1,body.imagine-city-open .app-header .brand-subtitle{color:var(--ink);}
+body.imagine-city-open .app-header .brand-subtitle{color:var(--muted);}
+body.imagine-city-open #btn-vista:hover{color:#67e2f5;}
+body.imagine-city-open :is(.imagine-city-panel .btn,.imagine-city-view-navigation .btn,.view-utilities .btn,.panel-toggle){background:var(--soft);color:var(--ink);border-color:var(--line);box-shadow:none;}
+body.imagine-city-open :is(.imagine-city-panel .btn,.imagine-city-view-navigation .btn,.view-utilities .btn):hover{background:#164050;color:var(--ink);border-color:#67e2f5;}
+body.imagine-city-open :is(.imagine-city-panel .btn[aria-pressed="true"],.vp-toolbar .seg-btn.active){background:#8eeaf4;color:#062632;border-color:#43d7ed;}
+body.imagine-city-open :is(.imagine-city-panel .btn[aria-pressed="true"]):is(:hover,:focus-visible){background:#c0f7ff;color:#062632;border-color:#67e2f5;}
+body.imagine-city-open :is(.vp-toolbar .seg,.layer-menu,.view-caption,.scene-status){background:var(--panel);color:var(--ink);border-color:var(--line);box-shadow:none;}
+body.imagine-city-open .vp-toolbar .seg-btn{background:transparent;color:var(--ink);border-color:transparent;}
+body.imagine-city-open .vp-toolbar .seg-btn.active{background:#8eeaf4;color:#062632;border-color:#43d7ed;}
+body.imagine-city-open .vp-toolbar .seg-btn:not(.active):hover{background:var(--soft);}
+body.imagine-city-open .imagine-city-panel :is(input,select){background:var(--soft);color:var(--ink);border-color:var(--line);accent-color:var(--obs);}
+body.imagine-city-open :is(button,input,select,summary,a):focus-visible{outline:2px solid var(--obs);outline-offset:3px;}
+body.imagine-city-open ::selection{background:#67e2f5;color:#081b24;}
+body.imagine-city-open:not([data-scene-style="night"]) .imagine-city-hover{color:#21323d;text-shadow:0 0 3px #fff,0 1px 2px #fff;}
+body.imagine-city-open .imagine-city-hover small{color:inherit;}

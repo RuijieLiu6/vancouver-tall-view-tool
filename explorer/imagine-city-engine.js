@@ -17,10 +17,20 @@
     if (f32[0] > value) u32[0]--;
     return f32[0];
   }
+  function ceilFloat32(value) {
+    if (!(value > 0)) return 0;
+    f32[0] = value;
+    if (f32[0] < value) u32[0]++;
+    return f32[0];
+  }
   function prepare(dataset) {
     if (!dataset || dataset.schema !== SCHEMA || !Array.isArray(dataset.coneIds) || dataset.coneIds.length > 32 ||
       new Set(dataset.coneIds).size !== dataset.coneIds.length) throw new Error('Unsupported Imagine City dataset');
     if (compiled.has(dataset)) return compiled.get(dataset);
+    const scoped=dataset.metadata?.geographicScope?.schema==='vista-imagine-geographic-scope/1';
+    if(dataset.metadata?.geographicScope&&!scoped)throw new Error('Unsupported Imagine geographic scope');
+    const designScreen=dataset.metadata?.footprintDesignScreen;
+    if(designScreen&&designScreen.schema!=='vista-imagine-footprint-screen/1')throw new Error('Unsupported Imagine footprint screen');
     const assets = {}, coneIds = dataset.coneIds.map(String), declared = dataset.assemblies || {bases:[], tops:[], sizes:[]};
     if (![declared.bases, declared.tops, declared.sizes].every(Array.isArray) || declared.bases.length > 100000 ||
       declared.tops.length !== declared.bases.length || declared.sizes.length !== declared.bases.length) throw new Error('Invalid assembly table');
@@ -39,6 +49,8 @@
       total += count;
       if (total > 100000) throw new Error('Imagine City building budget exceeded');
       const cellsByRow = Array.from({length:count}, () => []), groupIndices = new Uint32Array(count);
+      if (designScreen && (![asset.footprintAreasM2,asset.footprintMinWidthsM].every(values=>Array.isArray(values)&&values.length===count&&values.every(v=>finite(v)&&v>=0)))) throw new Error('Invalid Imagine footprint dimensions');
+      if (scoped && (!Array.isArray(asset.geographicScope) || asset.geographicScope.length !== count || asset.geographicScope.some(value=>![0,1,2,3].includes(value)))) throw new Error('Invalid Imagine geographic scope rows');
       if (asset.assemblyIds && (!Array.isArray(asset.assemblyIds) || asset.assemblyIds.length !== count)) throw new Error('Invalid assembly row mapping');
       for (let row = 0; row < count; row++) {
         const b = asset.bounds.slice(row * 6, row * 6 + 6);
@@ -65,7 +77,7 @@
     }
     if (!Object.keys(assets).length) throw new Error('Imagine City dataset has no assets');
     if (groups.some(group => group.members.length !== group.size)) throw new Error('Assembly member count does not match');
-    const ready = {assets, coneIds, total, groups}; compiled.set(dataset, ready); return ready;
+    const ready = {assets, coneIds, total, groups, scoped,designScreen:!!designScreen}; compiled.set(dataset, ready); return ready;
   }
   function normalizePlanes(planes, coneIds) {
     const map = new Map();
@@ -90,40 +102,74 @@
   function calculate(dataset, options = {}) {
     const ready = prepare(dataset), scenario = ['existing', 'zoning', 'views'].includes(options.scenario) ? options.scenario : 'views';
     const fallback = finite(options.missingHeightM) && options.missingHeightM >= 0 && options.missingHeightM <= 2000 ? options.missingHeightM : 213.36;
+    const minimumHeight = finite(options.minimumHeightM) && options.minimumHeightM >= 4 && options.minimumHeightM <= 6 ? options.minimumHeightM : 5;
+    const focusMappedCorridors=ready.scoped&&options.focusMappedCorridors!==false;
     const useAssumptions = options.useAssumptions === true, surfaces = normalizePlanes(options.planes, ready.coneIds);
     const error = finite(dataset.metadata?.coordinateErrorM) && dataset.metadata.coordinateErrorM >= 0 ? Math.min(.001, dataset.metadata.coordinateErrorM) : .0000005;
     const clearance = .1, assets = {}, missingIds = new Set();
     const stats = {buildingCount:ready.total, mappedViewBuildings:0, changedBuildings:0, reducedBuildings:0, grownBuildings:0,
       zoningReferenceBuildings:0, unresolvedZoningBuildings:0, assumedHeightBuildings:0, missingSurfaceBuildings:0, missingSurfaceIds:[],
       zeroHeightBuildings:0, noPositiveHeightBuildings:0, controllingViewCounts:{}, availableSurfaceCount:surfaces.size,
+      minimumRaisedBuildings:0, minimumViewConflictBuildings:0, minimumZoningConflictBuildings:0,
+      eligibleBuildings:0,preservedContextBuildings:0,outsideVancouverBuildings:0,boundaryContextBuildings:0,unknownScopeBuildings:0,unmappedContextBuildings:0,smallFootprintContextBuildings:0,viewReducedBuildings:0,
       assumedSurfaceCount:[...surfaces.values()].filter(s => s.assumed).length};
     for (const [id, {source}] of Object.entries(ready.assets)) {
       const heights = new Float32Array(source.count), baselineHeights = new Float32Array(source.count), controlViews = new Int16Array(source.count), flags = new Uint8Array(source.count);
-      const allowances = new Float32Array(source.count), ceilingModelZ = new Float64Array(source.count), controlXY = new Float64Array(source.count * 2);
+      const allowances = new Float64Array(source.count), ceilingModelZ = new Float64Array(source.count), controlXY = new Float64Array(source.count * 2);
       const bases = new Float32Array(source.count), scales = new Float32Array(source.count), baselineScales = new Float32Array(source.count), controlRows = new Uint32Array(source.count), controlAssets = [];
+      const comparisonHeights=new Float32Array(source.count),comparisonScales=new Float32Array(source.count),viewReductions=new Float32Array(source.count);
+      const minimumApplied = new Uint8Array(source.count), minimumConflictsView = new Uint8Array(source.count), minimumConflictsZoning = new Uint8Array(source.count), heightControls = [];
       controlViews.fill(-1); allowances.fill(NaN); ceilingModelZ.fill(NaN); controlXY.fill(NaN);
-      assets[id] = {heights, baselineHeights, controlViews, flags, allowances, ceilingModelZ, controlXY, bases, scales, baselineScales, controlRows, controlAssets};
+      assets[id] = {heights, baselineHeights, controlViews, flags, allowances, ceilingModelZ, controlXY, bases, scales, baselineScales, controlRows, controlAssets,
+        minimumApplied, minimumConflictsView, minimumConflictsZoning, heightControls,comparisonHeights,comparisonScales,viewReductions,preservationReasons:[]};
     }
     for (const group of ready.groups) {
-      const groupHeight = group.top - group.base; let knownMinimum = Infinity, allResolved = true, invalid = false;
+      const groupHeight = group.top - group.base;
+      const scopes=group.members.map(({id,row})=>ready.assets[id].source.geographicScope?.[row]??0);
+      const mapped=group.members.some(({id,row})=>ready.assets[id].cellsByRow[row].length>0);
+      const geographicContext=ready.scoped&&scopes.some(scope=>scope!==0);
+      let smallFootprint=false;
+      if(ready.designScreen){
+        let dominant=group.members[0],dominantVolume=-1;
+        for(const member of group.members){
+          const source=ready.assets[member.id].source,row=member.row;
+          const volume=source.footprintAreasM2[row]*(source.bounds[row*6+5]-source.bounds[row*6+2]);
+          if(volume>dominantVolume){dominantVolume=volume;dominant=member;}
+        }
+        smallFootprint=group.members.some(member=>{
+          const source=ready.assets[member.id].source,row=member.row,partHeight=source.bounds[row*6+5]-source.bounds[row*6+2];
+          const tested=member===dominant||partHeight>=Math.max(8,groupHeight*.2);
+          return tested&&(source.footprintAreasM2[row]<300||source.footprintMinWidthsM[row]<12);
+        });
+      }
+      const preserveReason=geographicContext ? scopes.includes(1)?'outside-vancouver':scopes.includes(2)?'boundary-context':'unknown-geography'
+        : scenario!=='existing'&&focusMappedCorridors&&!mapped?'outside-mapped-corridors':smallFootprint?'small-footprint':null;
+      const preserveContext=!!preserveReason;
+      let knownMinimum = Infinity, zoningMember = null, unresolvedMember = null, allResolved = true, invalid = false;
       for (const {id, row} of group.members) {
         const source = ready.assets[id].source;
         const resolved = source.zoningStatus[row] === 0 && finite(source.zoningHeights[row]);
-        if (resolved) knownMinimum = Math.min(knownMinimum, source.zoningHeights[row]); else allResolved = false;
+        if (resolved) {
+          if (source.zoningHeights[row] < knownMinimum) { knownMinimum = source.zoningHeights[row]; zoningMember = {id, row}; }
+        } else { allResolved = false; unresolvedMember ||= {id, row}; }
         invalid ||= source.zoningStatus[row] === 3;
         stats[resolved ? 'zoningReferenceBuildings' : 'unresolvedZoningBuildings']++;
       }
-      let baseline = groupHeight, assumedBaseline = false;
-      if (scenario !== 'existing' && !invalid) {
-        if (allResolved) baseline = knownMinimum;
-        else if (useAssumptions) { baseline = Math.min(knownMinimum, fallback); assumedBaseline = true; }
+      let baseline = groupHeight, assumedBaseline = false, baselineKind = 'existing', baselineMember = group.members[0];
+      if (scenario !== 'existing' && !preserveContext && !invalid) {
+        if (allResolved) { baseline = knownMinimum; baselineKind = 'zoning'; baselineMember = zoningMember; }
+        else if (useAssumptions) {
+          baseline = Math.min(knownMinimum, fallback); assumedBaseline = true;
+          baselineKind = knownMinimum <= fallback ? 'zoning' : 'fallback-assumption';
+          baselineMember = baselineKind === 'zoning' ? zoningMember : unresolvedMember;
+        }
       }
       const baselineScale = groupHeight > 0 ? baseline / groupHeight : 1;
       let viewScale = Infinity, controller = -1, controlPoint = null, controllingMember = null, missing = false, assumedSurface = false;
       for (const member of group.members) {
         const {id, row} = member, {source, cellsByRow} = ready.assets[id], cells = cellsByRow[row];
         if (cells.length) stats.mappedViewBuildings++;
-        if (scenario === 'views') for (const cell of cells) {
+        if (scenario === 'views' && !preserveContext) for (const cell of cells) {
           const viewId = ready.coneIds[cell[1]], surface = surfaces.get(viewId);
           if (!surface) { missing = true; missingIds.add(viewId); continue; }
           assumedSurface ||= surface.assumed;
@@ -134,7 +180,18 @@
           if (permittedScale < viewScale) { viewScale = permittedScale; controller = cell[1]; controlPoint = candidate; controllingMember = member; }
         }
       }
-      const scale = scenario === 'existing' ? 1 : floorFloat32(Math.max(0, Math.min(baselineScale, viewScale)));
+      const allowedScale = Math.max(0, Math.min(baselineScale, viewScale));
+      // This is a visible design assumption, applied to the assembled total.
+      // Rounding upward here prevents the Float32 transform from erasing it.
+      const minimumApplied = scenario !== 'existing' && !preserveContext && groupHeight > 0 && groupHeight * allowedScale < minimumHeight;
+      const scale = scenario === 'existing' || preserveContext ? 1 : Math.max(floorFloat32(allowedScale), groupHeight > 0 ? ceilFloat32(minimumHeight / groupHeight) : 0);
+      const comparisonScale=scenario==='existing'||preserveContext?1:Math.max(floorFloat32(baselineScale),groupHeight>0?ceilFloat32(minimumHeight/groupHeight):0);
+      const minimumConflictsView = minimumApplied && controller >= 0 && groupHeight * viewScale < minimumHeight;
+      const minimumConflictsZoning = minimumApplied && knownMinimum < minimumHeight;
+      const controlKind = scenario!=='existing'&&preserveContext ? 'context-preserved' : minimumApplied ? 'design-minimum' : scenario !== 'existing' && controller >= 0 && viewScale < baselineScale ? 'view' : baselineKind;
+      const sourceMember = controlKind === 'view' ? controllingMember : controlKind === 'design-minimum' ? null : baselineMember;
+      const heightControl = {kind:controlKind, viewId:controlKind === 'view' ? ready.coneIds[controller] : null,
+        asset:sourceMember?.id || null, row:sourceMember?.row ?? null};
       for (const {id, row} of group.members) {
         const {source, cellsByRow} = ready.assets[id], out = assets[id];
         const ownBase = source.bounds[row * 6 + 2], ownTop = source.bounds[row * 6 + 5], existing = ownTop - ownBase;
@@ -146,12 +203,34 @@
         if (assumedSurface) flag |= FLAGS.ASSUMED_SURFACE;
         if (missing) { flag |= FLAGS.MISSING_SURFACE; stats.missingSurfaceBuildings++; }
         if (controller >= 0) {
-          out.allowances[row] = floorFloat32(Math.max(0, groupHeight * viewScale)); out.ceilingModelZ[row] = controlPoint.z;
+          out.allowances[row] = groupHeight * viewScale; out.ceilingModelZ[row] = controlPoint.z;
           out.controlViews[row] = controller; out.controlXY[row * 2] = controlPoint.x; out.controlXY[row * 2 + 1] = controlPoint.y;
           out.controlRows[row] = controllingMember.row; out.controlAssets[row] = controllingMember.id;
           if (viewScale <= 0) stats.noPositiveHeightBuildings++;
-          const viewId = ready.coneIds[controller]; stats.controllingViewCounts[viewId] = (stats.controllingViewCounts[viewId] || 0) + 1;
+          if (controlKind === 'view') {
+            const viewId = ready.coneIds[controller]; stats.controllingViewCounts[viewId] = (stats.controllingViewCounts[viewId] || 0) + 1;
+          }
         }
+        out.minimumApplied[row] = +minimumApplied; out.minimumConflictsView[row] = +minimumConflictsView; out.minimumConflictsZoning[row] = +minimumConflictsZoning;
+        out.heightControls[row] = heightControl;
+        out.preservationReasons[row] = preserveReason;
+        if(preserveContext){
+          stats.preservedContextBuildings++;
+          if(preserveReason==='outside-mapped-corridors')stats.unmappedContextBuildings++;
+          if(preserveReason==='small-footprint')stats.smallFootprintContextBuildings++;
+        }else stats.eligibleBuildings++;
+        if(ready.scoped){
+          const scope=source.geographicScope[row];
+          if(scope===1)stats.outsideVancouverBuildings++;
+          if(scope===2)stats.boundaryContextBuildings++;
+          if(scope===3)stats.unknownScopeBuildings++;
+        }
+        if (minimumApplied) stats.minimumRaisedBuildings++;
+        if (minimumConflictsView) stats.minimumViewConflictBuildings++;
+        if (minimumConflictsZoning) stats.minimumZoningConflictBuildings++;
+        out.comparisonHeights[row]=existing*comparisonScale;out.comparisonScales[row]=comparisonScale;
+        out.viewReductions[row]=scenario==='views'?Math.max(0,existing*(comparisonScale-scale)):0;
+        if(out.viewReductions[row]>.001)stats.viewReducedBuildings++;
         out.heights[row] = existing * scale; out.baselineHeights[row] = existing * baselineScale;
         out.bases[row] = group.base; out.scales[row] = scale; out.baselineScales[row] = baselineScale;
         if (Math.abs(out.heights[row] - existing) > .001 || Math.abs((ownBase - group.base) * (scale - 1)) > .001) {
@@ -163,7 +242,9 @@
     }
     stats.missingSurfaceIds = [...missingIds].sort();
     return {schema:SCHEMA, scenario, assets, stats, certainty:'Study', clearanceM:clearance,
-      assumptions:{useAssumptions, missingHeightM:fallback, planeCount:surfaces.size, verifiedPlaneCount:0,
+      assumptions:{useAssumptions, footprintDesignScreen:ready.designScreen?{minimumAreaM2:300,minimumWidthM:12,substantiveHeightM:8,substantiveHeightFraction:.2}:null,geographicScope:ready.scoped?'City of Vancouver whole footprints':'Undeclared legacy dataset',focusMappedCorridors, missingHeightM:fallback, minimumHeightM:minimumHeight, minimumApplies:scenario !== 'existing',
+        scopeNote:'Outside Vancouver and uncertain jurisdiction footprints retain exact source transforms in all scenarios. Connected groups preserve context together. Both comparison scenarios keep non-intersecting context when focusMappedCorridors is enabled.',
+        minimumNote:'The imagined assembled building has a design minimum height; this is an assumption, not a legal requirement. Conflicts with lower view surfaces or zoning references are reported.', planeCount:surfaces.size, verifiedPlaneCount:0,
         note:'Selected-use zoning references and compatible study surfaces are design scenarios, not legal maximums or a verified City assessment.'},
       planes:[...surfaces.values()]};
   }
@@ -179,13 +260,31 @@
     const viewIds = asset.cellsByRow[row].map(cell => ready.coneIds[cell[1]]);
     const assemblyViewIds = [...new Set(group.members.flatMap(member => ready.assets[member.id].cellsByRow[member.row].map(cell => ready.coneIds[cell[1]])))];
     const controllingSurface = index >= 0 ? result.planes.find(p => p.id === ready.coneIds[index]) || null : null;
-    return {asset:assetId, row, osmId:source.osmIds[row], bounds, modelBaseZM:base, modelTopZM:bounds[5], targetTopModelZM:assemblyBase + (bounds[5] - assemblyBase) * scale,
+    const control = values.heightControls[row], controlSource = control.asset ? ready.assets[control.asset].source : null;
+    const controlRuleIds = control.kind === 'zoning' ? controlSource.ruleIds[control.row].slice() : [];
+    const controlRules = controlRuleIds.map(id => ({id, ...(ruleMap[id] || {status:'unresolved', note:'No complete numeric source reference for this zone.'})}));
+    const labels = {view:'View surface', zoning:'Basic zoning height reference', 'fallback-assumption':'Missing-height assumption',
+      'design-minimum':'Design minimum height assumption', existing:'Existing model height','context-preserved':'Existing context height'};
+    const preservationReason=values.preservationReasons[row]||null;
+    const heightControl = {...control, label:labels[control.kind], osmId:controlSource ? controlSource.osmIds[control.row] : null,
+      ruleIds:controlRuleIds, rules:controlRules,
+      source:control.kind==='context-preserved' ? (preservationReason==='small-footprint'?'Existing source model — footprint design screen (300 m² area / 12 m minimum width; not a regulation)':preservationReason==='outside-mapped-corridors'?'Existing source model — outside mapped view corridors':(dataset.metadata?.geographicScope?.sourceUrl||'Geographic context preserved')) : control.kind === 'view' ? controllingSurface?.source || 'Study surface' : control.kind === 'zoning' ? controlRules.map(rule => rule.sourceUrl).filter(Boolean).join('; ') || labels.zoning : labels[control.kind]};
+    const viewAllowanceController = index >= 0 ? {viewId:ready.coneIds[index], asset:controllingAsset, row:controllingRow,
+      osmId:ready.assets[controllingAsset].source.osmIds[controllingRow], surface:controllingSurface} : null;
+    return {geographicScope:ready.scoped?['inside-vancouver','outside-vancouver','boundary-context','unknown-geography'][source.geographicScope[row]]:'undeclared',
+      geographicScopeSource:dataset.metadata?.geographicScope||null,footprintDesignScreen:dataset.metadata?.footprintDesignScreen||null,
+      footprintAreaM2:source.footprintAreasM2?.[row]??null,footprintMinWidthM:source.footprintMinWidthsM?.[row]??null,contextPreserved:!!preservationReason,preservationReason,
+      asset:assetId, row, osmId:source.osmIds[row], bounds, modelBaseZM:base, modelTopZM:bounds[5], targetTopModelZM:assemblyBase + (bounds[5] - assemblyBase) * scale,
+      comparisonHeightM:values.comparisonHeights[row],viewReductionM:values.viewReductions[row],
+      comparisonAssemblyHeightM:(group.top-assemblyBase)*values.comparisonScales[row],viewAssemblyReductionM:result.scenario==='views'?Math.max(0,(group.top-assemblyBase)*(values.comparisonScales[row]-scale)):0,
       existingHeightM:bounds[5] - base, baselineHeightM:values.baselineHeights[row], targetHeightM,
       assemblyBaseModelZM:assemblyBase, assemblyHeightM:group.top - assemblyBase, targetAssemblyHeightM:(group.top - assemblyBase) * scale,
       targetBaseModelZM:assemblyBase + (base - assemblyBase) * scale, assemblySize:group.size, scale,
       zoningHeightM:source.zoningHeights[row], zoningStatus:source.zoningStatus[row], ruleIds,
       rules:ruleIds.map(id => ({id, ...(ruleMap[id] || {status:'unresolved', note:'No complete numeric source reference for this zone.'})})),
-      viewIds, assemblyViewIds, controllingView:index >= 0 ? ready.coneIds[index] : null,
+      heightControl, minimumHeightM:result.assumptions.minimumHeightM, minimumApplied:!!values.minimumApplied[row],
+      minimumConflictsView:!!values.minimumConflictsView[row], minimumConflictsZoning:!!values.minimumConflictsZoning[row],
+      viewIds, assemblyViewIds, controllingView:control.kind === 'view' ? control.viewId : null, viewAllowanceController,
       controllingSurface, surfaceStatus:controllingSurface ? controllingSurface.assumed ? 'Invented study surface' : 'Supplied surface, unverified' : 'No compatible surface',
       viewAllowanceM:finite(values.allowances[row]) ? values.allowances[row] : null, ceilingModelZ:finite(ceiling) ? ceiling : null,
       clearanceM:finite(ceiling) ? ceiling - assemblyBase - (controlTop - assemblyBase) * scale : null,

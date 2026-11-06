@@ -1135,3 +1135,65 @@ body[data-scene-style="night"] .observer-keyboard kbd{background:#202a3a;border-
   /* The step panel owns the phone surface while open; leave its footer usable. */
   .layout:has(#panel:not(.collapsed)) #viewcone-panel{display:none;}
 }
+
+/* Paired workspaces stay together, apart from help and scene presentation. */
+.app-modes{display:flex;align-items:center;gap:24px;min-width:0;max-width:100%;}
+.app-modes .title-block{flex:none;}
+.app-header .vista-mode{display:flex;align-items:center;gap:12px;min-height:52px;padding:5px 0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;}
+.app-modes #btn-imagine{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 13px;white-space:nowrap;flex:none;font-size:14px;}
+.app-modes :is(button):focus-visible{outline:2px solid var(--obs);outline-offset:4px;}
+@media(max-width:860px){.app-header{gap:10px;}.app-header .header-actions{gap:20px;}.app-modes{gap:18px;}}
+@media(max-width:600px){.app-header{padding:10px 12px;}.app-modes{width:100%;gap:16px;justify-content:space-between;}.app-header .vista-mode{min-height:44px;gap:9px;}.app-modes .brand-subtitle{display:none;}.app-modes #btn-imagine{padding:9px 11px;min-height:44px;font-size:13px;}.app-header .header-actions{width:100%;justify-content:flex-end;gap:18px;}}
+
+/* Viewport controls share flow rows instead of competing for fixed coordinates. */
+#viewport{--viewport-font-size:13px;}
+#viewport .viewport-hud{position:absolute;inset:10px 10px auto;z-index:8;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;pointer-events:none;}
+#viewport .viewport-hud-main,#viewport .viewport-hud-side{display:flex;flex-direction:column;gap:8px;min-width:0;align-items:flex-start;pointer-events:none;}
+#viewport .viewport-hud-side{align-items:flex-end;gap:12px;}
+#viewport .viewport-hud :is(.vp-toolbar,.metrics,.metrics-help,.scene-status,.observer-controls,.imagine-city-view-navigation,.view-utilities,.north-cue,.draw-prompt,.aerial-note){position:static;inset:auto;transform:none;margin:0;max-width:100%;pointer-events:auto;}
+#viewport .viewport-hud .vp-toolbar{display:flex;flex-wrap:wrap;width:100%;gap:8px;align-items:flex-start;order:0;}
+#viewport .viewport-hud .seg{max-width:100%;flex-wrap:wrap;gap:4px;}
+#viewport .viewport-hud :is(.seg-btn,.btn,.layer-menu,.layer-menu label,.observer-keyboard,.observer-keyboard summary,.observer-shortcuts,#viewpoint-position,.scene-status,.draw-prompt,.aerial-note){font-size:var(--viewport-font-size);line-height:1.4;}
+#viewport .viewport-hud :is(.seg-btn,.btn){min-height:44px;padding:8px 10px;}
+#viewport .viewport-hud :is(.observer-controls,.imagine-city-view-navigation){order:1;display:flex;flex-wrap:wrap;width:100%;gap:8px;}
+#viewport .viewport-hud .observer-controls.hidden,#viewport .viewport-hud .imagine-city-view-navigation[hidden]{display:none;}
+#viewport .viewport-hud .imagine-city-view-navigation{align-self:flex-end;justify-content:flex-end;}
+#viewport .viewport-hud .observer-controls .viewpoint-navigation{position:static;inset:auto;max-width:100%;flex-wrap:wrap;}
+#viewport .viewport-hud .view-utilities{display:flex;gap:8px;align-items:flex-end;}
+#viewport .viewport-hud .view-utilities>.btn{min-width:44px;}
+#viewport .viewport-hud .layer-menu{padding:0;max-width:200px;}
+#viewport .viewport-hud .layer-menu summary{min-height:44px;padding:12px 10px;}
+#viewport .viewport-hud .layer-menu label,#viewport .viewport-hud .layer-menu p{padding:0 10px;}
+#viewport .viewport-hud .north-cue{min-width:44px;min-height:44px;padding:4px 9px;font-size:var(--viewport-font-size);}
+#viewport .viewport-hud .north-cue span{font-size:18px;}
+#viewport .viewport-hud .metrics{order:2;display:flex;flex-wrap:wrap;gap:8px 0;width:100%;padding:8px;pointer-events:none;}
+#viewport .viewport-hud .metrics>div{flex:1 1 102px;min-width:0;padding:0 8px;}
+#viewport .viewport-hud .metrics :is(dt,dd){font-size:var(--viewport-font-size);line-height:1.4;letter-spacing:0;text-transform:none;white-space:normal;overflow-wrap:anywhere;}
+#viewport .viewport-hud .metrics dd{font-weight:600;}
+#viewport .viewport-hud .metrics .m-help{flex:0 0 44px;padding:0;pointer-events:auto;}
+#viewport .viewport-hud .metrics .m-help .btn{width:44px;height:44px;}
+#viewport .viewport-hud .metrics-help{order:3;width:min(460px,100%);}
+#viewport .viewport-hud .scene-status{order:4;}
+#viewport .viewport-hud :is(.draw-prompt,.aerial-note){order:5;}
+#viewport .viewport-bottom{position:absolute;left:10px;right:10px;bottom:10px;z-index:4;display:flex;flex-direction:column;align-items:flex-start;gap:8px;pointer-events:none;}
+#viewport .viewport-bottom :is(.view-caption,.legend,.live-feedback){position:static;inset:auto;margin:0;max-width:100%;font-size:var(--viewport-font-size);line-height:1.4;}
+#viewport .viewport-bottom .view-caption:empty{display:none;}
+#viewport .viewport-bottom .legend{gap:6px 12px;}
+#viewport .viewport-proceed{pointer-events:auto;max-width:100%;min-height:44px;padding:10px 16px;font-size:var(--viewport-font-size);line-height:1.4;font-weight:600;}
+#viewport .viewport-proceed[hidden],body.imagine-city-open #viewport .viewport-proceed{display:none;}
+#viewport .labels .label{font-size:var(--viewport-font-size);line-height:1.4;}
+#viewport:has(#inset-frame:not(.hidden)) .viewport-bottom{right:290px;}
+@media(max-width:1000px){#viewport .viewport-bottom .legend{display:none;}}
+@media(max-width:860px){
+  #viewport .viewport-hud{gap:8px;}
+  #viewport .viewport-hud-main{padding-top:50px;}
+  #viewport .viewport-hud .metrics{display:none;}
+  #viewport .viewport-hud .observer-controls{flex-direction:column;}
+  #viewport .viewport-hud .observer-controls .viewpoint-navigation{width:100%;gap:4px;justify-content:space-between;}
+  #viewport .viewport-hud .observer-controls #viewpoint-position{flex:1 1 100%;order:2;max-width:100%;}
+  #viewport .viewport-hud .observer-controls .viewpoint-navigation .btn{padding:8px;}
+  #viewport .viewport-hud .imagine-city-view-navigation .btn{flex:1 1 140px;justify-content:center;}
+  #viewport:has(#inset-frame:not(.hidden)) .viewport-bottom{right:190px;}
+}
+#viewport:has(#mode-observer.active) .viewport-hud .metrics,#viewport:has(#mode-viewcone.active) .viewport-hud .metrics{display:none;}
+#viewport #plan-markers .pm-label{font-size:var(--viewport-font-size);line-height:1.4;}

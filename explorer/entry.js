@@ -45,6 +45,8 @@
   stylesheet.onerror = () => { document.documentElement.classList.add('app-styled'); const strip = document.getElementById('error-strip'); if (strip) { strip.textContent = 'The page styles could not be loaded. Reload the page to try again.'; strip.classList.remove('hidden'); } };
   document.head.appendChild(stylesheet);
   const imagineStyles=document.createElement('link'); imagineStyles.rel='stylesheet'; imagineStyles.href=fileUrl('imagine-city.css'); document.head.appendChild(imagineStyles);
+  const toolStyles=document.createElement('link');toolStyles.rel='stylesheet';toolStyles.href=fileUrl('tool-palette.css');document.head.appendChild(toolStyles);
+  const siteStyles=document.createElement('link');siteStyles.rel='stylesheet';siteStyles.href=fileUrl('site-placement.css');document.head.appendChild(siteStyles);
   const sourcesStyles=document.createElement('link'); sourcesStyles.rel='stylesheet'; sourcesStyles.href=fileUrl('sources.css'); document.head.appendChild(sourcesStyles);
   const load = (src) => new Promise((resolve, reject) => {
     const script = document.createElement('script'); script.src = src;
@@ -52,10 +54,11 @@
     document.body.appendChild(script);
   });
   (async () => {
-    const files = ['browser-api.js', 'project-store.js', 'storage-policy.js', 'intro.js', 'sources.js', 'browser-rhino.js', 'import-parcels.js', 'building-view-heights.js'];
+    const files = ['browser-api.js', 'project-store.js', 'storage-policy.js', 'intro.js', 'sources.js', 'browser-rhino.js', 'import-parcels.js', 'site-parcels.js', 'building-view-heights.js'];
     if (window.VANCOUVER_STATIC) files.push('browser-check.js');
-    files.push('georeference.js', 'site-geometry.js', 'proposal-geometry.js', 'cone-ceiling.js', 'view-envelope.js', 'view-certainty.js', 'viewcone-geometry.js', 'view-height-suggestion.js', 'height-policy.js', 'street-geometry.js', 'surface-query.js', 'traffic-network.js', 'traffic-raster.js', 'streetscape.js', 'building-assembly.js', 'building-materials.js', 'facade-bounds.js', 'observer-navigation.js', 'units.js', 'inset-camera.js', 'water-surface.js', 'imagine-city-render.js', 'imagine-city-engine.js', 'pdf.js', 'explorer.js', 'view-envelope-ui.js', 'viewcone-ui.js', 'view-height-suggestion-ui.js', 'aerial-context.js', 'georeference-ui.js', 'address-search.js', 'report.js', 'height-presets.js', 'imagine-city.js', 'imagine-city-hover.js');
+    files.push('georeference.js', 'site-geometry.js', 'proposal-geometry.js', 'cone-ceiling.js', 'view-envelope.js', 'view-certainty.js', 'viewcone-geometry.js', 'view-height-suggestion.js', 'height-policy.js', 'street-geometry.js', 'surface-query.js', 'traffic-network.js', 'traffic-raster.js', 'streetscape.js', 'building-assembly.js', 'building-materials.js', 'facade-bounds.js', 'observer-navigation.js', 'units.js', 'inset-camera.js', 'water-surface.js', 'imagine-city-viewpoints.js', 'imagine-city-render.js', 'imagine-city-engine.js', 'project-road-mask.js', 'viewport-label-layout.js', 'pdf.js', 'explorer.js', 'site-placement.js', 'view-envelope-ui.js', 'viewcone-ui.js', 'view-height-suggestion-ui.js', 'aerial-context.js', 'georeference-ui.js', 'address-search.js', 'report.js', 'height-presets.js', 'imagine-city.js', 'imagine-city-hover.js', 'tool-palette.js');
     for (const file of files) await load(fileUrl(file));
+    window.__explorer?.configureSitePlacement?.();
     const query = new URLSearchParams(location.search);
     if (query.get('storagetest') === '1') await load(fileUrl('storage-selftest.js'));
     if (query.get('studytest') === '1') await load(fileUrl('study-selftest.js'));
@@ -65,7 +68,7 @@
     if (query.get('flowtest') === '1') await load(fileUrl('flow-selftest.js'));
     if (query.get('citytest') === '1' || query.get('importselftest') === '1') await load(fileUrl('city-selftest.js'));
     if (query.get('imagineperf') === '1' || query.get('imaginetest') === '1') await load(fileUrl('imagine-city-selftest.js'));
-    if (query.get('hovertest') === '1') await load(fileUrl('imagine-hover-selftest.js'));
+    if (query.get('hovertest') === '1' || query.get('imagine39test') === '1' || query.get('imagine40test') === '1' || query.get('imagine41test') === '1') await load(fileUrl('imagine-hover-selftest.js'));
     if (query.get('viewpointtest') === '1') await load(fileUrl('viewpoint-selftest.js'));
     if (query.get('selftest') === '1') await load(fileUrl('selftest.js'));
     if (query.get('envelopetest') === '1') await load(fileUrl('envelope-selftest.js'));

@@ -151,6 +151,7 @@ uniform sampler2D uGrassTex; uniform float uGrassTextureOn;
 uniform sampler2D uFacadeMineral; uniform sampler2D uFacadeBrick; uniform sampler2D uFacadeWhiteBrick; uniform vec3 uFacadeTextureOn;
 uniform sampler2D uAsphaltTex; uniform sampler2D uPavingTex; uniform vec2 uPavingTextureOn;
 uniform sampler2D uShadowTex; uniform mat4 uShadowVP; uniform float uShadowOn; uniform float uShadowTexel;
+${ProjectRoadMask.GLSL}
 float hash21(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float hatch(float q){ float aa=max(fwidth(q),0.001); float line=1.0-smoothstep(0.045,0.045+aa,abs(fract(q+0.5)-0.5)); return line*(1.0-smoothstep(0.22,0.7,aa)); }
 float stipple(vec2 q){ vec2 cell=floor(q); vec2 centre=vec2(hash21(cell),hash21(cell+vec2(83.0,19.0)))*0.5+0.25;
@@ -275,6 +276,8 @@ vec3 contextFacade(vec2 uv,float family,float floorH,float seed,vec3 glass,float
 }
 void main(){
   vec3 n=normalize(cross(dFdx(vWorld),dFdy(vWorld))); vec3 L=normalize(vec3(-0.45,-0.35,0.82)); float light=max(dot(n,L),0.0);
+  bool clearedRoad=(uSurface==2.0 || uSurface==3.0 || uSurface==8.0 || uSurface==9.0) && projectRoadCleared(vWorld.xy);
+  if(clearedRoad && (uSurface==8.0 || uSurface==9.0)) discard;
   bool excess=uStudyActive>0.5 && vWorld.z>uStudyCeiling+0.001 && vWorld.x>=uStudyArea.x && vWorld.y>=uStudyArea.y && vWorld.x<=uStudyArea.z && vWorld.y<=uStudyArea.w;
   vec3 base=excess ? (uSceneStyle>0.5?vec3(0.71,0.075,0.19):vec3(0.85,0.16,0.12)) : uColor.rgb;
   vec3 c=base*mix(1.0,0.50+0.50*light,uLightMix);
@@ -421,7 +424,7 @@ void main(){
     } else { c=base*daylight; }
     if(excess) c=vec3(0.85,0.10,0.22);
   }
-  if(uAerialOn>0.5 && uSurface!=5.0 && uSurface!=0.0 && uSurface!=7.0 && uLightMix>0.5 && !(uSceneStyle>3.5 && (uSurface==4.0 || uSurface==3.0 || uSurface==2.0 || uSurface==8.0 || uSurface==9.0))){
+  if(uAerialOn>0.5 && !clearedRoad && uSurface!=5.0 && uSurface!=0.0 && uSurface!=7.0 && uLightMix>0.5 && !(uSceneStyle>3.5 && (uSurface==4.0 || uSurface==3.0 || uSurface==2.0 || uSurface==8.0 || uSurface==9.0))){
     // Experimental: City 2022 orthophoto draped from above on ground, water, parks and roofs; walls take a darker smear of the same pixels.
     vec2 auv=vec2(uAerialMap.x*vWorld.x+uAerialMap.y, uAerialMap.z*vWorld.y+uAerialMap.w);
     if(auv.x>0.0 && auv.x<1.0 && auv.y>0.0 && auv.y<1.0){
@@ -438,7 +441,7 @@ void main(){
       if(excess) c=vec3(1.0,0.18,0.32);
     }
   }
-  if(uTrafficOn>0.5 && uSceneStyle>3.5 && (uSurface==2.0 || uSurface==3.0) && uLightMix>0.5){
+  if(uTrafficOn>0.5 && !clearedRoad && uSceneStyle>3.5 && (uSurface==2.0 || uSurface==3.0) && uLightMix>0.5){
     // The mapped road material shares the terrain/park surface: no floating or buried pavement mesh.
     vec2 guv=vec2(uTrafficMap.x*vWorld.x+uTrafficMap.y,uTrafficMap.z*vWorld.y+uTrafficMap.w);
     vec3 road=vec3(0.0);
@@ -459,7 +462,9 @@ void main(){
 }`;
 const FS_LINE = `#version 300 es
 precision highp float; in vec3 vWorld; uniform vec4 uColor; uniform vec3 uCamPos; uniform vec3 uFog; uniform float uFogFar; out vec4 outColor;
-void main(){ float f = clamp(distance(vWorld, uCamPos) / uFogFar, 0.0, 1.0); f = f * f * 0.5; outColor = vec4(mix(uColor.rgb, uFog, f), uColor.a); }`;
+uniform float uSurface;
+${ProjectRoadMask.GLSL}
+void main(){ if(uSurface==8.0 && projectRoadCleared(vWorld.xy)) discard; float f = clamp(distance(vWorld, uCamPos) / uFogFar, 0.0, 1.0); f = f * f * 0.5; outColor = vec4(mix(uColor.rgb, uFog, f), uColor.a); }`;
 // Unlit view surface: a quiet transparent centre with a luminous grazing edge.
 // Uses the actual clipped geometry, independent of the Context facade shader.
 const FS_VIEWCONE = `#version 300 es
@@ -468,7 +473,7 @@ void main(){ vec3 n=normalize(cross(dFdx(vWorld),dFdy(vWorld))); vec3 v=normaliz
   float rim=pow(1.0-abs(dot(n,v)),2.0); outColor=vec4(mix(uColor.rgb,vec3(0.3,0.86,1.0),rim*0.55),uColor.a*(0.65+rim*1.25)); }`;
 function compile(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error('shader: ' + gl.getShaderInfoLog(s)); return s; }
 function program(fs) { const p = gl.createProgram(); gl.attachShader(p, compile(gl.VERTEX_SHADER, VS)); gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
-  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('link: ' + gl.getProgramInfoLog(p)); const u = {}; for (const n of ['uVP', 'uOffset', 'uImagineCity', 'uColor', 'uCamPos', 'uFog', 'uFogFar', 'uLightMix', 'uStudyActive', 'uStudyCeiling', 'uStudyArea', 'uSceneStyle', 'uSurface', 'uAerialTex', 'uAerialOn', 'uAerialMap', 'uTrafficTex', 'uTrafficDetailTex', 'uTrafficMap', 'uTrafficDetailMap', 'uTrafficOn', 'uWaterNormal', 'uWaterTextureOn', 'uGrassTex', 'uGrassTextureOn', 'uFacadeMineral', 'uFacadeBrick', 'uFacadeWhiteBrick', 'uFacadeTextureOn', 'uAsphaltTex', 'uPavingTex', 'uPavingTextureOn', 'uShadowTex', 'uShadowVP', 'uShadowOn', 'uShadowTexel']) u[n] = gl.getUniformLocation(p, n); return { p, u }; }
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('link: ' + gl.getProgramInfoLog(p)); const u = {}; for (const n of ['uVP', 'uOffset', 'uImagineCity', 'uColor', 'uCamPos', 'uFog', 'uFogFar', 'uLightMix', 'uStudyActive', 'uStudyCeiling', 'uStudyArea', 'uSceneStyle', 'uSurface', 'uAerialTex', 'uAerialOn', 'uAerialMap', 'uTrafficTex', 'uTrafficDetailTex', 'uTrafficMap', 'uTrafficDetailMap', 'uTrafficOn', 'uProjectRoadCount', 'uProjectRoadPoints', 'uProjectRoadBounds', 'uWaterNormal', 'uWaterTextureOn', 'uGrassTex', 'uGrassTextureOn', 'uFacadeMineral', 'uFacadeBrick', 'uFacadeWhiteBrick', 'uFacadeTextureOn', 'uAsphaltTex', 'uPavingTex', 'uPavingTextureOn', 'uShadowTex', 'uShadowVP', 'uShadowOn', 'uShadowTexel']) u[n] = gl.getUniformLocation(p, n === 'uProjectRoadPoints' ? n + '[0]' : n); return { p, u }; }
 let PM = null, PL = null, PV = null; if (gl) { try { PM = program(FS_MESH); PL = program(FS_LINE); PV = program(FS_VIEWCONE); } catch (e) { showError(String(e)); } }
 function makeMesh(pos, idx) { const vao = gl.createVertexArray(); let vb=null, ib=null;
   try { gl.bindVertexArray(vao); vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.STATIC_DRAW);
@@ -585,6 +590,12 @@ function drawProposalEdges(parts) {
 }
 
 // ------------------------------------------------------------------ state
+// North-up City orbit: a plan-like composition of the downtown peninsula,
+// retaining the textured 3D renderer and drag-to-orbit interaction.
+function vistaEntryCamera(aspect = 1.6) {
+  const ratio = Number.isFinite(aspect) && aspect > 0 ? clamp(aspect, .35, 3) : 1.6;
+  return { target: [0, 0, 20], dist: Math.max(1600, 1900 / ratio) / Math.tan(Math.PI / 8) * 1.04, az: -Math.PI / 2, el: 1.55 };
+}
 const state = {
   step: 1, mode: 'overview', tool: 'site', sceneStyle:'collage',
   site: null, pmode: 'boxes', displayUnits: 'm',
@@ -593,12 +604,15 @@ const state = {
   observer: null, observerSource: 'exploratory', eyeH: 1.6, fov: 60, wedge: true,
   viewpoint: null, showAllCones: false, showBackdrop: true,
   check: { bz: 120, unknown: true, reference: 'height', height: 120, area: 'footprint', custom: null, result: null, requestId: 0 },
-  studyName: 'Untitled study', selected: null, boundary: [], drawing: null, removed: [], showExisting: false, multiSel: [], cleared: [], clearOverlaps: true,
+  studyName: 'Untitled study', selected: null, boundary: [], drawing: null, siteStrategy:null, projectParcelIds:[], removed: [], showExisting: false, multiSel: [], cleared: [], clearOverlaps: true,
   flow: { stage: 'site', methods: { site: null, build: null, view: null }, choosing: null, guided: false, alt: { find: null, place: null } },
   layers: { labels: true, roads: true, sources: false, extent: false, aerial: false },
   cams: { overview: { target: [0, 0, 20], dist: 6500, az: -1.15, el: 0.85 }, inspect: { dist: 400, az: -0.9, el: 0.35 }, observer: { yaw: 0, pitch: 0 } },
 };
 const assets = { ready: false, manifest: null, index: null, labels: [], meshes: {}, raw: {}, guideline: null, cones: null, geo: null, backdrop: null, extension: null, unified: null };
+// Imagine owns a render-only camera. The study's mode, observer and cameras never
+// become working storage for city navigation, including pointer and key input.
+let imagineNavigation=null, imagineViewpointCache=null, imagineHintBefore=null, applyingStudyState=false;
 let needsRender = true; const requestRender = () => { needsRender = true; };
 const waterSurface = WaterSurface.create(gl, {
   url: window.ProjectAPI.assetUrl('explorer/textures/ocean-normal-map-1k.png'),
@@ -815,7 +829,22 @@ function evaluationArea() { const P = proposalBox(); if (state.check.area === 'c
 // ------------------------------------------------------------------ cameras
 function orbitEye(target, o) { return V.add(target, V.scale([Math.cos(o.el) * Math.cos(o.az), Math.cos(o.el) * Math.sin(o.az), Math.sin(o.el)], o.dist)); }
 function observerForward() { const o = state.cams.observer; return [Math.cos(o.pitch) * Math.cos(o.yaw), Math.cos(o.pitch) * Math.sin(o.yaw), Math.sin(o.pitch)]; }
-function computeCamera(mode, aspect) { let eye, target, fovy, near, far;
+function computeCamera(mode, aspect, navigation = null) { let eye, target, fovy, near, far;
+  if(navigation){
+    mode=navigation.mode;const o=navigation.cams[mode==='plan'?'overview':mode];
+    if(mode==='plan'){
+      const half=o.dist*Math.tan(Math.PI/8);target=o.target;eye=[target[0],target[1],12000];
+      const view=lookAt(eye,[target[0],target[1],0],[0,1,0]),proj=ortho(-half*aspect,half*aspect,-half,half,1,40000);
+      return {mode,eye,target,view,proj,vp:mul(proj,view),aspect,half,fogFar:1e9};
+    }
+    if(mode==='observer'){
+      eye=navigation.observerPosition;
+      target=V.add(eye,[Math.cos(o.pitch)*Math.cos(o.yaw),Math.cos(o.pitch)*Math.sin(o.yaw),Math.sin(o.pitch)]);
+      fovy=navigation.fov*Math.PI/180;near=.5;far=90000;
+    }else{target=o.target;eye=orbitEye(target,o);fovy=Math.PI/4;near=Math.max(.5,o.dist*.005);far=90000;}
+    const view=lookAt(eye,target,[0,0,1]),proj=perspective(fovy,aspect,near,far);
+    return {mode,eye,target,fovy,near,far,view,proj,vp:mul(proj,view),aspect,fogFar:mode==='observer'?9000:Math.max(4000,V.len(V.sub(eye,target))*3)};
+  }
   if (mode === 'plan') { const o = state.cams.overview, half = o.dist * Math.tan(Math.PI / 8); target = o.target; eye = [target[0], target[1], 12000]; const view = lookAt(eye, [target[0], target[1], 0], [0, 1, 0]); const proj = ortho(-half * aspect, half * aspect, -half, half, 1, 40000); return { eye, target, view, proj, vp: mul(proj, view), aspect, half, fogFar: 1e9 }; }
   if (mode === 'observer' && state.observer) { eye = observerEye(); target = V.add(eye, observerForward()); fovy = state.fov * Math.PI / 180; near = 0.5; far = 45000; }
   else if (mode === 'inspect' && proposalBox()) { const o = state.cams.inspect; target = proposalCentre(); eye = orbitEye(target, o); fovy = 45 * Math.PI / 180; near = Math.max(0.5, o.dist * 0.01); far = 20000; }
@@ -826,6 +855,11 @@ let lastCam = null;
 
 // ------------------------------------------------------------------ rendering
 function setCommon(prog, cam) { gl.useProgram(prog.p);
+  if(prog.u.uProjectRoadCount){
+    const roadMask=ProjectRoadMask.pack(activeProjectRoadBoundary());
+    gl.uniform1i(prog.u.uProjectRoadCount,roadMask.count);
+    if(roadMask.count){gl.uniform2fv(prog.u.uProjectRoadPoints,roadMask.points);gl.uniform4fv(prog.u.uProjectRoadBounds,roadMask.bounds);}
+  }
   if(prog.u.uPavingTextureOn){
     const entries=[['asphalt','uAsphaltTex',9],['concrete','uPavingTex',10]];
     for(const [key,uniform,unit] of entries){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,pavingSurfaces[key].texture);gl.uniform1i(prog.u[uniform],unit);}
@@ -850,7 +884,109 @@ function setCommon(prog, cam) { gl.useProgram(prog.p);
 }
 let imagineCityScene=null,imagineCityUploads=0,imagineCityBytes=0,imaginePickIndex=null,imagineOcclusionIndex=null;
 const imaginePickMetrics={buildMs:0,occlusionBuildMs:0,lastPickMs:0};
+const imagineBackdropMetrics={drawn:false,drawFrames:0,mode:null};
+const imagineViewGuideMetrics={frameRendered:false,selectedId:null,frame:null,allConeOverlayVisible:false};
+let imagineObserverFrameCache=null;
 function imagineCityOpen(){return document.body.classList.contains('imagine-city-open');}
+function activeImagineNavigation(){
+  if(!imagineCityOpen()||applyingStudyState||!assets.ready||!window.ImagineCityViewpoints)return null;
+  if(!imagineNavigation){
+    imagineHintBefore=$('hint')?.textContent;
+    imagineNavigation=window.ImagineCityViewpoints.create(state,proposalCentre());
+    const park=listImagineViewpoints().find(r=>r.id==='3.2.1'),rect=canvas.getBoundingClientRect();
+    window.ImagineCityViewpoints.home(imagineNavigation,park,{aspect:rect.width/Math.max(1,rect.height)});
+  }
+  return imagineNavigation;
+}
+function listImagineViewpoints(){
+  if(!assets.ready||!window.ImagineCityViewpoints)return [];
+  const refs=[assets.cones,...['terrain','ext_terrain','water','ext_water'].map(key=>assets.raw[key]),state.eyeH];
+  if(!imagineViewpointCache||refs.some((v,i)=>v!==imagineViewpointCache.refs[i])){
+    const records=window.ImagineCityViewpoints.list(assets.cones?.cones,groundZAt,Number.isFinite(state.eyeH)?state.eyeH:1.6);
+    imagineViewpointCache={refs,records};
+  }
+  return imagineViewpointCache.records.map(r=>({...r,origin:r.origin?.slice()||null,observerPosition:r.observerPosition?.slice()||null,groundPosition:r.groundPosition?.slice()||null,groupKey:r.origin?.join(',')||r.id}));
+}
+function getImagineObserverFrame(viewId,eye){
+  const cone=assets.cones?.cones?.find(c=>String(c.view_number)===String(viewId));
+  if(!cone||!eye||!window.ImagineCityViewpoints?.protectedViewFrame)return null;
+  const height=window.VistaImagineCity?.getState?.().studyHeightM||120;
+  const surfaces=window.VistaViewcone?.getCitySurfaces?.({heightM:height,reference:[0,0]});
+  const surface=surfaces?.planes?.find(p=>p.id===String(viewId));
+  if(!surface)return null;
+  const key=JSON.stringify([viewId,eye,surface.plane,surface.source,surface.assumed]);
+  if(imagineObserverFrameCache?.key!==key||imagineObserverFrameCache?.cone!==cone){
+    imagineObserverFrameCache={key,cone,frame:window.ImagineCityViewpoints.protectedViewFrame(cone,eye,surface)};
+  }
+  return imagineObserverFrameCache.frame;
+}
+function imagineObserverFrameInfo(frame){
+  if(!frame)return null;
+  return {selectedId:frame.selectedId,status:frame.status,horizontalStatus:frame.horizontalStatus,
+    lowerStatus:frame.lowerStatus,upperStatus:frame.upperStatus,lowerSource:frame.lowerSource,
+    referenceStatus:frame.referenceStatus,distanceM:frame.distanceM,headroomDeg:frame.headroomDeg,
+    horizontalSpanDeg:frame.horizontalSpanDeg,officialVerticalBoundary:frame.officialVerticalBoundary};
+}
+function getImagineCameraState(){
+  const nav=activeImagineNavigation();
+  return nav?{active:true,mode:nav.mode,overview:{...nav.cams.overview,target:nav.cams.overview.target.slice(),homeViewpointId:nav.homeViewpointId||null},selectedId:nav.selectedId,observerPosition:nav.observerPosition?.slice()||null,reference:nav.reference.slice(),protectedFrame:imagineObserverFrameInfo(getImagineObserverFrame(nav.selectedId,nav.observerPosition)),fov:nav.fov,yaw:nav.cams.observer.yaw,pitch:nav.cams.observer.pitch}: {active:false,mode:null,selectedId:null};
+}
+function syncImagineCameraControls(){
+  const nav=activeImagineNavigation();if(!nav)return;
+  const viewpoints=listImagineViewpoints();
+  if($('btn-focus')){$('btn-focus').textContent='Reset view';$('btn-focus').title='Return to the Queen Elizabeth Park city overview';$('btn-focus').disabled=!assets.ready;}
+  for(const mode of ['overview','observer','inspect'])$('mode-'+mode)?.classList.toggle('active',nav.mode===mode);
+  $('btn-plan')?.classList.toggle('active',nav.mode==='plan');
+  if($('mode-observer'))$('mode-observer').disabled=!nav.observerPosition&&!viewpoints.some(r=>r.id===nav.homeViewpointId&&r.available);
+  if($('mode-inspect'))$('mode-inspect').disabled=false;
+  floatBtn.classList.toggle('hidden',nav.mode==='overview');
+  const record=viewpoints.find(r=>r.id===nav.selectedId);
+  const cap=$('view-caption');
+  if(cap){
+    const key=nav.mode+'|'+(record?.id||'')+'|'+imagineCityScene?.showCones;
+    if(cap.dataset.imagineCaption!==key){
+      cap.dataset.imagineCaption=key;cap.replaceChildren();
+      if(nav.mode==='observer'){
+        const name=document.createElement('strong');name.className='imagine-view-location';name.textContent=record?.name||'Protected viewpoint';
+        const id=document.createElement('small');id.className='imagine-view-number';id.textContent='View '+(record?.id||'');
+        const instructions=document.createElement('span');instructions.className='imagine-view-instructions';instructions.textContent=(imagineCityScene?.showCones?'Protected-view frame · study extent':'Protected viewpoint')+' · drag or arrows to look · scroll to zoom.';
+        cap.append(name,id,instructions);
+      }else cap.textContent=nav.mode==='plan'?'Imagine · Plan, north up · drag to pan · scroll to zoom.':nav.mode==='inspect'?'Imagine · inspect the city · drag to orbit · right-drag to pan · scroll to zoom.':'Imagine · City · drag to orbit · right-drag to pan · choose a protected viewpoint to stand at its modelled origin.';
+    }
+  }
+}
+function notifyImagineCamera(){
+  syncImagineCameraControls();window.VistaImagineHover?.clear();requestRender();
+  document.dispatchEvent(new CustomEvent('vista-imagine-viewpoint-changed',{detail:getImagineCameraState()}));
+}
+function enterImagineViewpoint(viewId){
+  const nav=activeImagineNavigation(),record=listImagineViewpoints().find(r=>r.id===String(viewId));
+  if(!nav||!record?.available)return false;
+  const height=window.VistaImagineCity?.getState?.().studyHeightM||120;
+  const frame=getImagineObserverFrame(record.id,record.observerPosition),rect=canvas.getBoundingClientRect();
+  if(!window.ImagineCityViewpoints.enter(nav,record,frame?.center||[0,0,height],frame?{horizontalSpanRad:frame.horizontalSpanRad,aspect:rect.width/Math.max(1,rect.height)}:null))return false;
+  notifyImagineCamera();setHint(`${record.name} · View ${record.id}. Approximate modelled observer; unverified City eye elevation. Drag or use arrows to look; scroll changes the field of view.`);
+  return true;
+}
+function leaveImagineViewpoint(){return setImagineCameraMode('overview');}
+function setImagineCameraMode(mode){
+  const nav=activeImagineNavigation();if(!nav)return false;
+  if(mode==='observer'&&!nav.observerPosition)return enterImagineViewpoint(nav.homeViewpointId);
+  if(!window.ImagineCityViewpoints.setMode(nav,mode))return false;
+  notifyImagineCamera();return true;
+}
+// Canvas CSS pixels from its top-left, with no edge clamping. Duplicate public
+// corridor origins share groupKey so UI markers can be grouped without moving an apex.
+function imagineViewpointScreenPositions(){
+  const nav=activeImagineNavigation();if(!nav||!lastCam)return [];
+  const rect=canvas.getBoundingClientRect();
+  return listImagineViewpoints().map(record=>{
+    const q=record.observerPosition?project(lastCam.vp,record.observerPosition):null;
+    return {...record,x:q?(q[0]+1)*.5*rect.width:null,y:q?(1-q[1])*.5*rect.height:null,
+      visible:nav.mode!=='observer'&&!!q&&q[3]>0&&Math.abs(q[0])<=1&&Math.abs(q[1])<=1&&Math.abs(q[2])<=1,
+      selected:record.id===nav.selectedId};
+  });
+}
 function setImagineCityScene(scene){
   if(scene?.assets!==imagineCityScene?.assets){imaginePickIndex=null;window.VistaImagineHover?.clear();}
   if(!scene)imagineOcclusionIndex=null;
@@ -910,12 +1046,12 @@ function pickImagineBuildingAt(cx,cy){
   imaginePickMetrics.lastPickMs=performance.now()-started;
   return visible?{asset:hit.asset,index:hit.index}:null;
 }
-function drawStatic(prog, key, color, offset) { if(prog.u.uSurface) gl.uniform1f(prog.u.uSurface,({buildings:1,ext_buildings:1,terrain:2,ext_terrain:2,parks:3,ext_parks:3,water:4,ext_water:4,backdrop:6})[key] || 0); const m = assets.meshes[key]; if (!m) return;const cityBuilding=!!imagineCityScene&&/^(ext_)?buildings$/.test(key);if(prog.u.uImagineCity)gl.uniform1f(prog.u.uImagineCity,cityBuilding?1:0); gl.uniform4fv(prog.u.uColor, color); gl.uniform3fv(prog.u.uOffset, offset || [0, 0, 0]); gl.bindVertexArray(m.vao); if (m.indexed && /^(ext_)?buildings$/.test(key) && !imagineCityOpen() && (state.removed.length || state.cleared.length) && !state.showExisting) {
+function drawStatic(prog, key, color, offset) { if(prog.u.uSurface) gl.uniform1f(prog.u.uSurface,({buildings:1,ext_buildings:1,terrain:2,ext_terrain:2,parks:3,ext_parks:3,water:4,ext_water:4,backdrop:6,roads:8,ext_roads:8,street_network:8})[key] || 0); const m = assets.meshes[key]; if (!m) return;const cityBuilding=!!imagineCityScene&&/^(ext_)?buildings$/.test(key);if(prog.u.uImagineCity)gl.uniform1f(prog.u.uImagineCity,cityBuilding?1:0); gl.uniform4fv(prog.u.uColor, color); gl.uniform3fv(prog.u.uOffset, offset || [0, 0, 0]); gl.bindVertexArray(m.vao); if (m.indexed && /^(ext_)?buildings$/.test(key) && !imagineCityOpen() && (state.removed.length || state.cleared.length) && !state.showExisting) {
     const ext = key === 'ext_buildings', cols = (ext ? assets.extIndex : assets.index).columns;
     const hidden = [...new Set([...state.removed, ...state.cleared].filter(r => r.ext === ext).map(r => r.index))].sort((a,b) => cols.index_offset[a] - cols.index_offset[b]); let start = 0;
     for (const i of hidden) { const end = cols.index_offset[i]; if (end > start) gl.drawElements(gl.TRIANGLES, end - start, gl.UNSIGNED_INT, start * 4); start = end + cols.index_count[i]; }
     if (start < m.count) gl.drawElements(gl.TRIANGLES, m.count - start, gl.UNSIGNED_INT, start * 4);
-  } else if (m.indexed) gl.drawElements(gl.TRIANGLES, m.count, gl.UNSIGNED_INT, 0); else gl.drawArrays(gl.LINES, 0, m.count); gl.bindVertexArray(null);if(prog.u.uImagineCity)gl.uniform1f(prog.u.uImagineCity,0); }
+  } else if (m.indexed) gl.drawElements(gl.TRIANGLES, m.count, gl.UNSIGNED_INT, 0); else gl.drawArrays(gl.LINES, 0, m.count); gl.bindVertexArray(null);if(prog.u.uImagineCity)gl.uniform1f(prog.u.uImagineCity,0);if(prog.u.uSurface)gl.uniform1f(prog.u.uSurface,0); }
 const CONE_TOP = 260;
 function coneGeometry(c) { // vertical boundary walls from the apex to the far vertices + outline at the ground and the top
   const pts = c.polygon_model_xy; const n = pts.length; const ax = c.origin_model_xy[0], ay = c.origin_model_xy[1]; let ai = 0; for (let i = 0; i < n; i++) if (Math.abs(pts[i][0] - ax) < 0.01 && Math.abs(pts[i][1] - ay) < 0.01) ai = i;
@@ -988,7 +1124,7 @@ function prepareStreetSurfaces(cam){
     const geometry=Streetscape.generate({roads:[deckRoads],center:[0,0],bounds,groundAt,isOccupied:(x,y,z)=>occupied(x,y,z,false),maxSegments:8000,detailRadius:0,sidewalkWidth:0,markings:false,terrainTolerance:0.02,segmentOptions:traffic.segmentOptions});
     globalTrafficSurfaces={mesh:uploadStreetMesh(geometry.asphalt),stats:{...geometry.stats,groundMode:'terrain-material',groundSegments:trafficTextures.global.stats.roadSegments,bounds,coverageComplete:true}};globalTrafficKey='static';
   }
-  const anchor=state.mode==='observer'&&state.observer?[state.observer.x,state.observer.y]:cam.target||state.cams.overview.target,center=anchor.slice(0,2).map(v=>Math.round(v/200)*200),detailBounds=[center[0]-600,center[1]-600,center[0]+600,center[1]+600],key=JSON.stringify([center,sceneKey]);
+  const anchor=cam.mode==='observer'?cam.eye:state.mode==='observer'&&state.observer&&!imagineCityOpen()?[state.observer.x,state.observer.y]:cam.target||state.cams.overview.target,center=anchor.slice(0,2).map(v=>Math.round(v/200)*200),detailBounds=[center[0]-600,center[1]-600,center[0]+600,center[1]+600],key=JSON.stringify([center,sceneKey]);
   if(key===streetSurfaceKey&&streetSurfaces)return;
   if(!trafficTextures.local||trafficTextures.local.bounds.some((v,i)=>v!==detailBounds[i]))trafficTextures.local=uploadTrafficTexture(traffic,detailBounds,true,trafficTextures.local);
   clearStreetSurfaces();
@@ -1004,7 +1140,7 @@ function drawStreetSurfaces(cam,o){
   const colors={asphalt:[0.23,0.25,0.26,1],sidewalks:[0.86,0.86,0.84,1]},draw=(mesh,color,surface)=>{if(!mesh?.count)return;gl.uniform1f(PM.u.uSurface,surface);gl.uniform4fv(PM.u.uColor,color);gl.bindVertexArray(mesh.vao);gl.drawElements(gl.TRIANGLES,mesh.count,gl.UNSIGNED_INT,0);};
   draw(globalTrafficSurfaces.mesh,colors.asphalt,8);
   if(!o.plan)for(const key of ['asphalt','sidewalks'])draw(streetSurfaces?.meshes[key],colors[key],key==='asphalt'?8:9);
-  gl.bindVertexArray(null);gl.disable(gl.POLYGON_OFFSET_FILL);
+  gl.bindVertexArray(null);gl.disable(gl.POLYGON_OFFSET_FILL);gl.uniform1f(PM.u.uSurface,0);
 }
 
 let viewconeGpu = null;
@@ -1054,15 +1190,44 @@ function drawViewconeOverlay(cam, scene) {
   gl.disable(gl.DEPTH_TEST);draw(PL,'footprints',gl.LINES,[0.03,0.39,0.86,0.32]);gl.enable(gl.DEPTH_TEST);
   gl.depthMask(true);gl.disable(gl.BLEND);
 }
+function drawImagineViewGuides(cam){
+  imagineViewGuideMetrics.frameRendered=false;imagineViewGuideMetrics.selectedId=null;
+  imagineViewGuideMetrics.frame=null;imagineViewGuideMetrics.allConeOverlayVisible=false;
+  if(!imagineCityOpen())return;
+  if(cam.mode==='observer'){
+    if(!imagineCityScene?.showCones)return;
+    const nav=activeImagineNavigation(),frame=getImagineObserverFrame(nav?.selectedId,nav?.observerPosition);
+    if(!frame?.edges.length)return;
+    // One opaque wire outline, projected from fixed world coordinates. This
+    // explanatory guide stays legible over intervening buildings; it has no
+    // surface, curtains, additive halo, or camera-dependent corner positions.
+    setCommon(PL,cam);gl.uniform1f(PL.u.uFogFar,1000000);
+    gl.disable(gl.BLEND);gl.disable(gl.DEPTH_TEST);gl.depthMask(false);
+    dynDraw(PL,gl.LINES,frame.edges,null,state.sceneStyle==='night'?[1,.78,.3,1]:[.47,.24,.025,1]);
+    gl.depthMask(true);gl.enable(gl.DEPTH_TEST);
+    imagineViewGuideMetrics.frameRendered=true;imagineViewGuideMetrics.selectedId=frame.selectedId;
+    imagineViewGuideMetrics.frame=imagineObserverFrameInfo(frame);
+  }else if(imagineCityScene?.showCones&&imagineCityScene.overlay){
+    drawViewconeOverlay(cam,imagineCityScene.overlay);
+    imagineViewGuideMetrics.allConeOverlayVisible=!!imagineCityScene.overlay.enabled;
+  }
+}
+function drawMountainBackdrop(cam,options,city){
+  const mode=cam.mode||state.mode;
+  const drawn=!!(assets.meshes.backdrop&&(city?mode!=='plan'&&!options.plan:options.backdrop&&state.showBackdrop));
+  if(drawn){gl.uniform1f(PM.u.uFogFar,42000);drawStatic(PM,'backdrop',C.backdrop);gl.uniform1f(PM.u.uFogFar,cam.fogFar);}
+  if(city){imagineBackdropMetrics.drawn=drawn;imagineBackdropMetrics.mode=mode;if(drawn)imagineBackdropMetrics.drawFrames++;}
+  return drawn;
+}
 function drawScene(cam, opts) {
   const o = Object.assign({ lines: true, markers: true, wedge: true, cones: true, backdrop: false, viewcone: true }, opts || {});
   const city=imagineCityOpen();if(city){o.markers=false;o.wedge=false;o.cones=false;}
   const viewconeActive = city || o.viewcone && !!window.VistaViewcone?.enabled;
   const viewcone = !city && viewconeActive && o.cones && !o.plan ? window.VistaViewcone?.getScene() : null;
-  const observerView = state.mode === 'observer' && !o.plan;
+  const observerView = (cam.mode||state.mode) === 'observer' && !o.plan;
   if(!o.plan){ prepareStreetSurfaces(cam); prepareContextShadow(cam); drawContextSky(cam); }
   gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.BLEND); gl.depthMask(true); setCommon(PM, cam);
-  if (o.backdrop && state.showBackdrop && assets.meshes.backdrop) { gl.uniform1f(PM.u.uFogFar, 42000); drawStatic(PM, 'backdrop', C.backdrop); gl.uniform1f(PM.u.uFogFar, cam.fogFar); }
+  drawMountainBackdrop(cam,o,city);
   if (assets.meshes.ext_terrain) { drawStatic(PM, 'ext_terrain', state.layers.sources ? C.extTerrain : C.terrain); drawStatic(PM, 'ext_water', state.layers.sources ? C.extWater : C.water); drawStatic(PM, 'ext_parks', state.layers.sources ? C.extParks : C.parks); }
   drawStatic(PM, 'ext_buildings', state.layers.sources ? C.extBuildings : C.buildings);
   drawStatic(PM, 'terrain', C.terrain); drawStatic(PM, 'water', C.water, [0, 0, 0.05]); drawStatic(PM, 'parks', C.parks, assets.unified ? null : [0, 0, 0.15]); drawStatic(PM, 'buildings', C.buildings);
@@ -1103,7 +1268,7 @@ function drawScene(cam, opts) {
   if (!viewcone?.enabled && !observerView && o.cones) drawConeCeiling(cam);
   gl.depthMask(true); gl.disable(gl.BLEND);
   if (viewcone?.enabled) drawViewconeOverlay(cam,viewcone);
-  if (city && imagineCityScene?.showCones && imagineCityScene.overlay) drawViewconeOverlay(cam,imagineCityScene.overlay);
+  drawImagineViewGuides(cam);
 }
 function wedgeGeometry(aspect) { const eye = observerEye(); if (!eye) return null; const f = observerForward(); const tgt = proposalCentre(); const L = tgt ? V.len(V.sub(tgt, eye)) * 1.1 : 120;
   let r = V.cross(f, [0, 0, 1]); if (V.len(r) < 1e-6) r = [1, 0, 0]; r = V.norm(r); const u = V.norm(V.cross(r, f)); const vf = state.fov * Math.PI / 180; const hh = L * Math.tan(vf / 2), hw = hh * (aspect || 1.6);
@@ -1112,14 +1277,16 @@ function wedgeGeometry(aspect) { const eye = observerEye(); if (!eye) return nul
     edges: new Float32Array([...eye, ...q[0], ...eye, ...q[1], ...eye, ...q[2], ...eye, ...q[3], ...q[0], ...q[1], ...q[1], ...q[2], ...q[2], ...q[3], ...q[3], ...q[0]]) }; }
 function resize() { const dpr = Math.min(window.devicePixelRatio || 1, 2); const r = canvas.getBoundingClientRect(); const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr)); if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; requestRender(); } }
 function render() { if (!gl || !PM) return; resize(); const W = canvas.width, H = canvas.height; gl.viewport(0, 0, W, H); gl.disable(gl.SCISSOR_TEST); gl.clearColor(BG[0], BG[1], BG[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); if (!assets.ready) return;
-  const cam = computeCamera(state.mode, W / H); if(lastCam&&cam.vp.some((value,i)=>Math.abs(value-lastCam.vp[i])>1e-7))window.VistaImagineHover?.clear(); lastCam = cam; drawScene(cam, { markers: state.mode !== 'observer', backdrop: state.mode === 'observer' });
-  const inset = insetContext(); $('inset-frame').classList.toggle('hidden', !inset.visible); if (inset.visible) drawInset(W, H, inset);
-  updatePlanMarkers(cam); updateLabels(cam); updateMapCues(cam); aerialFollow(); }
+  const nav=activeImagineNavigation(),mode=nav?.mode||state.mode;
+  const cam = computeCamera(mode, W / H, nav); if(lastCam&&cam.vp.some((value,i)=>Math.abs(value-lastCam.vp[i])>1e-7))window.VistaImagineHover?.clear(); lastCam = cam; drawScene(cam, { markers: mode !== 'observer', backdrop: mode === 'observer' });
+  const inset = imagineCityOpen()?{visible:false}:insetContext(); $('inset-frame').classList.toggle('hidden', !inset.visible); if (inset.visible) drawInset(W, H, inset);
+  updatePlanMarkers(cam); updateLabels(cam); updateMapCues(cam); drawSitePlacementOverlay(cam); aerialFollow();
+  if(nav){syncImagineCameraControls();document.dispatchEvent(new Event('vista-imagine-camera-rendered'));} }
 // Screen-size markers in Plan and City views: an eye where the observer stands, with a fan for the view direction, and a
 // proposal badge when the building is too small on screen to find. Both keep their size at any zoom.
 const planMarkers = { observer: false, proposal: false }; // which markers replace the older text tags this frame
 function updatePlanMarkers(cam) {
-  const rect = canvas.getBoundingClientRect(), show = state.mode === 'plan' || state.mode === 'overview', m = 26;
+  const rect = canvas.getBoundingClientRect(), show = !imagineCityOpen()&&(state.mode === 'plan' || state.mode === 'overview'), m = 26;
   const toScreen = (p) => { const q = project(cam.vp, p); if (q[3] <= 0) return null; return [(q[0] + 1) / 2 * rect.width, (1 - q[1]) / 2 * rect.height]; };
   const place = (el, s) => { const x = clamp(s[0], m, rect.width - m), y = clamp(s[1], m, rect.height - m); el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`; el.classList.toggle('offscreen', x !== s[0] || y !== s[1]); return [x, y]; };
   const obsEl = $('pm-observer'), propEl = $('pm-proposal'), line = $('pm-link-line'); let a = null, b = null;
@@ -1148,6 +1315,17 @@ function updatePlanMarkers(cam) {
   obsEl.querySelector('.pm-label').classList.toggle('flip', !!leftIsObs); for (const el of [propEl, $('pm-site')]) el?.querySelector('.pm-label').classList.toggle('flip', !!near && !leftIsObs);
   const link = $('pm-link'); link.classList.toggle('hidden', !(a && b));
   if (a && b) { link.setAttribute('width', rect.width); link.setAttribute('height', rect.height); line.setAttribute('x1', a[0]); line.setAttribute('y1', a[1]); line.setAttribute('x2', b[0]); line.setAttribute('y2', b[1]); }
+  layoutPlanMarkerLabels(rect);
+}
+function layoutPlanMarkerLabels(rect) {
+  const layout=window.ViewportLabelLayout;if(!layout)return;
+  const markers=[$('pm-proposal'),$('pm-site'),$('pm-observer'),$('pm-address')].filter(el=>el&&!el.classList.contains('hidden'));
+  const pending=markers.map(el=>{const n=el.querySelector('.pm-label');n.style.visibility='hidden';return {el,n};});
+  const items=pending.map(({el,n})=>{const a=el.getBoundingClientRect(),b=n.getBoundingClientRect();return {key:el.id,cls:'observer',x:a.left-rect.left,y:a.top-rect.top,width:b.width,height:b.height,gap:24};});
+  const reserved=layout.reservedRects($('viewport'),rect,{excludeMarkers:true});
+  for(const item of items)reserved.push({left:item.x-18,top:item.y-18,right:item.x+18,bottom:item.y+18});
+  const result=layout.layout(items,rect.width,rect.height,reserved),positions=new Map(result.positioned.map(p=>[p.key,p]));
+  for(const {el,n} of pending){const p=positions.get(el.id);if(!p)continue;const a=items.find(item=>item.key===el.id);n.style.left=(p.left-a.x)+'px';n.style.right='auto';n.style.top=(p.top-a.y)+'px';n.style.visibility='';}
 }
 // Choosing a cone previews its origin; it does not move the eye-level camera.
 function insetContext() {
@@ -1193,14 +1371,14 @@ function drawInset(W, H, context) { const dpr = canvas.width / canvas.getBoundin
   $('inset-frame').setAttribute('aria-label', `Location map, north up. ${anchor ? eyeLabel + (preview ? ' ' + state.viewpoint : '') + '. ' : ''}${target ? (proposalShown() ? 'Proposal.' : 'Site.') : ''}${frame.extentExceeded ? ' Model coverage ends at the outlined edge.' : ''}`);
 }
 const labelsEl = $('labels'); const labelNodes = new Map();
-function labelNode(key, cls) { let n = labelNodes.get(key); if (!n) { n = document.createElement('div'); n.className = 'label ' + (cls || ''); labelsEl.appendChild(n); labelNodes.set(key, n); } n.className = 'label ' + (cls || ''); return n; }
+function labelNode(key, cls) { let n = labelNodes.get(key); if (!n) { n = document.createElement('div'); labelsEl.appendChild(n); labelNodes.set(key, n); } const className = 'label ' + (cls || ''); if (n.className !== className) n.className = className; return n; }
 function updateLabels(cam) { const rect = canvas.getBoundingClientRect(); const items = [],city=imagineCityOpen();
   const boundary = state.drawing || state.boundary;
   if (!city && boundary.length > 1 && state.mode !== 'observer') {
     for (let i = 0; i < boundary.length - (state.drawing ? 1 : 0); i++) { const a = boundary[i], b = boundary[(i+1)%boundary.length], mid = [(a[0]+b[0])/2, (a[1]+b[1])/2]; items.push({ key: 'edge'+i, text: fmt(Math.hypot(b[0]-a[0], b[1]-a[1]),1)+' m', p: [...mid, (terrainZAt(...mid) || 0)+2], cls: 'site-edge' }); }
     if (boundary.length >= 3 && !SiteGeometry.validate(boundary)) { const m = SiteGeometry.metrics(boundary); items.push({key: 'site-area', text: formatArea(m.area)+' · study area', p: [...m.centre, (terrainZAt(...m.centre)||0)+2], cls:'site'}); }
   }
-  if (state.layers.labels && state.mode !== 'observer') { for (const l of assets.labels) items.push({ key: 'L' + l.text, text: l.text, p: [l.x, l.y, l.z + 40], cls: '' }); if (assets.extLabels) for (const l of assets.extLabels) items.push({ key: 'X' + l.text, text: l.text, p: [l.x, l.y, l.z + 40], cls: 'ext' }); }
+  if (state.layers.labels && (cam.mode||state.mode) !== 'observer') { for (const l of assets.labels) items.push({ key: 'L' + l.text, text: l.text, p: [l.x, l.y, l.z + 40], cls: '' }); if (assets.extLabels) for (const l of assets.extLabels) items.push({ key: 'X' + l.text, text: l.text, p: [l.x, l.y, l.z + 40], cls: 'ext' }); }
   const P = !city && proposalShown() ? proposalBox() : null; if (P) { // height tag beside the silhouette, not on it: upper-right of the projected bounding box, with a leader
     const b = P.box; let sx = -Infinity, sy = Infinity, ok = false;
     for (const x of [b[0], b[3]]) for (const y of [b[1], b[4]]) for (const z of [b[2], b[5]]) { const q = project(cam.vp, [x, y, z]); if (q[3] > 0) { ok = true; sx = Math.max(sx, q[0]); if (z === b[5]) sy = Math.min(sy, q[1]); } }
@@ -1212,12 +1390,30 @@ function updateLabels(cam) { const rect = canvas.getBoundingClientRect(); const 
   // zoomed out, the proposal marker carries the label; the ceiling tag would sit on top of it
   const area = evaluationArea(); if (!city && !vc?.enabled && area && !state.check.unknown && Number.isFinite(state.check.bz) && state.mode !== 'observer' && !planMarkers.proposal) items.push({ key: 'plane', text: `Study ceiling · ${fmt(state.check.bz-(P?.base || 0))} m above base`, p: [area.x_max, area.y_min, state.check.bz + 2], cls: 'plane' });
   const cr=window.VistaEnvelope?.getResult(); if(!city && !vc?.enabled && coneStudy.show && cr?.coordinateCompatible && cr.limitingPoint && state.mode !== 'observer') items.push({key:'cone-ceiling',text:`${cr.certainty.label} envelope · view ${cr.limitingView} · ${fmt(cr.ceilingElevationM)} m (${coneStudy.datumName})${cr.mathematicalStatus==='partial'?' · incomplete':''}`,p:[...cr.limitingPoint.xy,cr.ceilingElevationM-coneStudy.datumOffsetM+2],cls:'plane'});
-  if(state.sceneStyle==='context' && state.layers.roads && state.mode!=='observer') for(const label of streetSurfaces?.labels||[]) items.push({key:'street-name-'+label.name,text:label.name,p:label.p,cls:'street'});
-  const seen = new Set(), placed = []; items.sort((a,b)=>Number(!a.cls || a.cls==='ext')-Number(!b.cls || b.cls==='ext'));
-  for (const it of items) { const q = it.screen ? [it.screen[0], it.screen[1], 0, 1] : project(cam.vp, it.p); const n = labelNode(it.key, it.cls); seen.add(it.key); if (q[3] <= 0 || q[0] < -1.05 || q[0] > 1.05 || q[1] < -1.05 || q[1] > 1.05) { n.style.display = 'none'; continue; }
-    const px=(q[0]+1)/2*rect.width, py=(1-q[1])/2*rect.height, half=it.text.length*2.9+8;
-    if ((!it.cls || it.cls==='ext') && placed.some(b=>px+half>b[0] && px-half<b[2] && py>b[1] && py-22<b[3])) { n.style.display='none'; continue; } placed.push([px-half,py-22,px+half,py+3]);
-    n.style.display = ''; n.textContent = it.text; n.style.left = (clamp((q[0] + 1) / 2, 0, 1) * rect.width + (it.screen ? 14 : 0)) + 'px'; n.style.top = (clamp((1 - q[1]) / 2, 0, 1) * rect.height) + 'px'; }
+  if(state.sceneStyle==='context' && state.layers.roads && (cam.mode||state.mode)!=='observer'){const projectMask=window.ProjectRoadMask?.pack(activeProjectRoadBoundary());for(const label of streetSurfaces?.labels||[])if(!window.ProjectRoadMask?.contains(projectMask,label.p))items.push({key:'street-name-'+label.name,text:label.name,p:label.p,cls:'street'});}
+  const seen = new Set(), pending = [];
+  // Batch content/style writes first, then measure every real rendered label before placing any.
+  for (const it of items) {
+    const n = labelNode(it.key, it.cls); seen.add(it.key);
+    if (n.textContent !== it.text) n.textContent = it.text;
+    n.style.display = ''; n.style.visibility = 'hidden'; n.style.transform = 'none';
+    const q = it.screen ? [it.screen[0], it.screen[1], 0, 1] : project(cam.vp, it.p);
+    if (q[3] <= 0 || q[0] < -1.05 || q[0] > 1.05 || q[1] < -1.05 || q[1] > 1.05) { n.style.display = 'none'; continue; }
+    pending.push({ it, n, x: (q[0] + 1) / 2 * rect.width + (it.screen ? 14 : 0), y: (1 - q[1]) / 2 * rect.height });
+  }
+  const measured = pending.map(({ it, n, x, y }) => {
+    const r = n.getBoundingClientRect();
+    return { key: it.key, cls: it.cls || '', x, y, width: r.width, height: r.height, gap: it.cls?.includes('dim') ? 8 : 7, leaderLeft: it.cls?.includes('dim') ? 12 : 0 };
+  });
+  const layout = window.ViewportLabelLayout;
+  const reserved = layout ? layout.reservedRects(labelsEl.parentElement, rect) : [];
+  const result = layout ? layout.layout(measured, rect.width, rect.height, reserved) : { positioned: measured.map((m) => ({ ...m, left: m.x-m.width/2, top: m.y-m.height-7 })), hidden: [] };
+  const byKey = new Map(result.positioned.map(p => [p.key, p]));
+  for (const { it, n } of pending) {
+    const p = byKey.get(it.key);
+    if (!p) { n.style.display = 'none'; continue; }
+    n.style.left = p.left + 'px'; n.style.top = p.top + 'px'; n.style.visibility = '';
+  }
   for (const [k, n] of labelNodes) if (!seen.has(k)) n.style.display = 'none';
 }
 
@@ -1226,10 +1422,16 @@ let drag = null; const pointers = new Map();
 canvas.addEventListener('pointerdown', (e) => { try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* synthetic pointer */ } pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 1 && e.button === 0 && !imagineCityOpen() && state.tool === 'aim' && state.mode !== 'observer' && assets.ready && beginAim(e.clientX, e.clientY)) { drag = { x0: e.clientX, y0: e.clientY, button: 0, aim: true, moved: false }; requestRender(); return; }
   if (pointers.size === 1) drag = { x0: e.clientX, y0: e.clientY, button: e.button, shift: e.shiftKey, moved: false }; else drag = null; });
-canvas.addEventListener('pointermove', (e) => { if (!pointers.has(e.pointerId)) return; const prev = pointers.get(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+let sitePointerAt=0;
+canvas.addEventListener('pointermove', (e) => { if (!pointers.has(e.pointerId)) {
+  if(window.VistaSitePlacement?.getState().phase==='place'&&performance.now()-sitePointerAt>32&&sitePlacementAvailable()){
+    sitePointerAt=performance.now();const z=state.site?.z??terrainZAt(...state.cams.overview.target.slice(0,2))??0,p=groundUnderPointer(e.clientX,e.clientY,z);if(p)window.VistaSitePlacement.pointerPreview(p[0],p[1]);
+  }return;
+} const prev = pointers.get(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (drag && drag.aim) { if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 6) drag.moved = true; if (drag.moved) aimDragTo(e.clientX, e.clientY); return; }
   if (pointers.size === 2) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); if (drag && drag.pinch) zoomBy(Math.log(drag.pinch / d) * 1.2); drag = { pinch: d }; requestRender(); return; }
   if (!drag || drag.pinch !== undefined) return; const dx = e.clientX - prev.x, dy = e.clientY - prev.y; if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 4) drag.moved = true; if (!drag.moved) return;
+  const nav=activeImagineNavigation();if(nav){window.ImagineCityViewpoints.drag(nav,dx,dy,drag.button===2||drag.shift,canvas.clientHeight);requestRender();return;}
   const pan = drag.button === 2 || drag.shift || state.mode === 'plan';
   // eye-level drag follows the cursor (about one pixel of view per pixel of drag) instead of spinning: scaled by the field of view
   if (state.mode === 'observer' && state.observer) { const o = state.cams.observer, k = 1.25 * (state.fov * Math.PI / 180) / Math.max(1, canvas.clientHeight); o.yaw -= dx * k; o.pitch = clamp(o.pitch - dy * k, -1.48, 1.48); }
@@ -1239,9 +1441,10 @@ canvas.addEventListener('pointermove', (e) => { if (!pointers.has(e.pointerId)) 
   requestRender(); writeHash(); });
 function endPointer(e) { pointers.delete(e.pointerId); if (drag && drag.aim) { const moved = drag.moved; drag = null; if (e.type === 'pointerup') endAim(moved); return; } if (drag && !drag.pinch && !drag.moved && pointers.size === 0 && e.type === 'pointerup') handleClick(e.clientX, e.clientY, e.button); if (pointers.size === 0) drag = null; }
 canvas.addEventListener('pointerup', endPointer); canvas.addEventListener('pointercancel', endPointer); canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-function zoomBy(f) { if (state.mode === 'observer') { state.fov = clamp(state.fov * Math.exp(f), 20, 110); $('fov').value = Math.round(state.fov); } else { const o = state.mode === 'inspect' ? state.cams.inspect : state.cams.overview; o.dist = clamp(o.dist * Math.exp(f), state.mode === 'inspect' ? 20 : 30, 30000); } requestRender(); writeHash(); }
+function zoomBy(f) { const nav=activeImagineNavigation();if(nav){window.ImagineCityViewpoints.zoom(nav,f);requestRender();return;} if (state.mode === 'observer') { state.fov = clamp(state.fov * Math.exp(f), 20, 110); $('fov').value = Math.round(state.fov); } else { const o = state.mode === 'inspect' ? state.cams.inspect : state.cams.overview; o.dist = clamp(o.dist * Math.exp(f), state.mode === 'inspect' ? 20 : 30, 30000); } requestRender(); writeHash(); }
 canvas.addEventListener('wheel', (e) => { e.preventDefault(); zoomBy(clamp(e.deltaY, -120, 120) * 0.0012); }, { passive: false });
 function handleClick(cx, cy, button) { if (!assets.ready || !lastCam || button !== 0) return;
+  if(imagineCityOpen()){const hit=pickImagineBuildingAt(cx,cy);if(hit)window.VistaImagineCity?.selectBuilding({asset:hit.asset,index:hit.index});return;}
   if (state.mode === 'observer') { setHint('In the observer view, drag to look around and use the wheel to change the field of view. Switch to the city overview to move the site or the observer.'); return; }
   const ray = rayFromClient(cx, cy, lastCam); if (!ray) return; applyPick(pickRay(ray.o, ray.d)); }
 function applyPick(hit) {
@@ -1250,6 +1453,10 @@ function applyPick(hit) {
   if (state.tool === 'boundary') { if (hit.type === 'terrain' || hit.type === 'building') addBoundaryPoint(hit.point[0], hit.point[1]); else setHint('Choose a point over modelled land. Water and missing terrain cannot anchor a study boundary.'); return; }
   if (hit.type === 'none') { setHint(state.tool === 'rooftop' ? 'No modelled roof under the cursor. Zoom in and choose a visible building roof.' : 'Nothing under the cursor. The placement surface is the active terrain; the outline on the ground marks the model coverage.'); return; }
   if (hit.type === 'water') { setHint(state.tool === 'rooftop' ? 'That is water, not a modelled roof.' : 'That is the water surface. Sites and observers are placed on the active terrain, not on water.'); return; }
+  if(state.tool==='site'&&typeof window!=='undefined'&&window.VistaSitePlacement&&state.flow.stage==='site'&&(hit.type==='terrain'||hit.type==='building')){
+    const p=hit.point,z=landZAt(p[0],p[1]);if(z===null){setHint('Choose modelled land for your project site.');return;}
+    const rect=canvas.getBoundingClientRect(),q=project(lastCam.vp,[p[0],p[1],z]);window.VistaSitePlacement.requestAt(p[0],p[1],{x:(q[0]+1)*rect.width/2,y:(1-q[1])*rect.height/2});return;
+  }
   if (hit.type === 'building' && state.tool === 'rooftop') {
     const roof = roofZAt(hit.index, !!hit.ext, hit.point[0], hit.point[1]);
     const clickedRoof = roof && Math.abs(roof.z - hit.point[2]) <= 0.25;
@@ -1276,6 +1483,7 @@ function applyPick(hit) {
 let pendingSite = null;
 function requestSiteConfirmation(x,y,source='plan') {
   pendingSite={x,y,source};
+  refreshSiteProceed();
   $('site-confirm-title').textContent=state.site ? 'Move your building here?' : 'Place your building here?';
   $('site-confirm-description').textContent=state.site ? 'Confirm to move your study site to the location you clicked. Cancel keeps your current site.' : 'Confirm to set the location you clicked as your study site, or cancel to choose another spot.';
   if(source==='coordinates'){const ll=window.VistaGeoreference.modelToLonLat(x,y);$('site-confirm-description').textContent=`Approximate location ${ll.lat.toFixed(6)}°, ${ll.lon.toFixed(6)}°; model X ${fmt(x,2)}, Y ${fmt(y,2)} m. Confirm to use this point as your study site and clear its drawn boundary. Cancel keeps the current site.`;}
@@ -1291,16 +1499,94 @@ function confirmSitePlacement() {
 }
 function cancelSitePlacement() {
   pendingSite=null; $('site-placement-dialog').close();
+  refreshSiteProceed();
   setHint('Placement cancelled. Click another location on the plan when you are ready.'); $('gl').focus();
 }
 $('btn-confirm-site').addEventListener('click',confirmSitePlacement);
 $('btn-cancel-site-placement').addEventListener('click',cancelSitePlacement);
 $('site-placement-dialog').addEventListener('cancel',e=>{e.preventDefault();cancelSitePlacement();});
 
-function placeSite(x, y, keepRemovals = false) { const z = landZAt(x, y); if (z === null) { setHint('That point is water or outside modelled land. The site was not placed.'); return false; } if (!keepRemovals) { state.removed=[]; state.showExisting=false; } state.site = { x, y, z }; state.boundary = []; state.selected = null; state.check.result = null; refreshPanels(); requestRender(); writeHash(); return true; }
+function placeSite(x, y, keepRemovals = false) { const z = landZAt(x, y); if (z === null) { setHint('That point is water or outside modelled land. The site was not placed.'); return false; } if (!keepRemovals) { state.removed=[]; state.showExisting=false; } siteMutationRevision++;state.siteStrategy=null;state.projectParcelIds=[];state.site = { x, y, z }; state.boundary = []; state.selected = null; state.check.result = null; refreshPanels(); requestRender(); writeHash(); return true; }
+
+// Temporary parcel previews are separate from the committed study state.
+let siteParcelLoader=null,siteParcelIndex=null,sitePlacementOverlay=null,pendingCombinedDraw=null,siteMutationRevision=0;
+function sitePlacementAvailable(){return assets.ready&&!imagineCityOpen()&&state.flow.stage==='site'&&state.tool==='site'&&state.mode!=='observer';}
+function activeProjectRoadBoundary(){return state.siteStrategy==='combine'&&state.boundary.length>=3&&!state.showExisting&&!imagineCityOpen()?state.boundary:null;}
+async function ensureSiteParcels(){
+  if(!siteParcelLoader)siteParcelLoader=window.SiteParcels.createLoader({loadData:async()=>{
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
+    try{const response=await window.ProjectAPI.fetch('/generated/imagine_parcels.json',{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error('Property lines could not load. Try again, or choose Place.');return await response.json();}finally{clearTimeout(timer);}
+  }});
+  siteParcelIndex=await siteParcelLoader.get();return siteParcelIndex;
+}
+function presetAt(x,y){
+  const parts=state.parts?.length?state.parts:[{w:30,d:30,h:120,dx:0,dy:0,rotation:0}];
+  return {heightM:parts.reduce((h,p)=>h+p.h,0),polygons:parts.map(p=>{const a=(p.rotation||0)*Math.PI/180,c=Math.cos(a),s=Math.sin(a);return [[[-p.w/2,-p.d/2],[p.w/2,-p.d/2],[p.w/2,p.d/2],[-p.w/2,p.d/2]].map(([u,v])=>[x+(p.dx||0)+u*c+v*s,y+(p.dy||0)-u*s+v*c])];})};
+}
+async function projectRemovals(boundary){
+  const bounds=SiteGeometry.metrics(boundary).bounds,out=[];
+  for(const ext of [false,true]){
+    const cols=(ext?assets.extIndex:assets.index)?.columns,mesh=assets.raw[ext?'ext_buildings':'buildings'];if(!cols||!mesh)continue;
+    for(let index=0;index<cols.bbox.length;index++){
+      const b=cols.bbox[index];if(!planBoxesOverlap(bounds,[b[0],b[1],b[3],b[4]]))continue;
+      let meets=false;
+      for(let i=cols.index_offset[index];i<cols.index_offset[index]+cols.index_count[index];i+=3){
+        const tri=[0,1,2].map(j=>{const k=mesh.idx[i+j]*3;return [mesh.pos[k],mesh.pos[k+1]];});
+        if(ProposalGeometry.planOverlap(boundary,tri).area>.01){meets=true;break;}
+      }
+      if(meets)out.push({index,ext,id:cols.osm_id[index]});
+      if(out.length>2000)throw Error('This project covers too many buildings. Select a smaller site.');
+      if(index%250===0)await new Promise(resolve=>setTimeout(resolve,0));
+    }
+  }
+  const graph=getBuildingAssemblyGraph(),keys=BuildingAssembly.expandRemoved(graph,out.map(r=>(r.ext?'e':'s')+r.index));
+  if(keys.size>2000)throw Error('This project affects too many connected building parts. Select a smaller site.');
+  return [...keys].map(key=>{const r=graph.records.get(key);return {index:r.index,ext:r.ext,id:r.id};});
+}
+async function commitMapSite(data){
+  const revision=siteMutationRevision;
+  const ring=data.polygon?.filter((p,i,a)=>!i||p[0]!==a[i-1][0]||p[1]!==a[i-1][1]).map(p=>p.slice());
+  // Public GeoJSON rings repeat the first vertex; the study editor uses an open ring.
+  if(ring?.length>3&&ring[0][0]===ring.at(-1)[0]&&ring[0][1]===ring.at(-1)[1])ring.pop();
+  if(!sitePlacementAvailable()||!ring)throw Error('The project boundary needs a valid outline over modelled land.');
+  const outlineError=SiteGeometry.validate(ring);if(outlineError)throw Error('The selected boundary needs attention: '+outlineError);
+  if(data.mode!=='place'&&(data.polygons?.length!==1||data.polygons[0].length!==1))throw Error('This parcel has separate pieces or internal exclusions. Use Draw part of site to define one study boundary.');
+  if(ring.length>128)throw Error('Use a simpler boundary with no more than 128 corners.');
+  const m=SiteGeometry.metrics(ring),inside=p=>SiteGeometry.pointInPolygon(p,ring)&&landZAt(...p)!==null;
+  const point=data.mode==='place'?data.point:[m.centre,data.point,...ring].find(p=>p&&inside(p));
+  if(!point||landZAt(...point)===null)throw Error('The proposed site has no modelled land. Choose a different location.');
+  const removals=data.mode==='place'?[]:await projectRemovals(ring);
+  if(!sitePlacementAvailable()||revision!==siteMutationRevision)return false;
+  if(!placeSite(...point))return false;
+  if(data.mode==='place'){setProposalMode('boxes',true);if(state.flow.methods.build==='import')state.flow.methods.build='platform';}
+  state.siteStrategy=data.mode;state.projectParcelIds=(data.parcels||[]).map(p=>p.id);state.boundary=data.mode==='place'?[]:ring;
+  state.removed=removals;state.showExisting=false;state.flow.methods.site='point';state.flow.alt.place=data.mode==='place'?'spot':'boundary';state.check.result=null;clearedKey='';
+  invalidateRoofObserver();refreshPanels();requestRender();writeHash();
+  setHint(data.mode==='place'?'Massing location set. Proceed to Build to edit it.':data.mode==='replace'?'Selected parcel is now your project site. Its buildings are hidden as a reversible study change.':`Combined ${state.projectParcelIds.length} mapped parcels into one project study. Internal streets are cleared only inside this boundary; this is not a legal merger.`);return true;
+}
+function configureSitePlacement(){
+  window.VistaSitePlacement?.configure({isAvailable:sitePlacementAvailable,validatePoint:(x,y)=>landZAt(x,y)!==null,
+    ensureParcels:ensureSiteParcels,pickParcel:async(x,y)=>window.SiteParcels.pick(await ensureSiteParcels(),[x,y],{maxDistance:60}),
+    combineParcels:parcels=>window.SiteParcels.deriveStudyOutline(parcels,{connectGaps:true,union:window.ImportParcels.union}),getPreset:presetAt,
+    commitSite:commitMapSite,beginDrawBoundary:data=>{beginBoundary(data);return true;},previewChanged:preview=>{if(!preview)siteMutationRevision++;refreshSiteProceed();requestRender();}});
+}
+function drawSitePlacementOverlay(cam){
+  const preview=window.VistaSitePlacement?.getPreview(),available=sitePlacementAvailable(),positioning=available&&preview?.phase==='place',show=available&&!!preview&&(!positioning||preview.pointerValid!==false);
+  canvas.style.cursor=positioning?(preview.pointerValid===false?'not-allowed':'crosshair'):'';
+  if(!sitePlacementOverlay&&show){sitePlacementOverlay=document.createElementNS('http://www.w3.org/2000/svg','svg');sitePlacementOverlay.classList.add('site-placement-parcel-overlay');sitePlacementOverlay.setAttribute('aria-hidden','true');$('viewport').appendChild(sitePlacementOverlay);}
+  if(!sitePlacementOverlay)return;sitePlacementOverlay.style.display=show?'block':'none';if(!show)return;
+  const rect=canvas.getBoundingClientRect();sitePlacementOverlay.setAttribute('viewBox',`0 0 ${rect.width} ${rect.height}`);sitePlacementOverlay.replaceChildren();
+  const pathFor=(polygons,selected)=>{
+    for(const poly of polygons){let d='',valid=true;for(const ring of poly){for(let i=0;i<ring.length;i++){const p=ring[i],q=project(cam.vp,[...p,(terrainZAt(...p)??state.site?.z??0)+.8]);if(q[3]<=0){valid=false;break;}d+=(i?'L':'M')+((q[0]+1)*rect.width/2).toFixed(1)+' '+((1-q[1])*rect.height/2).toFixed(1);}d+='Z';}if(!valid)continue;
+      const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',d);path.setAttribute('fill-rule','evenodd');path.setAttribute('class',selected?'selected-parcel':'nearby-parcel');sitePlacementOverlay.appendChild(path);}
+  };
+  if(preview.phase==='combine'&&siteParcelIndex&&preview.point){const [x,y]=preview.point,nearby=window.SiteParcels.query(siteParcelIndex,[x-180,y-180,x+180,y+180]).slice(0,100);pathFor(nearby.flatMap(p=>p.polygons),false);}
+  pathFor(preview.polygons,true);
+}
 function placeObserver(x, y, source) { const g = groundZAt(x, y); if (!g) { setHint('That point has neither terrain nor water in the model; the observer was not placed.'); return false; } state.observer = { x, y, z: g.z, ground: g.source }; state.observerSource = source || 'exploratory'; if (source !== 'origin') state.viewpointObserver = null; if (proposalBox()) aimAtProposal(); refreshPanels(); requestRender(); writeHash(); return true; }
 let observerMoveMessage='';
 function moveObserver(key,distance=1){
+  if(imagineCityOpen())return false;
   if(!assets.ready||state.mode!=='observer'||!state.observer)return false;
   prepareStreetQueries();const roof=state.observerSource==='rooftop'?state.observer.building:null;
   const surfaceAt=(x,y)=>roof?roofZAt(roof.index,roof.source==='extension',x,y)?.z??null:streetSamplers.land(x,y);
@@ -1327,6 +1613,7 @@ function moveObserver(key,distance=1){
   return result.moved;
 }
 function lookObserver(key,factor=1){
+  const nav=activeImagineNavigation();if(nav){const used=window.ImagineCityViewpoints.key(nav,key,factor);if(used)requestRender();return used;}
   if(state.mode!=='observer'||!state.observer)return false;
   const k=key.toLowerCase(),o=state.cams.observer;
   if(k==='j')o.yaw+=0.045*factor;else if(k==='l')o.yaw-=0.045*factor;
@@ -1425,6 +1712,7 @@ function invalidateRoofObserver() {
 function aimAtProposal() { const eye = observerEye(), tgt = proposalCentre(); if (!eye || !tgt) return false; const d = V.sub(tgt, eye); state.cams.observer.yaw = Math.atan2(d[1], d[0]); state.cams.observer.pitch = Math.atan2(d[2], Math.hypot(d[0], d[1])); return true; }
 function lookTowardProposal() { if (!state.observer) { setHint('Place an observer first (Step 3).'); return false; } if (!proposalBox()) { setHint('Define a proposal first (Steps 1–2).'); return false; } aimAtProposal(); setMode('observer'); return true; }
 function setMode(mode, quiet=false) {
+  if(imagineCityOpen()&&!applyingStudyState)return setImagineCameraMode(mode);
   if (mode === 'observer' && !state.observer) { setHint('Choose a viewpoint first (3 · View).'); return false; }
   if (mode === 'inspect' && !proposalBox()) { setHint('Build a proposal first (2 · Build).'); return false; }
   state.mode = mode; floatBtn.classList.toggle('hidden', mode === 'overview');
@@ -1435,10 +1723,10 @@ function setMode(mode, quiet=false) {
   refreshCaption();
   if (!quiet) { refreshPanels(); requestRender(); writeHash(); } return true;
 }
-function setTool(t) { if (t !== 'boundary' && state.drawing) { state.drawing = null; refreshStudyUI(); } state.tool = t; for (const k of ['site', 'observer', 'rooftop', 'identify', 'boundary']) $('tool-' + k)?.classList.toggle('active', k === t); if (t === 'rooftop') planView(); else if (state.mode === 'observer') setMode('overview');
+function setTool(t) { if(t!=='site')window.VistaSitePlacement?.cancel(); if (t !== 'boundary' && state.drawing) { state.drawing = null; refreshStudyUI(); } state.tool = t; for (const k of ['site', 'observer', 'rooftop', 'identify', 'boundary']) $('tool-' + k)?.classList.toggle('active', k === t); if (t === 'rooftop') planView(); else if (state.mode === 'observer') setMode('overview');
   setHint(t === 'boundary' ? 'Click the corners of your study area. Finish boundary or press Enter; Esc cancels.' : t === 'site' ? 'Click open ground for a site point, or select a building for a replacement study.' : t === 'observer' ? 'Ground observer: click open terrain (Plan helps). Or pick a view and stand at its origin.' : t === 'rooftop' ? 'Rooftop observer: click a visible roof from above. The modelled height is unverified.' : 'Identify: click a building or the ground.'); }
 // the caption under the view always says what a click or drag does right now (mode × active tool)
-function refreshCaption() { const cap = $('view-caption'); if (!cap) return; const m = state.mode, t = state.tool, red = !window.VistaViewcone?.enabled && !state.check.unknown && state.check.result?.overall_result === 'INTERSECTS' && proposalShown() ? ' Red marks the part above your study ceiling, not a City limit.' : '';
+function refreshCaption() { if(imagineCityOpen()){syncImagineCameraControls();return;} const cap = $('view-caption'); if (!cap) return; const m = state.mode, t = state.tool, red = !window.VistaViewcone?.enabled && !state.check.unknown && state.check.result?.overall_result === 'INTERSECTS' && proposalShown() ? ' Red marks the part above your study ceiling, not a City limit.' : '';
   const free = state.flow.stage === 'view' || !!selectedCone() || !!state.observer || m === 'inspect';
   const enter = state.flow.methods.view === 'cone' ? ' Choose “View from here” to enter the selected viewpoint.' : '';
   if (m === 'observer') { cap.textContent = `${state.observerSource === 'origin' ? 'Protected viewpoint ' + state.viewpoint + ' · ' + (selectedCone()?.name || '') : state.observerSource === 'rooftop' ? 'From a rooftop (height approximate)' : state.observerSource === 'street' ? 'From the street (modelled)' : 'From the ground'}, eye ${fmt(state.eyeH)} m up · ↑/↓ forward/back · ←/→ sidestep · Shift faster · drag to look.${red}`; return; }
@@ -1448,19 +1736,33 @@ function refreshCaption() { const cap = $('view-caption'); if (!cap) return; con
   const nav = t === 'aim' ? 'right-drag to pan' : m === 'plan' ? 'drag to pan' : 'drag to orbit · right-drag to pan';
   cap.textContent = `${free ? 'Free inspection · ' : ''}${m === 'plan' ? 'Plan · north up' : 'City'} · ${act ? act + ' · ' : ''}${nav} · scroll to zoom.${free ? enter : ''}${red}`;
 }
-function setHint(msg) { $('hint').textContent = msg; }
+function setHint(msg) {
+  const hint=$('hint');hint.textContent=msg;
+  // The tool palette supplies the fixed how-to copy on demand. Action results,
+  // warnings and errors keep their visible status strip.
+  if(hint.dataset)hint.dataset.toolGuide=String(typeof FLOW_HINTS==='object'&&Object.values(FLOW_HINTS).includes(msg));
+}
 function resetToContext() { let e = assets.manifest ? assets.manifest.extent_m.scene_bbox : [-3000, -2300, 0, 2600, 3900, 0]; if (assets.extension) { const t = assets.extension.target_extent_model_m; e = [t[0], t[1], 0, t[2], t[3], 0]; }
+  const nav=activeImagineNavigation();if(nav){const park=listImagineViewpoints().find(r=>r.id==='3.2.1'),rect=canvas.getBoundingClientRect();if(window.ImagineCityViewpoints.home(nav,park,{aspect:rect.width/Math.max(1,rect.height)})){notifyImagineCamera();return;}setImagineCameraMode('overview');return;}
   state.cams.overview = { target: [(e[0] + e[3]) / 2, (e[1] + e[4]) / 2, 20], dist: Math.max(e[3]-e[0],e[4]-e[1])*1.8, az: -1.15, el: 0.85 }; setMode('overview'); }
-function planView() { if (state.mode === 'inspect' && state.site) { state.cams.overview.target = [state.site.x, state.site.y, state.site.z]; state.cams.overview.dist = Math.max(220, state.cams.inspect.dist); } setMode('plan'); }
+function planView() { if(imagineCityOpen()&&!applyingStudyState){setImagineCameraMode('plan');return;} if (state.mode === 'inspect' && state.site) { state.cams.overview.target = [state.site.x, state.site.y, state.site.z]; state.cams.overview.dist = Math.max(220, state.cams.inspect.dist); } setMode('plan'); }
+function homeVista() {
+  if (imagineCityOpen()) return false;
+  const rect = canvas.getBoundingClientRect();
+  state.cams.overview = vistaEntryCamera(rect.width / Math.max(1, rect.height));
+  setMode('overview');
+  return true;
+}
 function focusLocation(x, y) {
   if (!assets.ready || !Number.isFinite(x) || !Number.isFinite(y)) return false;
   const e = assets.extension?.target_extent_model_m || assets.manifest?.extent_m.scene_bbox;
   if (!e || x < e[0] || x > e[e.length === 4 ? 2 : 3] || y < e[1] || y > e[e.length === 4 ? 3 : 4]) return false;
   const z = terrainZAt(x, y) ?? groundZAt(x, y)?.z ?? 0;
+  const nav=activeImagineNavigation();if(nav){nav.cams.overview.target=[x,y,z];nav.cams.overview.dist=500;setImagineCameraMode('plan');return true;}
   state.cams.overview.target = [x, y, z]; state.cams.overview.dist = 500; state.selected = null; state.selectedExt = false;
   setMode('plan'); return true; // the address panel writes its own status
 }
-function inspectFrom(az, el) { if (!setMode('inspect')) return; const o = state.cams.inspect; if (az !== null) o.az = az; if (el !== null) o.el = el; requestRender(); writeHash(); }
+function inspectFrom(az, el) { if (!setMode('inspect')) return; const nav=activeImagineNavigation(),o=nav?nav.cams.inspect:state.cams.inspect; if (az !== null) o.az = az; if (el !== null) o.el = el; requestRender(); if(!nav)writeHash(); }
 
 // ------------------------------------------------------------------ measured site studies (visual hypotheses)
 function formatArea(area) { return Math.round(area).toLocaleString() + ' m²'; }
@@ -1596,7 +1898,7 @@ function updateCleared() {
 }
 function refreshStudyUI() {
   const pts=state.drawing || state.boundary; const valid = pts.length >= 3 && !SiteGeometry.validate(pts), m = valid ? SiteGeometry.metrics(pts) : null;
-  $('site-metrics').innerHTML = m ? `<b>${formatArea(m.area)}</b><b class="metric-sub">${fmt(m.area / 10000, 3)} ha</b><span>${fmt(m.perimeter, 1)} m perimeter · horizontal plan area</span><span>${state.drawing ? "Draft boundary" : "User-defined study boundary"} · not a parcel; may enclose water</span>` : state.site ? '<span>Point site: no area is measured. Draw a boundary (B) if you want one.</span>' : ({ replace: '<b>Pick a building</b><span>Select a building, then choose “Replace this building”.</span>', multi: '<b>Pick buildings</b><span>Select buildings, then choose “Use as site”.</span>' }[state.flow.methods.site] || '<b>Place your site</b><span>Find the area if you need to, then pick a spot or draw a boundary.</span>');
+  $('site-metrics').innerHTML = m ? `<b>${formatArea(m.area)}</b><b class="metric-sub">${fmt(m.area / 10000, 3)} ha</b><span>${fmt(m.perimeter, 1)} m perimeter · horizontal plan area</span><span>${state.drawing ? "Draft study boundary · may enclose water" : state.siteStrategy==='replace' ? "Mapped parcel outline · dated public data, not a surveyed legal boundary" : state.siteStrategy==='combine' ? "Combined project study boundary · not a legal merger; may include streets or other property" : "User-defined study boundary · not a parcel; may enclose water"}</span>` : state.site ? '<span>Point site: no area is measured. Draw a boundary (B) if you want one.</span>' : ({ replace: '<b>Pick a building</b><span>Select a building, then choose “Replace this building”.</span>', multi: '<b>Pick buildings</b><span>Select buildings, then choose “Use as site”.</span>' }[state.flow.methods.site] || '<b>Place your site</b><span>Find the area if you need to, then pick a spot or draw a boundary.</span>');
   if (m && !state.drawing && proposalBox()) { const outside = proposalParts().some(p => { const fp=partFootprint(p); return ProposalGeometry.planOverlap(state.boundary,fp).area < Math.abs(SiteGeometry.metrics(fp).area)-0.01; }); if (outside) $('site-metrics').innerHTML += '<span class="site-warning">Proposal extends outside the study boundary.</span>'; }
   $('btn-fit-site').disabled = !state.site; $('btn-focus').disabled = !state.site;
   $('btn-replace-building').classList.toggle('hidden', state.selected === null);
@@ -1609,7 +1911,7 @@ function refreshStudyUI() {
   for (const key of Object.keys(state.layers)) $('layer-' + key).checked = state.layers[key];
 }
 function revealMap() { if (matchMedia('(max-width: 860px)').matches) { $('panel').classList.add('collapsed'); $('btn-panel-toggle').setAttribute('aria-expanded','false'); } }
-function beginBoundary() { if (state.flow.stage !== 'site') flowGo('site', { force: true }); state.flow.alt.place = 'boundary'; state.drawing = []; planView(); setTool('boundary'); revealMap(); refreshPanels(); requestRender(); }
+function beginBoundary(projectSelection=null) { pendingCombinedDraw=projectSelection?.mode==='combine'?projectSelection:null; if (state.flow.stage !== 'site') flowGo('site', { force: true }); state.flow.alt.place = 'boundary'; state.drawing = []; planView(); setTool('boundary'); revealMap(); refreshPanels(); requestRender(); }
 function addBoundaryPoint(x,y) {
   if (!state.drawing) state.drawing = [];
   const z = landZAt(x,y); if (z === null) { setHint('No terrain at this corner. Choose modelled land.'); return false; }
@@ -1621,20 +1923,21 @@ function finishBoundary() {
   if (!state.drawing) return false; const err = SiteGeometry.validate(state.drawing);
   if (err) { setHint(err + ' Use Undo vertex to adjust the boundary.'); return false; }
   const pts = state.drawing.map(q => [...q]), m = SiteGeometry.metrics(pts);
+  if(pendingCombinedDraw){const data=pendingCombinedDraw;pendingCombinedDraw=null;state.drawing=null;setTool('site');commitMapSite({...data,polygon:pts,polygons:[[pts]],sourceLabel:'User-drawn partial project study boundary',hypothetical:true}).catch(error=>setHint(error.message));return true;}
   // A concave polygon can have its centroid outside. Use an interior edge midpoint fallback.
   let centre = m.centre; if (!SiteGeometry.pointInPolygon(centre,pts) || landZAt(...centre) === null) centre = pts[0];
   if (!placeSite(...centre, true)) return false;
   state.boundary = pts; state.drawing = null; setTool('site'); refreshPanels(); requestRender(); writeHash();
   setHint(`${formatArea(m.area)} study area measured. Boundary and dimensions are approximate model measurements; parcel ownership, vacancy and eligibility are unknown.`); return true;
 }
-function cancelBoundary() { state.drawing = null; setTool('site'); refreshPanels(); requestRender(); }
+function cancelBoundary() { pendingCombinedDraw=null;state.drawing = null; setTool('site'); refreshPanels(); requestRender(); }
 function rectangleSite() {
   if (!state.site) { const t = state.cams.overview.target; if (!placeSite(t[0], t[1], true)) { setHint('The middle of the plan is not over land. Move the plan over land first, then apply the rectangle.'); return false; } }
   const w = Number($('site-width').value), d = Number($('site-depth').value);
   if (!Number.isFinite(w) || !Number.isFinite(d) || w < 2 || d < 2 || w > 2000 || d > 2000) { setHint('Enter widths and depths between 2 and 2,000 metres.'); return false; }
   const pts = SiteGeometry.rectangle(state.site.x-w/2,state.site.y-d/2,w,d);
   if (pts.some(q => landZAt(...q) === null)) { setHint('Some corners fall outside modelled terrain. Reduce the size or draw a boundary over land.'); return false; }
-  state.boundary = pts; state.check.result = null; state.flow.alt.place = 'boundary'; refreshPanels(); requestRender(); writeHash(); return true;
+  siteMutationRevision++;state.siteStrategy=null;state.projectParcelIds=[];pendingCombinedDraw=null;window.VistaSitePlacement?.cancel();state.boundary = pts; state.check.result = null; state.flow.alt.place = 'boundary'; refreshPanels(); requestRender(); writeHash(); return true;
 }
 function replaceSelectedBuilding() {
   if (state.selected === null) return false;
@@ -1652,9 +1955,10 @@ function restoreBuildings() { const replacing = state.flow.methods.site === 'rep
   setHint(replacing ? 'Buildings restored and automatic demolition is off. Choose a building or a group again to set the site.' : 'All context buildings restored, and automatic demolition is off (Build step). Your study boundary and proposal remain.'); }
 // in Build, once the height stops changing, the city view refits if the tower's top has left the frame
 let refitTimer = null, refitTop = null;
-function scheduleRefit() { const P = proposalBox(); if (!P || state.flow.stage !== 'build' || state.mode !== 'overview' || !proposalShown()) return; if (refitTop !== null && Math.abs(P.top - refitTop) < 0.01) return; refitTop = P.top; clearTimeout(refitTimer);
-  refitTimer = setTimeout(() => { const Q = proposalBox(); if (!Q || !lastCam || state.mode !== 'overview' || state.flow.stage !== 'build') return; const q = project(lastCam.vp, [Q.cx, Q.cy, Q.top]); if (q[3] <= 0 || q[1] > 0.9 || Math.abs(q[0]) > 1) focusSite(); }, 700); }
+function scheduleRefit() { const P = proposalBox(); if (imagineCityOpen() || !P || state.flow.stage !== 'build' || state.mode !== 'overview' || !proposalShown()) return; if (refitTop !== null && Math.abs(P.top - refitTop) < 0.01) return; refitTop = P.top; clearTimeout(refitTimer);
+  refitTimer = setTimeout(() => { const Q = proposalBox(); if (imagineCityOpen() || !Q || !lastCam || state.mode !== 'overview' || state.flow.stage !== 'build') return; const q = project(lastCam.vp, [Q.cx, Q.cy, Q.top]); if (q[3] <= 0 || q[1] > 0.9 || Math.abs(q[0]) > 1) focusSite(); }, 700); }
 function focusSite() {
+  if(imagineCityOpen()&&!applyingStudyState){resetToContext();return true;}
   if (!state.site) return false; const m = state.boundary.length >= 3 ? SiteGeometry.metrics(state.boundary) : null;
   const span = m ? Math.max(m.bounds[2]-m.bounds[0], m.bounds[3]-m.bounds[1]) : 120;
   const height=proposalBox() ? proposalBox().top-proposalBox().base : 0; state.cams.overview.target = [state.site.x,state.site.y,state.site.z+(state.mode==='plan' ? 0 : height*0.35)]; state.cams.overview.dist = Math.max(240, span * 2.3, state.mode==='plan' ? 0 : height*3);
@@ -1698,11 +2002,12 @@ function refreshImportedParcels() {
   el.textContent=match ? (match.ids?.length ? `${match.ids.length} property parcel${match.ids.length===1?'':'s'} · ` : '')+match.reason+(match.status==='matched-review'?' Separate parcel boundaries are retained; do not use them as a verified merged lot.':'')+(state.boundary.length?' Your drawn study boundary is preserved.':'')+(match.displayOmitted?' Some outline segments exceed the display limit.':'') : '';
 }
 function updateMapCues(cam) {
-  $('map-scale').classList.toggle('hidden', state.mode !== 'plan');
-  if (state.mode === 'plan') { const mpp=2*cam.half/canvas.clientHeight, raw=mpp*100, order=10**Math.floor(Math.log10(raw)), nice=[1,2,5,10].map(n=>n*order).filter(n=>n<=raw).pop() || order;
+  const mode=cam.mode||state.mode;
+  $('map-scale').classList.toggle('hidden', mode !== 'plan');
+  if (mode === 'plan') { const mpp=2*cam.half/canvas.clientHeight, raw=mpp*100, order=10**Math.floor(Math.log10(raw)), nice=[1,2,5,10].map(n=>n*order).filter(n=>n<=raw).pop() || order;
     $('scale-line').style.width=(nice/mpp)+'px'; $('scale-label').textContent=nice>=1000 ? fmt(nice/1000,1)+' km' : nice+' m'; }
-  $('north-cue').classList.toggle('hidden',state.mode==='observer');
-  const centre=state.mode==='inspect' && proposalCentre() ? proposalCentre() : state.cams.overview.target, a=project(cam.vp,centre), b=project(cam.vp,[centre[0],centre[1]+100,centre[2]]);
+  $('north-cue').classList.toggle('hidden',mode==='observer');
+  const centre=cam.mode?cam.target:state.mode==='inspect' && proposalCentre() ? proposalCentre() : state.cams.overview.target, a=project(cam.vp,centre), b=project(cam.vp,[centre[0],centre[1]+100,centre[2]]);
   const angle=Math.atan2((b[0]-a[0])*canvas.clientWidth,(b[1]-a[1])*canvas.clientHeight)*180/Math.PI; $('north-cue').querySelector('span').style.transform=`rotate(${angle}deg)`;
 }
 
@@ -2177,7 +2482,7 @@ function applyFlowTool() {
   refreshCaption();
 }
 function resetStage(stage) {
-  if (stage === 'site') { state.flow.alt = { find: null, place: null }; state.site = null; state.boundary = []; state.drawing = null; state.removed = []; state.showExisting = false; state.selected = null; state.multiSel = []; state.check.result = null; }
+  if (stage === 'site') { siteMutationRevision++;state.siteStrategy=null;state.projectParcelIds=[];pendingCombinedDraw=null;window.VistaSitePlacement?.cancel();state.flow.alt = { find: null, place: null }; state.site = null; state.boundary = []; state.drawing = null; state.removed = []; state.showExisting = false; state.selected = null; state.multiSel = []; state.check.result = null; }
   if (stage === 'view') { state.observer = null; state.observerSource = 'exploratory'; state.viewpointObserver = null; selectView(null); if (state.mode === 'observer') setMode('overview'); }
 }
 function flowGo(stage, opts = {}) {
@@ -2196,7 +2501,7 @@ function flowGo(stage, opts = {}) {
   refreshPanels(); requestRender(); writeHash(); if (!opts.quiet) focusStageHeading(); return true;
 }
 // keyboard and screen-reader users land on the new step's heading instead of losing focus to the page body
-function focusStageHeading() { const a = document.activeElement; if (a && a !== document.body && !$('panel').contains(a)) return; const h = document.querySelector('.flow-stage:not(.hidden) .stage-head h2'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
+function focusStageHeading(force=false) { const a = document.activeElement; if (!force && a && a !== document.body && !$('panel').contains(a)) return; const h = document.querySelector('.flow-stage:not(.hidden) .stage-head h2'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
 function chooseMethod(stage, method) {
   if (!FLOW_METHODS[stage]?.includes(method)) return false;
   if (state.flow.stage !== stage && !flowGo(stage)) return false;
@@ -2211,6 +2516,19 @@ function chooseMethod(stage, method) {
 function changeMethod(stage) { state.flow.choosing = stage; applyFlowTool(); setHint(FLOW_HINTS[stage] + (flowMethod(stage) ? ' Choosing a different method clears this step’s current result.' : '')); refreshPanels(); }
 function flowBack() { const i = FLOW.indexOf(state.flow.stage); if (i > 0) flowGo(FLOW[i - 1]); }
 function flowNext() { const stage = state.flow.stage, i = FLOW.indexOf(stage); if (!stageComplete(stage)) { setHint(stageNeed(stage)); return false; } return flowGo(FLOW[i + 1]); }
+// Continue from the map only after confirmation, never from a temporary preview.
+function siteProceedReady() {
+  return state.flow.stage==='site' && !flowChoosing('site') && stageComplete('site') &&
+    !pendingSite && !window.VistaSitePlacement?.isPending?.() && !imagineCityOpen();
+}
+function refreshSiteProceed() {
+  const button=$('btn-viewport-build');if(!button)return;
+  const ready=siteProceedReady();button.hidden=!ready;button.disabled=!ready;
+}
+function proceedFromViewport() {
+  if(!siteProceedReady()){refreshSiteProceed();return false;}
+  const advanced=flowNext();if(advanced)focusStageHeading(true);return advanced;
+}
 // Multi-building selection: a working list, applied as one combined site.
 function toggleMultiBuilding(index, ext) {
   const c = (ext ? assets.extIndex : assets.index)?.columns; if (!c) return false;
@@ -2270,6 +2588,7 @@ function inferFlow(step) {
   state.flow.stage = step >= 2 && m.view ? 'output' : m.view ? 'view' : m.site ? 'build' : 'site';
 }
 function refreshFlowUI() {
+  refreshSiteProceed();
   const stage = state.flow.stage, choosing = flowChoosing(stage), method = flowMethod(stage), idx = FLOW.indexOf(stage);
   document.querySelectorAll('.flow-step').forEach(el => { const s = el.dataset.stage, i = FLOW.indexOf(s), done = stageComplete(s), reach = stageReachable(s);
     el.classList.toggle('current', s === stage); el.classList.toggle('done', done && s !== stage); el.classList.toggle('locked', !reach);
@@ -2297,7 +2616,7 @@ function refreshFlowUI() {
   if (showNext) { next.textContent = `Proceed to ${FLOW_NAMES[FLOW[idx + 1]]} ›`; next.disabled = !stageComplete(stage); }
   $('flow-need').textContent = showNext ? stageNeed(stage) : '';
   panelToggleLabel();
-  const fb = $('btn-focus'); if (fb) fb.textContent = stage === 'output' || stage === 'view' ? 'Focus proposal' : 'Focus site';
+  const fb = $('btn-focus'); if (fb){fb.textContent = stage === 'output' || stage === 'view' ? 'Focus proposal' : 'Focus site';fb.title='Fit the current study site';}
   $('btn-open-ground')?.classList.toggle('hidden', state.mode === 'plan'); $('btn-face')?.classList.toggle('hidden', !(state.mode === 'observer' && proposalBox() && proposalShown()));
   // drag and view: once you stand somewhere, the how-to turns into what you can do next
   const dh = document.querySelector('.method-body[data-stage="view"][data-method="drag"] .method-howto'); if (dh) { dh.dataset.base ??= dh.innerHTML; const placed = state.observerSource === 'exploratory' && !!state.observer;
@@ -2354,9 +2673,9 @@ function refreshBuildingViewInfo() {
     buildingViewPending=api.load().then(()=>refreshBuildingViewInfo()).catch(error=>{buildingViewError='Building view data could not be loaded. Reload to retry.';refreshBuildingViewInfo();}).finally(()=>{buildingViewPending=null;});
   }
 }
-function refreshPanels() { window.VistaHeights?.refresh(); refreshConeCeiling(); window.VistaEnvelope?.refresh(); window.VistaLocation?.refresh(); updateCleared(); refreshStudyUI(); const P = proposalBox(); const eye = observerEye();
+function refreshPanels() { if(!sitePlacementAvailable())window.VistaSitePlacement?.cancel(); window.VistaHeights?.refresh(); refreshConeCeiling(); window.VistaEnvelope?.refresh(); window.VistaLocation?.refresh(); updateCleared(); refreshStudyUI(); const P = proposalBox(); const eye = observerEye();
   refreshNearbyRooftops(); refreshStreetChoices(); refreshViewpointNavigation();
-  $('site-info').textContent = state.site ? (state.boundary.length >= 3 ? 'Site set: your drawn boundary.' : state.removed.length ? `Site set: replacing ${state.removed.length} existing building${state.removed.length === 1 ? '' : 's'}.` : 'Site set: a point on open ground.') : 'No site yet.'; $('site-info').classList.toggle('muted', !state.site);
+  $('site-info').textContent = state.site ? (state.boundary.length >= 3 ? (state.siteStrategy==='replace'?'Site set: selected mapped parcel.':state.siteStrategy==='combine'?'Site set: combined project study boundary.':'Site set: your drawn boundary.') : state.removed.length ? `Site set: replacing ${state.removed.length} existing building${state.removed.length === 1 ? '' : 's'}.` : 'Site set: a point on open ground.') : 'No site yet.'; $('site-info').classList.toggle('muted', !state.site);
   $('proposal-info').textContent = P ? `${P.parts.length} ${state.pmode==='import'?'imported part':'block'}${P.parts.length === 1 ? '' : 's'} · ${fmt(P.top - P.base, 0)} m tall · about ${fmt(P.box[3] - P.box[0], 0)} × ${fmt(P.box[4] - P.box[1], 0)} m overall` : (state.site ? 'No building yet.' : 'Set the site first; your building stands on it.');
   refreshTechReadout(P, eye);
   const pill = (id, txt, ok) => { const el = $(id); el.textContent = txt; el.classList.toggle('ok', !!ok); };
@@ -2373,11 +2692,11 @@ function refreshPanels() { window.VistaHeights?.refresh(); refreshConeCeiling();
     $('cleared-text').textContent = state.clearanceWarning || (!state.clearOverlaps ? 'Buildings your proposal overlaps are kept. Tick the box to treat them as demolished.' : `${state.cleared.length} existing building${state.cleared.length === 1 ? '' : 's'} under your proposal ${state.cleared.length === 1 ? 'is' : 'are'} shown as demolished to make room. This is a study assumption, not an approval.`); }
   const bi = $('building-info'); if (state.selected !== null && assets.ready) { const c = (state.selectedExt ? assets.extIndex : assets.index).columns, i = state.selected, b = c.bbox[i]; bi.textContent = `${state.selectedExt ? 'Extension building (current OSM, © OpenStreetMap contributors)' : 'Existing building (supplied model)'} osm_id ${c.osm_id[i]} · ${c.osm_type[i] || '—'} · height_m ${c.height_m[i] === null ? '—' : c.height_m[i]} (${HS[c.height_source[i]]}) · ≈ ${fmt(b[3] - b[0], 0)} × ${fmt(b[4] - b[1], 0)} m · top z ${fmt(b[5])} m. Model bounding dimensions; not a parcel survey.`; bi.classList.remove('hidden'); }
   else bi.classList.add('hidden');
-  refreshBuildingViewInfo(); refreshImportedParcels(); refreshLiveStudy(); $('step-status').textContent = stepStatus(); refreshFlowUI(); refreshCaption(); window.VistaViewcone?.refresh(); window.VistaHeightSuggestion?.refresh(); scheduleRefit();
+  refreshBuildingViewInfo(); refreshImportedParcels(); refreshLiveStudy(); $('step-status').textContent = stepStatus(); refreshFlowUI(); refreshCaption(); window.VistaViewcone?.refresh(); window.VistaHeightSuggestion?.refresh(); scheduleRefit(); if(imagineCityOpen())syncImagineCameraControls();
   $('tech-json').textContent = JSON.stringify(technicalState(), null, 1); if (state.flow.stage === 'output') { renderReport(); window.__report?.renderBuilder(); } }
 function technicalState() { const m = assets.manifest; const P = proposalBox(); const c = selectedCone();
   return { schema: 'vancouver-site-study/1', name: state.studyName, resume_hash: serializeHash(), saved_at: new Date().toISOString(), imported_geometry_included: false, label: 'VISUAL EXPLORATION AND TEACHING ONLY — NOT A PROTECTED-VIEW ASSESSMENT', regulatory_applicability: 'NOT ASSESSED', coordinates: assets.unified ? 'model XY metres, Z up; rebuilt SRTM ground, building bases shifted vertically (see context_rebuild)' : 'model metres, Z up, untransformed (see source.display_transform)',
-    step: state.step, flow: { stage: state.flow.stage, methods: state.flow.methods }, site: state.site, study_area: state.boundary.length >= 3 ? { boundary_model_xy: state.boundary, ...SiteGeometry.metrics(state.boundary), units: 'metres; horizontal area in square metres', status: 'user-defined study boundary, not a legal parcel; total horizontal study area may include water; vacancy, ownership and redevelopment eligibility unknown' } : null, hypothetical_removals: state.removed.map(r => ({ osm_id: r.id, source: r.ext ? 'extension' : 'supplied' })), cleared_for_proposal: { enabled: state.clearOverlaps && !state.clearanceWarning, buildings: state.cleared.map(r => ({ osm_id: r.id, source: r.ext ? 'extension' : 'supplied' })), method: 'indexed source triangles intersect the proposal footprint in plan after a 0.5 m inward shrink', warning: state.clearanceWarning || null }, existing_comparison_visible: state.showExisting, display_layers: state.layers, visual_style: state.sceneStyle, proposal_mode: state.pmode, blocks: state.pmode === 'boxes' ? state.parts : null, imported: state.imported ? { name: state.imported.name, parts: state.imported.parts.map((p) => ({ name: p.name, bbox: p.bbox, triangles: p.triangles })), units_status: state.imported.units_status, placement: state.imported.placement } : null,
+    step: state.step, flow: { stage: state.flow.stage, methods: state.flow.methods }, site: state.site, project_site:{strategy:state.siteStrategy,parcelIds:state.projectParcelIds,source:'Dated cadastral snapshot; combined/drawn project boundary is hypothetical, not a legal merger'}, study_area: state.boundary.length >= 3 ? { boundary_model_xy: state.boundary, ...SiteGeometry.metrics(state.boundary), units: 'metres; horizontal area in square metres', status: 'user-defined study boundary, not a legal parcel; total horizontal study area may include water; vacancy, ownership and redevelopment eligibility unknown' } : null, hypothetical_removals: state.removed.map(r => ({ osm_id: r.id, source: r.ext ? 'extension' : 'supplied' })), cleared_for_proposal: { enabled: state.clearOverlaps && !state.clearanceWarning, buildings: state.cleared.map(r => ({ osm_id: r.id, source: r.ext ? 'extension' : 'supplied' })), method: 'indexed source triangles intersect the proposal footprint in plan after a 0.5 m inward shrink', warning: state.clearanceWarning || null }, existing_comparison_visible: state.showExisting, display_layers: state.layers, visual_style: state.sceneStyle, proposal_mode: state.pmode, blocks: state.pmode === 'boxes' ? state.parts : null, imported: state.imported ? { name: state.imported.name, parts: state.imported.parts.map((p) => ({ name: p.name, bbox: p.bbox, triangles: p.triangles })), units_status: state.imported.units_status, placement: state.imported.placement } : null,
     display_units: state.displayUnits, geometry_units: 'm', geographic_reference:window.VistaLocation?.reference() || window.VistaGeoreference?.describe(), geographic_location:window.VistaLocation?.exportGeoJSON() || null,
     proposal: P ? { footprint_bbox: P.box, base_z_model_relative: P.base, top_z_model_relative: P.top, parts: P.parts.map(p => ({name:p.name,box:p.box,rotation:state.pmode==='boxes' ? p.rotation || 0 : null,footprint:p.footprint || null})) } : null,
     observer: state.observer ? { source: state.observerSource, ground: state.observer, eye_height_m: state.eyeH, eye_height_reference: state.observerSource === 'rooftop' ? 'above modelled roof surface' : 'above modelled ground or water', roof_model_height_unverified: state.observerSource === 'rooftop', visibility_status: 'exploratory visualisation, not a verified sightline or regulatory assessment', eye: observerEye(), yaw_rad: state.cams.observer.yaw, pitch_rad: state.cams.observer.pitch, fov_deg: state.fov } : null,
@@ -2421,6 +2740,7 @@ let hashTimer = null;
 function serializeHash() { const p = new URLSearchParams(); const r = (v) => Number(v).toFixed(3);
   p.set('u', VistaUnits.normalizeUnit(state.displayUnits));
   p.set('style',state.sceneStyle); p.set('name', state.studyName); p.set('boundary', state.boundary.map(q => q.map(r).join(',')).join(';')); p.set('removed', state.removed.map(q => (q.ext ? 'e:' : 's:') + q.id).join(',')); p.set('existing', state.showExisting ? '1' : '0'); if (!state.clearOverlaps) p.set('clear', '0'); p.set('layers', Object.entries(state.layers).filter(([,v]) => v).map(([k]) => k).join(','));
+  if(state.siteStrategy){p.set('sm',state.siteStrategy);p.set('pid',state.projectParcelIds.join(','));}
   p.set('step', state.step); p.set('flow', state.flow.stage); p.set('fm', ['site', 'build', 'view'].map(k => state.flow.methods[k] || '').join(',')); if (state.site) p.set('site', `${r(state.site.x)},${r(state.site.y)}`); p.set('parts', state.parts.map((q) => [q.h, q.w, q.d, q.dx, q.dy].join(',') + ',' + encodeURIComponent(q.name)).join(';')); p.set('pm', state.pmode); p.set('rot',state.parts.map(q=>q.rotation || 0).join(','));
   if (state.observer) { p.set('obs', `${r(state.observer.x)},${r(state.observer.y)}`); p.set('osrc', state.observerSource); if (state.observerSource === 'rooftop' && state.observer.building) p.set('roof', `${state.observer.building.source === 'extension' ? 'e' : 's'}:${state.observer.building.id}`); } p.set('eye', state.eyeH); p.set('fov', state.fov); p.set('mode', state.mode); p.set('wedge', state.wedge ? 1 : 0); p.set('allcones', state.showAllCones ? 1 : 0); p.set('bd', state.showBackdrop ? 1 : 0);
   if (state.viewpoint) p.set('view', state.viewpoint); p.set('bz', state.check.unknown ? 'unknown' : state.check.bz); p.set('cref', state.check.reference); p.set('ch', state.check.height); p.set('area', state.check.area); if (state.check.custom) p.set('carea', [state.check.custom.x_min, state.check.custom.x_max, state.check.custom.y_min, state.check.custom.y_max].join(','));
@@ -2428,7 +2748,8 @@ function serializeHash() { const p = new URLSearchParams(); const r = (v) => Num
   if (Object.keys(coneStudy.planes).length || coneStudy.datumOffsetM !== null || !coneStudy.show) p.set('cp', JSON.stringify({planes:coneStudy.planes,datumOffsetM:coneStudy.datumOffsetM,datumName:coneStudy.datumName,show:coneStudy.show}));
   return '#' + p.toString(); }
 function writeHash() { if (hashTimer) return; hashTimer = setTimeout(() => { hashTimer = null; history.replaceState(null, '', serializeHash()); }, 150); }
-function applyHash(hash) { const p = new URLSearchParams((hash || location.hash).replace(/^#/, '')); const num = (k, lo, hi, dflt) => { const v = parseFloat(p.get(k)); return Number.isFinite(v) ? clamp(v, lo, hi) : dflt; };
+function applyHash(hash) { siteMutationRevision++;pendingCombinedDraw=null;window.VistaSitePlacement?.cancel();const p = new URLSearchParams((hash || location.hash).replace(/^#/, '')); const num = (k, lo, hi, dflt) => { const v = parseFloat(p.get(k)); return Number.isFinite(v) ? clamp(v, lo, hi) : dflt; };
+  const previousApplyingStudyState=applyingStudyState;applyingStudyState=true;try{
   window.dispatchEvent(new Event('vista:clear-address'));
   state.displayUnits = VistaUnits.normalizeUnit(p.get('u'));
   try { restoreConeStudy(p.has('cp') ? JSON.parse(p.get('cp')) : null); } catch (_) { restoreConeStudy(null); }
@@ -2444,6 +2765,7 @@ function applyHash(hash) { const p = new URLSearchParams((hash || location.hash)
   const lk = (p.get('look') || '').split(',').map(Number); if (lk.length === 2 && lk.every(Number.isFinite)) state.cams.observer = { yaw: lk[0], pitch: clamp(lk[1], -1.48, 1.48) };
   const s = pair('site'); state.site = null; if (s) { const z = landZAt(s[0], s[1]); state.site = z === null ? null : { x: s[0], y: s[1], z }; }
   state.boundary = []; const boundary = (p.get('boundary') || '').split(';').filter(Boolean).map(q => q.split(',').map(Number)); if (boundary.length && !SiteGeometry.validate(boundary)) state.boundary = boundary;
+  state.siteStrategy=['place','replace','combine'].includes(p.get('sm'))&&state.site?p.get('sm'):null;state.projectParcelIds=(p.get('pid')||'').split(',').filter(id=>/^[A-Za-z0-9:_-]{1,100}$/.test(id)).slice(0,256);if(state.siteStrategy==='combine'&&(state.boundary.length<3||state.boundary.length>128))state.siteStrategy=null;
   state.removed = []; for (const token of (p.get('removed') || '').split(',')) { const ext = token.startsWith('e:'), id = token.slice(2), index = (ext ? assets.extIndex : assets.index)?.columns.osm_id.indexOf(id); if (index >= 0 && !isReplaced(index, ext)) state.removed.push({index, ext, id}); }
   state.showExisting = p.get('existing') === '1'; state.clearOverlaps = p.get('clear') !== '0'; clearedKey = ''; state.cleared = []; if (p.has('layers')) for (const key of Object.keys(state.layers)) state.layers[key] = p.get('layers').split(',').includes(key);
   const o = pair('obs'); state.observer = null; state.observerSource = 'exploratory';
@@ -2479,6 +2801,7 @@ function applyHash(hash) { const p = new URLSearchParams((hash || location.hash)
   flowGo(state.flow.stage, { force: true, step, quiet: true });
   if(state.observerSource==='street' && state.observer && !usableStreetPoint(state.observer)){state.observer=null;state.observerSource='exploratory';setMode('plan');applyFlowTool();setHint('The saved street position is no longer usable with this model. Choose another mapped street.');}
   // refreshPanels schedules a live calculation for a saved ceiling.
+  }finally{applyingStudyState=previousApplyingStudyState;}
 }
 
 // ------------------------------------------------------------------ UI wiring
@@ -2497,12 +2820,12 @@ $('tool-site').addEventListener('click', () => setTool('site')); $('tool-observe
 $('tool-rooftop')?.addEventListener('click', () => setTool('rooftop'));
 $('btn-observer-on-building')?.addEventListener('click', viewFromSelectedRoof);
 $('btn-look').addEventListener('click', lookTowardProposal);
-$('btn-clear-site').addEventListener('click', () => { state.flow.alt = { find: null, place: null }; state.site = null; state.boundary = []; state.drawing = null; state.removed = []; state.multiSel = []; state.showExisting = false; state.check.result = null; applyFlowTool(); refreshPanels(); requestRender(); writeHash(); });
+$('btn-clear-site').addEventListener('click', () => { siteMutationRevision++;state.flow.alt = { find: null, place: null }; state.site = null; state.boundary = []; state.drawing = null; state.siteStrategy=null;state.projectParcelIds=[];pendingCombinedDraw=null;window.VistaSitePlacement?.cancel();state.removed = []; state.multiSel = []; state.showExisting = false; state.check.result = null; applyFlowTool(); refreshPanels(); requestRender(); writeHash(); });
 $('btn-clear-observer').addEventListener('click', () => { state.observer = null; state.observerSource = 'exploratory'; setMode(state.mode === 'inspect' ? 'inspect' : 'overview'); if (['drag','roof','street'].includes(state.flow.methods.view)) { planView(); applyFlowTool(); } });
 $('btn-reset-context').addEventListener('click', resetToContext); $('btn-plan').addEventListener('click', planView);
 // Export to PDF is handled by report.js (PDF contents builder).
 $('cam-n').addEventListener('click', () => inspectFrom(Math.PI / 2, 0.3)); $('cam-e').addEventListener('click', () => inspectFrom(0, 0.3)); $('cam-s').addEventListener('click', () => inspectFrom(-Math.PI / 2, 0.3)); $('cam-w').addEventListener('click', () => inspectFrom(Math.PI, 0.3));
-$('cam-opposite').addEventListener('click', () => { if (!setMode('inspect')) return; state.cams.inspect.az += Math.PI; requestRender(); writeHash(); }); $('cam-top').addEventListener('click', () => inspectFrom(null, 1.55));
+$('cam-opposite').addEventListener('click', () => { if (!setMode('inspect')) return; const nav=activeImagineNavigation();(nav?nav.cams:state.cams).inspect.az += Math.PI; requestRender(); if(!nav)writeHash(); }); $('cam-top').addEventListener('click', () => inspectFrom(null, 1.55));
 $('pmode-boxes').addEventListener('click', () => setProposalMode('boxes')); $('pmode-import').addEventListener('click', () => setProposalMode('import')); $('btn-add-part').addEventListener('click', () => addPart());
 $('file-import').addEventListener('change', async (e) => {
   const input=e.target,file=input.files?.[0];if(!file)return;
@@ -2533,6 +2856,12 @@ document.querySelectorAll('[data-open-example]').forEach((b) => b.addEventListen
 $('btn-example-close')?.addEventListener('click', () => $('example-banner').classList.add('hidden'));
 // Keyboard route: observer arrows translate; other map modes orbit or pan.
 canvas.addEventListener('keydown', (e) => { if (!assets.ready || e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key, f = e.shiftKey ? 4 : 1, r = canvas.getBoundingClientRect(); let used = true;
+  const nav=activeImagineNavigation();if(nav){
+    used=window.ImagineCityViewpoints.key(nav,k,f);
+    if(k==='+'||k==='='){zoomBy(-.15);used=true;}else if(k==='-'||k==='_'){zoomBy(.15);used=true;}
+    else if(k==='Enter'||k===' '){handleClick(r.left+r.width/2,r.top+r.height/2,0);used=true;}
+    if(used){e.preventDefault();e.stopPropagation();requestRender();}return;
+  }
   if (/^[ijkl]$/i.test(k)&&state.mode==='observer'&&state.observer)lookObserver(k,f);
   else if (k.startsWith('Arrow')) { const dx = k === 'ArrowLeft' ? -1 : k === 'ArrowRight' ? 1 : 0, dy = k === 'ArrowUp' ? -1 : k === 'ArrowDown' ? 1 : 0;
     if (state.mode === 'observer' && state.observer) moveObserver(k,(e.repeat?0.2:1)*f);
@@ -2545,6 +2874,10 @@ canvas.addEventListener('keydown', (e) => { if (!assets.ready || e.ctrlKey || e.
   if (used) { e.preventDefault(); e.stopPropagation(); requestRender(); } });
 // Viewpoint action buttons keep focus after selection; arrows still walk unless a text/form control owns them.
 document.addEventListener('keydown',e=>{
+  const nav=activeImagineNavigation();if(nav){
+    if(e.target===canvas||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||nav.mode!=='observer'||e.target.isContentEditable||e.target.closest('input,select,textarea,[role="dialog"],dialog')||document.querySelector('dialog[open]'))return;
+    if(window.ImagineCityViewpoints.key(nav,e.key,e.shiftKey?4:1)){e.preventDefault();canvas.focus({preventScroll:true});requestRender();}return;
+  }
   if(imagineCityOpen()||e.target===canvas||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||state.mode!=='observer'||!state.observer||!(/^Arrow(Up|Down|Left|Right)$/.test(e.key)||/^[ijkl]$/i.test(e.key)))return;
   if(e.target.isContentEditable||e.target.closest('input,select,textarea,[role="dialog"],dialog')||document.querySelector('dialog[open]'))return;
   e.preventDefault();if(e.key.startsWith('Arrow'))moveObserver(e.key,(e.repeat?0.2:1)*(e.shiftKey?4:1));else lookObserver(e.key,e.shiftKey?4:1);canvas.focus({preventScroll:true});
@@ -2558,6 +2891,7 @@ $('btn-face')?.addEventListener('click', () => { if (lookTowardProposal()) setHi
 $('btn-viewpoint-prev')?.addEventListener('click', () => stepViewpoint(-1));
 $('btn-viewpoint-next')?.addEventListener('click', () => stepViewpoint(1));
 $('btn-flow-back').addEventListener('click', flowBack); $('btn-flow-next').addEventListener('click', flowNext); $('btn-nav-pdf')?.addEventListener('click', async (e) => { const b = e.currentTarget; b.textContent = 'Exporting…'; await window.__report?.exportPdf(); b.textContent = 'Export PDF'; $('flow-need').textContent = $('pdf-status').textContent; });
+$('btn-viewport-build').addEventListener('click', proceedFromViewport);
 document.querySelectorAll('[data-proceed]').forEach(b => b.addEventListener('click', flowNext));
 $('btn-multi-apply').addEventListener('click', applyMultiSelection); $('btn-multi-clear').addEventListener('click', () => { state.multiSel = []; setHint('Selection cleared. Click buildings to start a new group.'); refreshPanels(); requestRender(); });
 $('btn-street-pick').addEventListener('click',()=>{planView();applyFlowTool();revealMap();setHint(FLOW_HINTS.street);});
@@ -2586,7 +2920,13 @@ function panelToggleLabel() { const t = $('btn-panel-toggle'), open = !$('panel'
 new MutationObserver(panelToggleLabel).observe($('panel'), { attributes: true, attributeFilter: ['class'] });
 $('btn-panel-toggle').addEventListener('click', () => { const p = $('panel'); p.classList.toggle('collapsed'); $('btn-panel-toggle').setAttribute('aria-expanded', String(!p.classList.contains('collapsed'))); setTimeout(() => { resize(); requestRender(); }, 50); });
 window.addEventListener('resize', () => { resize(); requestRender(); });
-for(const name of ['vista-imagine-city-opened','vista-imagine-city-closed'])document.addEventListener(name,()=>{resize();panelToggleLabel();window.VistaViewcone?.refresh();requestRender();});
+document.addEventListener('vista-imagine-city-opened',()=>{activeImagineNavigation();syncImagineCameraControls();resize();panelToggleLabel();refreshSiteProceed();window.VistaViewcone?.refresh();requestRender();});
+document.addEventListener('vista-imagine-city-closed',()=>{
+  const hint=imagineHintBefore;imagineObserverFrameCache=null;imagineNavigation=null;imagineViewpointCache=null;imagineHintBefore=null;
+  if($('view-caption'))delete $('view-caption').dataset.imagineCaption;
+  setMode(state.mode,true);refreshPanels();if(hint!=null)setHint(hint);
+  resize();panelToggleLabel();window.VistaViewcone?.refresh();requestRender();
+});
 const floatBtn = document.createElement('button'); floatBtn.className = 'btn hidden'; floatBtn.id = 'btn-overview-float'; floatBtn.textContent = '‹ City overview'; floatBtn.style.cssText = 'position:absolute;right:10px;top:10px;'; $('viewport').appendChild(floatBtn); floatBtn.addEventListener('click', () => setMode('overview'));
 
 
@@ -2631,7 +2971,7 @@ $('place-select').addEventListener('change',e=>{ if(e.target.value==='') return;
 function frame() { if (needsRender) { needsRender = false; try { render(); } catch (e) { showError('Render error: ' + (e && e.message || e)); } } requestAnimationFrame(frame); }
 const readyPromise = (async () => { if (!gl || !PM) throw new Error('WebGL2 unavailable');
   try { await loadAssets(); } catch (e) { $('loading').classList.add('hidden'); showError('Could not load the context model: ' + (e && e.message || e)); throw e; }
-  const e = assets.manifest.extent_m.scene_bbox; state.cams.overview.target = [(e[0] + e[3]) / 2, (e[1] + e[4]) / 2, 20]; renderClauseCards(); applyHash(); refreshPanels(); requestRender(); render(); return true; })();
+  const rect = canvas.getBoundingClientRect(); state.cams.overview = vistaEntryCamera(rect.width / Math.max(1, rect.height)); renderClauseCards(); applyHash(); refreshPanels(); requestRender(); render(); return true; })();
 requestAnimationFrame(frame);
 
 
@@ -2712,7 +3052,7 @@ function restoreProposalParts(parts) {
   state.parts=JSON.parse(JSON.stringify(parts));state.check.result=null;
   renderPartsList();refreshPanels();refreshLiveStudy();requestRender();writeHash();return true;
 }
-window.__explorer = { setImagineCityScene, pickImagineBuildingAt, imagineCityRenderState:()=>({active:!!imagineCityScene,versionId:imagineCityScene?.versionId,uploads:imagineCityUploads,bytes:imagineCityBytes,pickRows:imaginePickIndex?.size||0,occlusionChunks:imagineOcclusionIndex?.size||0,pickBuildMs:imaginePickMetrics.buildMs,occlusionBuildMs:imaginePickMetrics.occlusionBuildMs,lastPickMs:imaginePickMetrics.lastPickMs}), getStartupPerformance:()=>JSON.parse(JSON.stringify(startupPerformance)), applyHeightReference, restoreProposalParts, getConeStudy:()=>({...coneStudy}), importOffset, requestSiteConfirmation, pavingSurfaces, facadeSurfaces, grassSurface, waterSurface, trafficRenderInfo:()=>({enabled:state.sceneStyle==='context'&&state.layers.roads,global:trafficTextures.global?{bounds:trafficTextures.global.bounds,size:trafficTextures.global.size,stats:trafficTextures.global.stats}:null,detail:trafficTextures.local?{bounds:trafficTextures.local.bounds,size:trafficTextures.local.size,stats:trafficTextures.local.stats}:null,deck:globalTrafficSurfaces?.stats}), moveObserver, streetscapeStats:()=>streetSurfaces?{...streetSurfaces.stats,global:globalTrafficSurfaces?.stats,network:assets.traffic?.stats}:null, clearStreetSurfaces, placeStreetObserver, refreshStreetChoices, streetRoadArrays, usableStreetPoint, coneCeilingResult, restoreConeStudy, refreshConeCeiling, studySentence, setHint, setAddressPin, loadAerial, aerial, updateCleared, clearanceGeometry: { footprintRecord, footprintIndex, projectedTriangleMeetsFootprint, indexedBuildingMeetsFootprints }, isReplaced, startNewStudy, captureScene, proposalShown, partFootprint, highestRoofAtXY, formatArea, planAnalysis, renderClauseCards, SCENE_STYLES, HS, applyFlowTool, flowGo, chooseMethod, changeMethod, flowBack, flowNext, stageComplete, toggleMultiBuilding, applyMultiSelection, replaceSingleBuilding, beginAim, aimDragTo, endAim, setSceneStyle, planAnalysis, refreshLiveStudy, resultLabel, serializeHash, openStudy, landZAt, beginBoundary, addBoundaryPoint, finishBoundary, cancelBoundary, rectangleSite, replaceSelectedBuilding, restoreBuildings, focusSite, focusLocation, planView, applyPick, isRemoved, state, assets, ready: readyPromise, placeSite, placeObserver, placeObserverAtOrigin, lookTowardProposal, setMode, setTool, setStep, aimAtProposal, resetToContext, inspectFrom, selectView, selectedCone, addPart, renderPartsList, setProposalMode, parseObj, installImport, cancelImport, runCheck, evaluationArea,
+window.__explorer = {homeVista,configureSitePlacement,commitMapSite,presetAt,projectRemovals,activeProjectRoadBoundary,listImagineViewpoints, enterImagineViewpoint, leaveImagineViewpoint, getImagineCameraState, imagineViewpointScreenPositions, setImagineCameraMode, setImagineCityScene, pickImagineBuildingAt, imagineCityRenderState:()=>({active:!!imagineCityScene,observerFrameRendered:imagineCityOpen()&&imagineViewGuideMetrics.frameRendered,observerFrameSelectedId:imagineCityOpen()?imagineViewGuideMetrics.selectedId:null,observerFrame:imagineCityOpen()?imagineViewGuideMetrics.frame:null,allConeOverlayVisible:imagineCityOpen()&&imagineViewGuideMetrics.allConeOverlayVisible,mountainBackdropAvailable:!!assets.meshes.backdrop,mountainBackdropDrawn:imagineCityOpen()&&imagineBackdropMetrics.drawn,mountainBackdropDrawFrames:imagineBackdropMetrics.drawFrames,mountainBackdropMode:imagineCityOpen()?imagineBackdropMetrics.mode:null,imagineCameraFarM:imagineCityOpen()?lastCam?.far??null:null,versionId:imagineCityScene?.versionId,uploads:imagineCityUploads,bytes:imagineCityBytes,pickRows:imaginePickIndex?.size||0,occlusionChunks:imagineOcclusionIndex?.size||0,pickBuildMs:imaginePickMetrics.buildMs,occlusionBuildMs:imaginePickMetrics.occlusionBuildMs,lastPickMs:imaginePickMetrics.lastPickMs}), getStartupPerformance:()=>JSON.parse(JSON.stringify(startupPerformance)), applyHeightReference, restoreProposalParts, getConeStudy:()=>({...coneStudy}), importOffset, requestSiteConfirmation, pavingSurfaces, facadeSurfaces, grassSurface, waterSurface, trafficRenderInfo:()=>({enabled:state.sceneStyle==='context'&&state.layers.roads,global:trafficTextures.global?{bounds:trafficTextures.global.bounds,size:trafficTextures.global.size,stats:trafficTextures.global.stats}:null,detail:trafficTextures.local?{bounds:trafficTextures.local.bounds,size:trafficTextures.local.size,stats:trafficTextures.local.stats}:null,deck:globalTrafficSurfaces?.stats}), moveObserver, streetscapeStats:()=>streetSurfaces?{...streetSurfaces.stats,global:globalTrafficSurfaces?.stats,network:assets.traffic?.stats}:null, clearStreetSurfaces, placeStreetObserver, refreshStreetChoices, streetRoadArrays, usableStreetPoint, coneCeilingResult, restoreConeStudy, refreshConeCeiling, studySentence, setHint, setAddressPin, loadAerial, aerial, updateCleared, clearanceGeometry: { footprintRecord, footprintIndex, projectedTriangleMeetsFootprint, indexedBuildingMeetsFootprints }, isReplaced, startNewStudy, captureScene, proposalShown, partFootprint, highestRoofAtXY, formatArea, planAnalysis, renderClauseCards, SCENE_STYLES, HS, applyFlowTool, flowGo, chooseMethod, changeMethod, flowBack, flowNext, stageComplete, toggleMultiBuilding, applyMultiSelection, replaceSingleBuilding, beginAim, aimDragTo, endAim, setSceneStyle, planAnalysis, refreshLiveStudy, resultLabel, serializeHash, openStudy, landZAt, beginBoundary, addBoundaryPoint, finishBoundary, cancelBoundary, rectangleSite, replaceSelectedBuilding, restoreBuildings, focusSite, focusLocation, planView, applyPick, isRemoved, state, assets, ready: readyPromise, placeSite, placeObserver, placeObserverAtOrigin, lookTowardProposal, setMode, setTool, setStep, aimAtProposal, resetToContext, inspectFrom, selectView, selectedCone, addPart, renderPartsList, setProposalMode, parseObj, installImport, cancelImport, runCheck, evaluationArea,
   terrainZAt, groundZAt, roofZAt, preferredRoofPoint, placeRoofObserver, placeRooftopAtXY, viewFromSelectedRoof, proposalBox, proposalParts, proposalCentre, observerEye, observerForward, pickRay, rayFromClient, applyHash, refreshPanels, technicalState, explainCheck, buildPdfReport,
   checkBody, setDisplayUnits, refreshImportInfo, viewFromHere, lookObserver, viewpointNavigationState, refreshViewpointNavigation, stepViewpoint,
   renderOnce: () => { needsRender = false; render(); return lastCam; }, camera: () => lastCam, canvas, gl,
