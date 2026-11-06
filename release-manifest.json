@@ -1,11 +1,11 @@
 {
   "format": "vancouver-static-pages/1",
   "file_count": 142,
-  "total_bytes": 146418809,
+  "total_bytes": 146420125,
   "files": {
     ".github/workflows/pages.yml": {
-      "bytes": 591,
-      "sha256": "8548c3879cb4969a9fb6f2f13ce3c780b2cc5158b483a1ce22fbd6f556c0aa84"
+      "bytes": 1907,
+      "sha256": "2bfc2d1a4af644b1159587d48991f5090c2220e0d647526e4835d126a974033b"
     },
     ".nojekyll": {
       "bytes": 0,

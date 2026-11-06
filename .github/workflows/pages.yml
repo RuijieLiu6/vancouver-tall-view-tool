@@ -7,24 +7,58 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: github-pages
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  upload:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      pages: read
+    outputs:
+      artifact_name: ${{ steps.site-name.outputs.name }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/configure-pages@v5
+      - name: Name this upload attempt
+        id: site-name
+        run: echo "name=github-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+      - id: upload
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .
+          name: ${{ steps.site-name.outputs.name }}
+      - name: Wait for the uploaded site to be discoverable
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAGES_ARTIFACT_NAME: ${{ steps.site-name.outputs.name }}
+          UPLOADED_ARTIFACT_ID: ${{ steps.upload.outputs.artifact_id }}
+        shell: bash
+        run: |
+          for attempt in {1..12}; do
+            visible_id=$(gh api "/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?name=${PAGES_ARTIFACT_NAME}" --jq '.artifacts[]?.id') || visible_id=""
+            if [[ "$visible_id" == "$UPLOADED_ARTIFACT_ID" && -n "$visible_id" ]]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "The uploaded site was not discoverable after 60 seconds. Re-run the failed job."
+          exit 1
+  deploy:
+    needs: upload
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: .
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: ${{ needs.upload.outputs.artifact_name }}
